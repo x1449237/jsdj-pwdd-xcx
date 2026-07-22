@@ -4,6 +4,7 @@ const websocket = require('../../utils/websocket');
 
 Page({
   data: {
+    currentTab: 'chat', // chat | group | after_sale
     conversationList: [],
     searchKeyword: '',
     loading: false,
@@ -48,6 +49,27 @@ Page({
 
   onMessageRead(data) {
     this.loadConversations();
+  },
+
+  onTabChange(e) {
+    const tab = e.currentTarget.dataset.tab;
+    if (tab === this.data.currentTab) return;
+
+    if (tab === 'group') {
+      wx.navigateTo({
+        url: '/chat/group-list/group-list'
+      });
+      return;
+    }
+
+    if (tab === 'after_sale') {
+      wx.navigateTo({
+        url: '/chat/after-sale-list/after-sale-list'
+      });
+      return;
+    }
+
+    this.setData({ currentTab: tab });
   },
 
   onSearchInput(e) {

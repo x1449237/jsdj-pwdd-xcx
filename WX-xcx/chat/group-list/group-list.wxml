@@ -1,0 +1,117 @@
+<view class="group-list-page">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input-wrapper">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索群聊"
+        placeholder-class="placeholder"
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+    </view>
+  </view>
+
+  <!-- 群聊列表 -->
+  <view class="group-list">
+    <block wx:if="{{groupList.length > 0}}">
+      <view
+        wx:for="{{groupList}}"
+        wx:key="group_id"
+        class="group-item"
+        bindtap="onOpenGroup"
+        data-group="{{item}}"
+        bindlongpress="onLongPress"
+        data-group="{{item}}"
+      >
+        <view class="avatar-wrapper">
+          <image class="group-avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+          <view class="unread-badge" wx:if="{{item.unread_count > 0}}">
+            <text>{{item.unread_count > 99 ? '99+' : item.unread_count}}</text>
+          </view>
+        </view>
+
+        <view class="group-info">
+          <view class="info-header">
+            <text class="group-name">{{item.group_name}}</text>
+            <text class="group-type-tag group-type-{{item.group_type}}">{{item.group_type_label}}</text>
+            <text class="time">{{item.last_time}}</text>
+          </view>
+          <view class="info-footer">
+            <text class="last-message text-ellipsis">{{item.last_msg_preview}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:if="{{groupList.length === 0 && !loading}}">
+      <text class="empty-state-icon">👥</text>
+      <text class="empty-state-text">暂无群聊</text>
+      <text class="empty-state-sub">点击下方按钮创建或加入群聊</text>
+    </view>
+
+    <view class="loading-wrapper" wx:if="{{loading}}">
+      <text class="loading-more">加载中...</text>
+    </view>
+  </view>
+
+  <!-- 创建群聊按钮 -->
+  <view class="create-btn-wrapper">
+    <view class="create-btn" bindtap="onShowCreateModal">
+      <text class="create-btn-icon">+</text>
+      <text class="create-btn-text">创建群聊</text>
+    </view>
+  </view>
+
+  <!-- 创建群聊弹窗 -->
+  <view class="modal-mask" wx:if="{{showCreateModal}}" bindtap="onHideCreateModal"></view>
+  <view class="create-modal" wx:if="{{showCreateModal}}">
+    <view class="modal-header">
+      <text class="modal-title">创建群聊</text>
+      <view class="modal-close" bindtap="onHideCreateModal">
+        <text>✕</text>
+      </view>
+    </view>
+
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">群名称</text>
+        <input
+          class="form-input"
+          placeholder="请输入群聊名称"
+          placeholder-class="form-placeholder"
+          value="{{createForm.name}}"
+          bindinput="onNameInput"
+          maxlength="20"
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">群类型</text>
+        <view class="type-selector">
+          <view
+            wx:for="{{groupTypes}}"
+            wx:key="value"
+            class="type-option {{createForm.type === item.value ? 'type-option-active' : ''}}"
+            bindtap="onTypeSelect"
+            data-type="{{item.value}}"
+          >
+            <text>{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="modal-footer">
+      <view class="btn-cancel" bindtap="onHideCreateModal">
+        <text>取消</text>
+      </view>
+      <view class="btn-confirm" bindtap="onCreateGroup">
+        <text>创建</text>
+      </view>
+    </view>
+  </view>
+</view>

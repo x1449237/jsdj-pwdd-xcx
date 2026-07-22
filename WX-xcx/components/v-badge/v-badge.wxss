@@ -1,0 +1,60 @@
+.v-badge-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.v-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.v-badge-text {
+  font-weight: bold;
+  font-style: italic;
+}
+
+/* 金色大V标 - 平台官方账号 */
+.badge-golden {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 6rpx;
+  background: linear-gradient(135deg, #f5af19, #f12711);
+  box-shadow: 0 2rpx 8rpx rgba(245, 175, 25, 0.4);
+}
+
+.badge-golden .v-badge-text {
+  font-size: 24rpx;
+  color: #ffffff;
+}
+
+/* 蓝色小V标 - 企业级俱乐部 */
+.badge-blue {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 4rpx;
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  box-shadow: 0 2rpx 6rpx rgba(79, 172, 254, 0.3);
+}
+
+.badge-blue .v-badge-text {
+  font-size: 18rpx;
+  color: #ffffff;
+}
+
+/* 绿色小V标 - 个人级俱乐部 */
+.badge-green {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 4rpx;
+  background: linear-gradient(135deg, #43e97b, #38f9d7);
+  box-shadow: 0 2rpx 6rpx rgba(67, 233, 123, 0.3);
+}
+
+.badge-green .v-badge-text {
+  font-size: 18rpx;
+  color: #ffffff;
+}

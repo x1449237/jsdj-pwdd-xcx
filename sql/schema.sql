@@ -604,20 +604,27 @@ INSERT INTO `timeout_rule` (`name`, `rule_type`, `from_status`, `to_status`, `ti
 ('待验收超时72小时', 'verify_timeout', 3, 4, 259200, 1);
 
 -- ============================================================
--- 24. IM聊天会话表
+-- 24. IM聊天会话表（订单内双向临时会话：玩家↔打手）
+-- session_type: 1=订单私聊 2=群聊 3=售后申诉
 -- ============================================================
 DROP TABLE IF EXISTS `chat_session`;
 CREATE TABLE `chat_session` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `session_no` VARCHAR(64) NOT NULL COMMENT '会话编号',
+  `session_type` TINYINT NOT NULL DEFAULT 1 COMMENT '1订单私聊 2群聊 3售后申诉',
   `order_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '关联订单ID',
-  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID（玩家）',
-  `player_id` BIGINT UNSIGNED NOT NULL COMMENT '打手ID',
+  `user_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '用户ID（玩家）',
+  `player_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '打手ID',
+  `group_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '关联群聊ID（session_type=2时）',
   `last_message` VARCHAR(512) DEFAULT '' COMMENT '最后一条消息摘要',
-  `last_message_type` TINYINT DEFAULT 1 COMMENT '1文字 2语音 3图片',
+  `last_message_type` TINYINT DEFAULT 1 COMMENT '1文字 2语音 3图片 4系统消息',
   `last_message_time` DATETIME DEFAULT NULL COMMENT '最后消息时间',
   `unread_user_count` INT UNSIGNED DEFAULT 0 COMMENT '用户未读数',
   `unread_player_count` INT UNSIGNED DEFAULT 0 COMMENT '打手未读数',
+  `is_platform_intervened` TINYINT(1) DEFAULT 0 COMMENT '是否平台已介入（仅售后会话）',
+  `intervene_time` DATETIME DEFAULT NULL COMMENT '平台介入时间',
+  `intervene_type` TINYINT DEFAULT 0 COMMENT '介入方式 1关键词自动 2人工申请',
+  `intervene_status` TINYINT DEFAULT 0 COMMENT '介入状态 0未介入 1介入中 2已解除',
   `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1活跃 0已关闭',
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -626,8 +633,10 @@ CREATE TABLE `chat_session` (
   KEY `idx_order_id` (`order_id`),
   KEY `idx_user_id` (`user_id`),
   KEY `idx_player_id` (`player_id`),
+  KEY `idx_group_id` (`group_id`),
+  KEY `idx_session_type` (`session_type`),
   KEY `idx_last_message_time` (`last_message_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='IM聊天会话表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='IM聊天会话表（三大会话体系）';
 
 -- ============================================================
 -- 25. IM聊天消息表
@@ -1280,6 +1289,329 @@ CREATE TABLE `batch_operation_confirm` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='批量操作扫码确认表';
 
 -- ============================================================
+-- 56. 平台官方账号表
+-- 仅超级管理员 Web 后台可创建，拥有全平台最高权限
+-- ============================================================
+DROP TABLE IF EXISTS `platform_official_account`;
+CREATE TABLE `platform_official_account` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `account_no` VARCHAR(32) NOT NULL COMMENT '平台账号编号（OFFICIAL_xxxxx）',
+  `nickname` VARCHAR(64) NOT NULL DEFAULT '平台官方' COMMENT '昵称',
+  `avatar` VARCHAR(512) DEFAULT '' COMMENT '头像',
+  `v_badge` TINYINT NOT NULL DEFAULT 1 COMMENT 'V标类型 1大金V（平台官方）',
+  `v_badge_display` VARCHAR(32) DEFAULT 'golden_v' COMMENT 'V标展示标识 golden_v/blue_v/green_v',
+  `is_system` TINYINT(1) DEFAULT 1 COMMENT '是否系统账号',
+  `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1正常 0停用',
+  `creator_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '创建者管理员ID',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_account_no` (`account_no`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='平台官方账号表';
+
+-- 初始化默认平台官方账号
+INSERT INTO `platform_official_account` (`account_no`, `nickname`, `v_badge`, `v_badge_display`, `is_system`, `creator_id`) VALUES
+('OFFICIAL_00001', '平台官方', 1, 'golden_v', 1, 0);
+
+-- ============================================================
+-- 57. 用户V标身份表
+-- 记录企业级/个人级俱乐部审核通过后的V标状态
+-- ============================================================
+DROP TABLE IF EXISTS `user_v_badge`;
+CREATE TABLE `user_v_badge` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+  `badge_type` VARCHAR(32) NOT NULL COMMENT 'blue_v企业级 / green_v个人级',
+  `badge_display` VARCHAR(32) NOT NULL DEFAULT 'blue_v' COMMENT 'blue_v / green_v',
+  `club_name` VARCHAR(128) DEFAULT '' COMMENT '俱乐部名称',
+  `audit_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0待审核 1通过 2驳回',
+  `audit_time` DATETIME DEFAULT NULL COMMENT '审核通过时间',
+  `auditor_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '审核人ID',
+  `is_active` TINYINT(1) DEFAULT 1 COMMENT '是否点亮',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_badge_type` (`badge_type`),
+  KEY `idx_audit_status` (`audit_status`),
+  KEY `idx_is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户V标身份表';
+
+-- ============================================================
+-- 58. 俱乐部群聊表
+-- 仅俱乐部创始人/管理员可创建，平台官方账号自动入驻
+-- ============================================================
+DROP TABLE IF EXISTS `club_group_chat`;
+CREATE TABLE `club_group_chat` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `group_no` VARCHAR(32) NOT NULL COMMENT '群聊编号',
+  `group_name` VARCHAR(128) NOT NULL COMMENT '群聊名称',
+  `group_avatar` VARCHAR(512) DEFAULT '' COMMENT '群头像',
+  `group_type` TINYINT NOT NULL COMMENT '群类型 1闲聊群 2福利群 3售后群',
+  `group_type_label` VARCHAR(32) NOT NULL COMMENT '群类型标签',
+  `creator_id` BIGINT UNSIGNED NOT NULL COMMENT '创建者用户ID',
+  `announcement` VARCHAR(1024) DEFAULT '' COMMENT '群公告',
+  `member_count` INT UNSIGNED DEFAULT 0 COMMENT '成员数量',
+  `max_member_count` INT UNSIGNED DEFAULT 500 COMMENT '最大成员数',
+  `is_muted_all` TINYINT(1) DEFAULT 0 COMMENT '是否全员禁言',
+  `platform_account_id` BIGINT UNSIGNED NOT NULL COMMENT '入驻的平台官方账号ID',
+  `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1正常 0已解散',
+  `dissolve_reason` VARCHAR(255) DEFAULT '' COMMENT '解散原因',
+  `dissolve_time` DATETIME DEFAULT NULL COMMENT '解散时间',
+  `dissolve_operator_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '解散操作人（平台账号ID）',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_group_no` (`group_no`),
+  KEY `idx_creator_id` (`creator_id`),
+  KEY `idx_group_type` (`group_type`),
+  KEY `idx_platform_account_id` (`platform_account_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='俱乐部群聊表';
+
+-- ============================================================
+-- 59. 群聊成员表
+-- ============================================================
+DROP TABLE IF EXISTS `group_chat_member`;
+CREATE TABLE `group_chat_member` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `group_id` BIGINT UNSIGNED NOT NULL COMMENT '群聊ID',
+  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+  `user_type` TINYINT NOT NULL DEFAULT 1 COMMENT '1普通成员 2俱乐部管理员 3俱乐部创始人 4平台官方账号',
+  `nickname_in_group` VARCHAR(64) DEFAULT '' COMMENT '群内昵称',
+  `is_muted` TINYINT(1) DEFAULT 0 COMMENT '是否被禁言',
+  `mute_until` DATETIME DEFAULT NULL COMMENT '禁言截止时间',
+  `mute_operator_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '禁言操作人',
+  `is_blacklist` TINYINT(1) DEFAULT 0 COMMENT '是否限制入群黑名单',
+  `join_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '入群时间',
+  `leave_time` DATETIME DEFAULT NULL COMMENT '退群时间',
+  `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1在群 0已退群',
+  PRIMARY KEY (`id`),
+  KEY `idx_group_id` (`group_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_user_type` (`user_type`),
+  KEY `idx_status` (`status`),
+  UNIQUE KEY `uk_group_user` (`group_id`, `user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='群聊成员表';
+
+-- ============================================================
+-- 60. 群聊消息表
+-- ============================================================
+DROP TABLE IF EXISTS `group_chat_message`;
+CREATE TABLE `group_chat_message` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `group_id` BIGINT UNSIGNED NOT NULL COMMENT '群聊ID',
+  `sender_id` BIGINT UNSIGNED NOT NULL COMMENT '发送者ID',
+  `sender_type` TINYINT NOT NULL DEFAULT 1 COMMENT '1普通成员 2管理员 3创始人 4平台官方',
+  `message_type` TINYINT NOT NULL DEFAULT 1 COMMENT '1文字 2图片 3语音 4系统消息 5公告',
+  `content` TEXT COMMENT '文字内容',
+  `media_url` VARCHAR(512) DEFAULT '' COMMENT '媒体文件URL',
+  `media_duration` INT UNSIGNED DEFAULT 0 COMMENT '语音时长（秒）',
+  `asr_text` TEXT COMMENT 'ASR转文字内容',
+  `ocr_text` TEXT COMMENT 'OCR识别内容',
+  `is_read` TINYINT(1) DEFAULT 0 COMMENT '是否已读',
+  `is_recalled` TINYINT(1) DEFAULT 0 COMMENT '是否撤回',
+  `is_blocked` TINYINT(1) DEFAULT 0 COMMENT '是否被拦截',
+  `block_reason` VARCHAR(255) DEFAULT '' COMMENT '拦截原因',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_group_id` (`group_id`),
+  KEY `idx_sender_id` (`sender_id`),
+  KEY `idx_message_type` (`message_type`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='群聊消息表';
+
+-- ============================================================
+-- 61. 售后申诉会话表
+-- 订单结束后玩家发起售后申诉时自动创建
+-- ============================================================
+DROP TABLE IF EXISTS `after_sale_session`;
+CREATE TABLE `after_sale_session` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `session_no` VARCHAR(32) NOT NULL COMMENT '售后会话编号（AS_xxxxx）',
+  `order_id` BIGINT UNSIGNED NOT NULL COMMENT '关联订单ID（永久绑定）',
+  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '申诉玩家ID',
+  `club_service_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '俱乐部客服ID',
+  `platform_account_id` BIGINT UNSIGNED NOT NULL COMMENT '平台官方账号ID（强制入驻）',
+  `appeal_reason` VARCHAR(512) DEFAULT '' COMMENT '申诉原因',
+  `appeal_images` JSON DEFAULT NULL COMMENT '申诉图片凭证',
+  `is_keyword_triggered` TINYINT(1) DEFAULT 0 COMMENT '是否关键词触发自动介入',
+  `is_manual_intervene` TINYINT(1) DEFAULT 0 COMMENT '是否人工申请介入',
+  `intervene_initiator` TINYINT DEFAULT 0 COMMENT '介入发起人 1玩家 2客服',
+  `intervene_time` DATETIME DEFAULT NULL COMMENT '平台介入时间',
+  `intervene_status` TINYINT DEFAULT 0 COMMENT '0未介入 1介入中 2已解除',
+  `intervene_resolve_time` DATETIME DEFAULT NULL COMMENT '介入解除时间',
+  `intervene_resolve_operator` BIGINT UNSIGNED DEFAULT 0 COMMENT '解除操作管理员ID',
+  `resolve_result` VARCHAR(512) DEFAULT '' COMMENT '处理结果',
+  `is_risk_high` TINYINT(1) DEFAULT 0 COMMENT '是否高风险待处理工单',
+  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '1进行中 2已解决 3已关闭',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_session_no` (`session_no`),
+  KEY `idx_order_id` (`order_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_club_service_id` (`club_service_id`),
+  KEY `idx_platform_account_id` (`platform_account_id`),
+  KEY `idx_intervene_status` (`intervene_status`),
+  KEY `idx_status` (`status`),
+  KEY `idx_is_risk_high` (`is_risk_high`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='售后申诉会话表';
+
+-- ============================================================
+-- 62. 售后申诉消息表
+-- 售后会话中的聊天记录，永久关联订单
+-- ============================================================
+DROP TABLE IF EXISTS `after_sale_message`;
+CREATE TABLE `after_sale_message` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `session_id` BIGINT UNSIGNED NOT NULL COMMENT '售后会话ID',
+  `sender_id` BIGINT UNSIGNED NOT NULL COMMENT '发送者ID',
+  `sender_type` TINYINT NOT NULL COMMENT '1玩家 2俱乐部客服 3平台官方',
+  `message_type` TINYINT NOT NULL DEFAULT 1 COMMENT '1文字 2图片 3语音 4系统消息',
+  `content` TEXT COMMENT '文字内容',
+  `media_url` VARCHAR(512) DEFAULT '' COMMENT '媒体文件URL',
+  `media_duration` INT UNSIGNED DEFAULT 0 COMMENT '语音时长（秒）',
+  `asr_text` TEXT COMMENT 'ASR转文字（仅风控用，不对外展示）',
+  `ocr_text` TEXT COMMENT 'OCR识别内容',
+  `is_from_platform` TINYINT(1) DEFAULT 0 COMMENT '是否平台官方发送',
+  `platform_msg_label` VARCHAR(32) DEFAULT '' COMMENT '平台官方专属标识',
+  `is_keyword_hit` TINYINT(1) DEFAULT 0 COMMENT '是否命中售后风控关键词',
+  `hit_keywords` JSON DEFAULT NULL COMMENT '命中的关键词列表',
+  `is_read` TINYINT(1) DEFAULT 0 COMMENT '是否已读',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_session_id` (`session_id`),
+  KEY `idx_sender_id` (`sender_id`),
+  KEY `idx_is_keyword_hit` (`is_keyword_hit`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='售后申诉消息表';
+
+-- ============================================================
+-- 63. 售后风控关键词库表
+-- 仅针对售后会话生效，后台可自定义维护
+-- ============================================================
+DROP TABLE IF EXISTS `after_sale_keyword`;
+CREATE TABLE `after_sale_keyword` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `word` VARCHAR(128) NOT NULL COMMENT '关键词',
+  `category` VARCHAR(32) NOT NULL DEFAULT 'general' COMMENT '分类 fraud/abuse/refund/threat',
+  `match_type` TINYINT NOT NULL DEFAULT 1 COMMENT '1精确匹配 2模糊匹配 3正则匹配',
+  `regex_pattern` VARCHAR(255) DEFAULT '' COMMENT '正则表达式',
+  `is_enabled` TINYINT(1) DEFAULT 1 COMMENT '是否启用',
+  `hit_count` INT UNSIGNED DEFAULT 0 COMMENT '命中次数',
+  `creator_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '创建者管理员ID',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_word` (`word`),
+  KEY `idx_category` (`category`),
+  KEY `idx_is_enabled` (`is_enabled`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='售后风控关键词库表';
+
+-- 预置售后关键词
+INSERT INTO `after_sale_keyword` (`word`, `category`, `match_type`, `is_enabled`) VALUES
+('骗钱', 'fraud', 1, 1),
+('诈骗', 'fraud', 1, 1),
+('退款', 'refund', 1, 1),
+('投诉', 'threat', 1, 1),
+('报警', 'threat', 1, 1),
+('起诉', 'threat', 1, 1),
+('假货', 'fraud', 1, 1),
+('骗子', 'fraud', 1, 1);
+
+-- ============================================================
+-- 64. 售后风控关键词总开关配置
+-- ============================================================
+INSERT INTO `system_config` (`config_key`, `config_value`, `config_type`, `description`, `is_hot_update`) VALUES
+('after_sale_keyword_switch', '1', 'bool', '售后关键词自动介入总开关', 1),
+('after_sale_test_mode', '0', 'bool', '售后测试模式（仅记录日志，不弹窗不推送）', 1);
+
+-- ============================================================
+-- 65. 平台介入记录表
+-- 记录所有平台介入的触发、处理过程、结果
+-- ============================================================
+DROP TABLE IF EXISTS `platform_intervention_log`;
+CREATE TABLE `platform_intervention_log` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `session_id` BIGINT UNSIGNED NOT NULL COMMENT '售后会话ID',
+  `session_type` VARCHAR(32) NOT NULL DEFAULT 'after_sale' COMMENT '会话类型',
+  `order_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '关联订单ID',
+  `trigger_type` TINYINT NOT NULL COMMENT '触发方式 1关键词自动 2玩家申请 3客服申请',
+  `trigger_user_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '触发者用户ID',
+  `trigger_detail` JSON DEFAULT NULL COMMENT '触发详情（关键词/申请内容）',
+  `intervene_account_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '介入的平台账号ID',
+  `intervene_time` DATETIME DEFAULT NULL COMMENT '介入时间',
+  `resolve_result` VARCHAR(1024) DEFAULT '' COMMENT '处理结果',
+  `resolve_action` VARCHAR(64) DEFAULT '' COMMENT '处理动作 mediation/refund/penalty/dismiss',
+  `resolve_time` DATETIME DEFAULT NULL COMMENT '处理时间',
+  `resolve_operator_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '处理管理员ID',
+  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '1介入中 2已处理 3已关闭',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_session_id` (`session_id`),
+  KEY `idx_order_id` (`order_id`),
+  KEY `idx_trigger_type` (`trigger_type`),
+  KEY `idx_status` (`status`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='平台介入记录表';
+
+-- ============================================================
+-- 66. 平台处罚记录表
+-- 记录平台对群聊/用户的所有处罚操作
+-- ============================================================
+DROP TABLE IF EXISTS `platform_punishment_log`;
+CREATE TABLE `platform_punishment_log` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `target_type` VARCHAR(32) NOT NULL COMMENT '处罚对象类型 user/group',
+  `target_id` BIGINT UNSIGNED NOT NULL COMMENT '处罚对象ID',
+  `punishment_type` VARCHAR(32) NOT NULL COMMENT '处罚类型 mute/ban/freeze/expel/group_dissolve',
+  `punishment_detail` VARCHAR(512) DEFAULT '' COMMENT '处罚详情',
+  `duration_type` VARCHAR(32) NOT NULL DEFAULT 'temporary' COMMENT 'temporary/permanent',
+  `start_time` DATETIME DEFAULT NULL COMMENT '开始时间',
+  `end_time` DATETIME DEFAULT NULL COMMENT '结束时间',
+  `operator_account_id` BIGINT UNSIGNED NOT NULL COMMENT '操作平台账号ID',
+  `reason` VARCHAR(512) DEFAULT '' COMMENT '处罚原因',
+  `is_revoked` TINYINT(1) DEFAULT 0 COMMENT '是否已撤销',
+  `revoke_time` DATETIME DEFAULT NULL COMMENT '撤销时间',
+  `revoke_operator_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '撤销操作人',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_target` (`target_type`, `target_id`),
+  KEY `idx_punishment_type` (`punishment_type`),
+  KEY `idx_operator_account_id` (`operator_account_id`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='平台处罚记录表';
+
+-- ============================================================
+-- 67. 售后风控命中日志表
+-- 记录售后会话中关键词命中详情
+-- ============================================================
+DROP TABLE IF EXISTS `after_sale_risk_log`;
+CREATE TABLE `after_sale_risk_log` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `session_id` BIGINT UNSIGNED NOT NULL COMMENT '售后会话ID',
+  `order_id` BIGINT UNSIGNED NOT NULL COMMENT '订单ID',
+  `message_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '消息ID',
+  `sender_id` BIGINT UNSIGNED NOT NULL COMMENT '发送人ID',
+  `hit_keywords` JSON NOT NULL COMMENT '命中的关键词列表',
+  `content_summary` VARCHAR(512) DEFAULT '' COMMENT '内容摘要',
+  `is_handled` TINYINT(1) DEFAULT 0 COMMENT '是否已处理',
+  `handle_time` DATETIME DEFAULT NULL COMMENT '处理时间',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_session_id` (`session_id`),
+  KEY `idx_order_id` (`order_id`),
+  KEY `idx_sender_id` (`sender_id`),
+  KEY `idx_is_handled` (`is_handled`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='售后风控命中日志表';
+
+-- ============================================================
 -- 完成
 -- ============================================================
 -- 索引优化建议：
@@ -1289,4 +1621,5 @@ CREATE TABLE `batch_operation_confirm` (
 -- 4. 敏感数据（密码、身份证、银行卡）使用加密存储
 -- 5. 软删除使用 delete_time 字段
 -- 6. 所有表使用 InnoDB 引擎支持事务
+-- 7. 新增12张表支持三大会话体系+平台介入+V标身份
 -- ============================================================

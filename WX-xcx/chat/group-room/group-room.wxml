@@ -1,31 +1,66 @@
-<view class="chat-room-page">
+<view class="group-room-page">
   <!-- 顶部状态栏 -->
   <view class="chat-header">
     <view class="header-back" bindtap="onBack">
       <text class="back-icon">‹</text>
     </view>
-    <view class="header-info">
-      <view class="header-name-row">
-        <text class="header-name">{{targetName}}</text>
-        <v-badge wx:if="{{isPlatformOfficial}}" badgeType="golden_v"></v-badge>
-      </view>
-      <text class="header-status">{{targetOnline ? '在线' : '离线'}}</text>
+    <view class="header-info" bindtap="onTapGroupName">
+      <text class="header-name">{{groupName}}</text>
+      <text class="header-type">{{groupTypeLabel}}</text>
     </view>
     <view class="header-more" bindtap="onMore">
       <text class="more-icon">⋯</text>
     </view>
   </view>
 
-  <!-- 介入警示横幅 -->
-  <view class="intervene-banner" wx:if="{{showInterveneBanner}}">
-    <text class="intervene-banner-icon">⚠️</text>
-    <text class="intervene-banner-text">{{interveneBannerText}}</text>
-  </view>
+  <!-- 群信息面板 -->
+  <view class="group-info-panel" wx:if="{{showGroupInfo}}">
+    <view class="info-panel-header">
+      <text class="panel-title">群信息</text>
+      <view class="panel-close" bindtap="onHideGroupInfo">
+        <text>✕</text>
+      </view>
+    </view>
 
-  <!-- 申请平台介入按钮 -->
-  <view class="intervene-toolbar" wx:if="{{interveneStatus !== 2}}">
-    <view class="intervene-btn {{interveneStatus === 1 ? 'intervene-btn-disabled' : ''}}" bindtap="onRequestIntervene">
-      <text class="intervene-btn-text">{{interveneStatus === 1 ? '平台已介入' : '申请平台介入'}}</text>
+    <view class="info-section">
+      <text class="section-title">群公告</text>
+      <view class="announcement-content" wx:if="{{announcement}}">
+        <text>{{announcement}}</text>
+      </view>
+      <view class="announcement-empty" wx:else>
+        <text>暂无群公告</text>
+      </view>
+      <view class="announcement-edit" wx:if="{{isAdmin || isCreator}}" bindtap="onEditAnnouncement">
+        <text>编辑公告</text>
+      </view>
+    </view>
+
+    <view class="info-section">
+      <text class="section-title">群成员 ({{memberList.length}})</text>
+      <view class="member-list">
+        <view
+          wx:for="{{memberList}}"
+          wx:key="user_id"
+          class="member-item"
+          bindtap="onMemberAction"
+          data-member="{{item}}"
+        >
+          <image class="member-avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+          <view class="member-info">
+            <view class="member-name-row">
+              <text class="member-name">{{item.nickname}}</text>
+              <view class="v-badge" wx:if="{{item.is_platform_official}}">
+                <text class="v-badge-text v-badge-golden">V</text>
+              </view>
+            </view>
+            <text class="member-role" wx:if="{{item.is_creator}}">群主</text>
+            <text class="member-role" wx:elif="{{item.is_admin}}">管理员</text>
+          </view>
+          <view class="member-actions" wx:if="{{(isAdmin || isCreator) && item.user_id !== myUserId}}">
+            <text class="action-icon">⋮</text>
+          </view>
+        </view>
+      </view>
     </view>
   </view>
 
@@ -52,13 +87,13 @@
       id="msg-{{item.msg_id}}"
       class="message-item {{item.from_self ? 'message-self' : 'message-other'}}"
     >
-      <!-- 系统消息 -->
-      <view class="system-message" wx:if="{{item.type === 'system'}}">
-        <text class="system-text">{{item.content}}</text>
+      <!-- 系统消息 / 群公告 -->
+      <view class="system-message" wx:if="{{item.type === 'system' || item.type === 'announcement'}}">
+        <text class="system-text">{{item.type === 'announcement' ? '📢 ' : ''}}{{item.content}}</text>
       </view>
 
       <!-- 普通消息 -->
-      <block wx:if="{{item.type !== 'system'}}">
+      <block wx:if="{{item.type !== 'system' && item.type !== 'announcement'}}">
         <image
           wx:if="{{!item.from_self}}"
           class="msg-avatar"
@@ -67,10 +102,12 @@
         ></image>
 
         <view class="msg-content-wrapper">
-          <!-- 对方昵称和V标 -->
+          <!-- 发送者昵称和标识 -->
           <view class="msg-sender" wx:if="{{!item.from_self}}">
-            <text class="sender-name">{{item.nickname || targetName}}</text>
-            <v-badge wx:if="{{item.is_platform_official}}" badgeType="golden_v"></v-badge>
+            <text class="sender-name">{{item.nickname}}</text>
+            <view class="v-badge" wx:if="{{item.is_platform_official}}">
+              <text class="v-badge-text v-badge-golden">V</text>
+            </view>
             <text class="platform-tag" wx:if="{{item.is_platform_official}}">【平台官方】</text>
           </view>
 
@@ -95,7 +132,6 @@
               class="msg-img"
               src="{{item.image_url}}"
               mode="widthFix"
-              bindload="onImageLoad"
             ></image>
           </view>
 
@@ -136,7 +172,6 @@
 
   <!-- 底部输入栏 -->
   <view class="input-bar">
-    <!-- 语音录制模式 -->
     <view class="voice-mode" wx:if="{{inputMode === 'voice'}}">
       <view
         class="voice-btn"
@@ -148,7 +183,6 @@
       </view>
     </view>
 
-    <!-- 文字输入模式 -->
     <view class="text-mode" wx:else>
       <view class="mode-switch" bindtap="onSwitchMode">
         <text class="switch-icon">🎤</text>
@@ -172,7 +206,6 @@
       </view>
     </view>
 
-    <!-- 发送按钮 -->
     <view class="send-btn" wx:if="{{inputText.length > 0 && inputMode === 'text'}}" bindtap="onSendText">
       <text class="send-text">发送</text>
     </view>
@@ -203,6 +236,36 @@
     <view class="panel-item" bindtap="onSwitchMode">
       <view class="panel-icon">🎤</view>
       <text class="panel-label">语音</text>
+    </view>
+  </view>
+
+  <!-- 公告编辑弹窗 -->
+  <view class="modal-mask" wx:if="{{showAnnouncementModal}}" bindtap="onCancelAnnouncement"></view>
+  <view class="announcement-modal" wx:if="{{showAnnouncementModal}}">
+    <view class="modal-header">
+      <text class="modal-title">编辑群公告</text>
+      <view class="modal-close" bindtap="onCancelAnnouncement">
+        <text>✕</text>
+      </view>
+    </view>
+    <view class="modal-body">
+      <textarea
+        class="announcement-textarea"
+        placeholder="请输入群公告内容"
+        placeholder-class="form-placeholder"
+        value="{{editAnnouncementText}}"
+        bindinput="onAnnouncementInput"
+        maxlength="500"
+        auto-height
+      />
+    </view>
+    <view class="modal-footer">
+      <view class="btn-cancel" bindtap="onCancelAnnouncement">
+        <text>取消</text>
+      </view>
+      <view class="btn-confirm" bindtap="onSaveAnnouncement">
+        <text>保存</text>
+      </view>
     </view>
   </view>
 </view>

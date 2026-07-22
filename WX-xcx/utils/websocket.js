@@ -108,9 +108,29 @@ const stopHeartbeat = () => {
 
 const handleMessage = (data) => {
   const { type } = data;
+
   if (type === 'pong') return;
 
-  if (listeners[type]) {
+  // 消息类型路由
+  const typeMap = {
+    'chat_message': 'chat_message',
+    'group_chat': 'group_chat',
+    'group_chat_message': 'group_chat',
+    'after_sale': 'after_sale',
+    'after_sale_message': 'after_sale',
+    'platform_intervene': 'platform_intervene',
+    'new_message': 'new_message',
+    'message_read': 'message_read'
+  };
+
+  const mappedType = typeMap[type] || type;
+
+  if (listeners[mappedType]) {
+    listeners[mappedType].forEach(callback => callback(data));
+  }
+
+  // 同时触发原始 type 的监听器（兼容旧代码）
+  if (mappedType !== type && listeners[type]) {
     listeners[type].forEach(callback => callback(data));
   }
 

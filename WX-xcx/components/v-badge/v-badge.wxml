@@ -1,0 +1,5 @@
+<view class="v-badge-wrapper">
+  <view class="v-badge {{badgeClass}}">
+    <text class="v-badge-text">V</text>
+  </view>
+</view>

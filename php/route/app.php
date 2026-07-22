@@ -119,6 +119,32 @@ Route::group('api/v1', function () {
         // --- 操作日志 ---
         Route::get('log/action',                'api/Common/actionLog');
 
+        // --- 群聊 ---
+        Route::get('group/list',                'api/GroupChat/groupList');
+        Route::post('group/create',             'api/GroupChat/createGroup');
+        Route::get('group/detail',              'api/GroupChat/groupDetail');
+        Route::get('group/messages',            'api/GroupChat/groupMessages');
+        Route::post('group/send_text',          'api/GroupChat/sendText');
+        Route::post('group/send_voice',         'api/GroupChat/sendVoice');
+        Route::post('group/send_image',         'api/GroupChat/sendImage');
+        Route::get('group/members',             'api/GroupChat/groupMembers');
+        Route::post('group/announcement',       'api/GroupChat/updateAnnouncement');
+        Route::post('group/mute',               'api/GroupChat/muteMember');
+        Route::post('group/unmute',             'api/GroupChat/unmuteMember');
+        Route::post('group/remove_member',      'api/GroupChat/removeMember');
+        Route::post('group/dissolve',           'api/GroupChat/dissolveGroup');
+        Route::post('group/add_member',         'api/GroupChat/addMember');
+
+        // --- 售后申诉 ---
+        Route::get('after_sale/list',           'api/AfterSale/sessionList');
+        Route::post('after_sale/create',        'api/AfterSale/createSession');
+        Route::get('after_sale/detail',         'api/AfterSale/sessionDetail');
+        Route::get('after_sale/messages',       'api/AfterSale/messageList');
+        Route::post('after_sale/send_text',     'api/AfterSale/sendText');
+        Route::post('after_sale/send_voice',    'api/AfterSale/sendVoice');
+        Route::post('after_sale/send_image',    'api/AfterSale/sendImage');
+        Route::post('after_sale/request_intervene', 'api/AfterSale/requestIntervene');
+
     })->middleware(['auth']);
 
     // ========== 打手端接口组（需要JWT user认证 + 打手身份校验） ==========
@@ -286,6 +312,42 @@ Route::group('api/v1', function () {
         Route::post('backup/create',            'admin/Backup/create');
         Route::post('backup/restore',           'admin/Backup/restore');
         Route::get('backup/download',           'admin/Backup/download');
+
+        // --- 平台账号管理 ---
+        Route::get('platform_account/list',     'admin/PlatformAccount/list');
+        Route::post('platform_account/create',  'admin/PlatformAccount/create');
+        Route::put('platform_account/disable',  'admin/PlatformAccount/disable');
+        Route::put('platform_account/nickname', 'admin/PlatformAccount/updateNickname');
+
+        // --- 售后关键词 ---
+        Route::get('after_sale_keyword/list',       'admin/AfterSaleKeyword/list');
+        Route::post('after_sale_keyword/create',    'admin/AfterSaleKeyword/create');
+        Route::put('after_sale_keyword/update',     'admin/AfterSaleKeyword/update');
+        Route::delete('after_sale_keyword/delete',  'admin/AfterSaleKeyword/delete');
+        Route::put('after_sale_keyword/toggle',     'admin/AfterSaleKeyword/toggle');
+        Route::post('after_sale_keyword/batch_import', 'admin/AfterSaleKeyword/batchImport');
+        Route::post('after_sale_keyword/test',      'admin/AfterSaleKeyword/testMatch');
+        Route::put('after_sale_keyword/switch',     'admin/AfterSaleKeyword/toggleSwitch');
+
+        // --- 群聊监察 ---
+        Route::get('group_monitor/list',            'admin/GroupChatMonitor/list');
+        Route::get('group_monitor/detail',          'admin/GroupChatMonitor/detail');
+        Route::get('group_monitor/messages',        'admin/GroupChatMonitor/messages');
+        Route::post('group_monitor/dissolve',       'admin/GroupChatMonitor/dissolve');
+        Route::post('group_monitor/mute',           'admin/GroupChatMonitor/muteMember');
+        Route::post('group_monitor/unmute',         'admin/GroupChatMonitor/unmuteMember');
+        Route::post('group_monitor/expel',          'admin/GroupChatMonitor/expelMember');
+        Route::post('group_monitor/ban_user',       'admin/GroupChatMonitor/banUser');
+        Route::post('group_monitor/freeze',         'admin/GroupChatMonitor/freezeAccount');
+        Route::get('group_monitor/punishment_log',  'admin/GroupChatMonitor/punishmentLog');
+
+        // --- 售后介入管理 ---
+        Route::get('after_sale_manage/list',        'admin/AfterSaleManage/list');
+        Route::get('after_sale_manage/detail',      'admin/AfterSaleManage/detail');
+        Route::get('after_sale_manage/messages',    'admin/AfterSaleManage/messages');
+        Route::get('after_sale_manage/intervene_log', 'admin/AfterSaleManage/interveneLog');
+        Route::post('after_sale_manage/resolve',    'admin/AfterSaleManage/resolve');
+        Route::get('after_sale_manage/export',      'admin/AfterSaleManage/export');
 
     })->middleware(['auth_admin']);
 

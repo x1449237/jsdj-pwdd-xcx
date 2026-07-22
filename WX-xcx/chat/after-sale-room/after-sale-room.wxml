@@ -1,22 +1,19 @@
-<view class="chat-room-page">
+<view class="after-sale-room-page">
   <!-- 顶部状态栏 -->
   <view class="chat-header">
     <view class="header-back" bindtap="onBack">
       <text class="back-icon">‹</text>
     </view>
     <view class="header-info">
-      <view class="header-name-row">
-        <text class="header-name">{{targetName}}</text>
-        <v-badge wx:if="{{isPlatformOfficial}}" badgeType="golden_v"></v-badge>
-      </view>
-      <text class="header-status">{{targetOnline ? '在线' : '离线'}}</text>
+      <text class="header-name">售后会话</text>
+      <text class="header-order">{{orderSn}}</text>
     </view>
     <view class="header-more" bindtap="onMore">
       <text class="more-icon">⋯</text>
     </view>
   </view>
 
-  <!-- 介入警示横幅 -->
+  <!-- 介入警示横幅（客服端） -->
   <view class="intervene-banner" wx:if="{{showInterveneBanner}}">
     <text class="intervene-banner-icon">⚠️</text>
     <text class="intervene-banner-text">{{interveneBannerText}}</text>
@@ -67,10 +64,12 @@
         ></image>
 
         <view class="msg-content-wrapper">
-          <!-- 对方昵称和V标 -->
+          <!-- 发送者昵称和标识 -->
           <view class="msg-sender" wx:if="{{!item.from_self}}">
-            <text class="sender-name">{{item.nickname || targetName}}</text>
-            <v-badge wx:if="{{item.is_platform_official}}" badgeType="golden_v"></v-badge>
+            <text class="sender-name">{{item.nickname}}</text>
+            <view class="v-badge" wx:if="{{item.is_platform_official}}">
+              <text class="v-badge-text v-badge-golden">V</text>
+            </view>
             <text class="platform-tag" wx:if="{{item.is_platform_official}}">【平台官方】</text>
           </view>
 
@@ -95,7 +94,6 @@
               class="msg-img"
               src="{{item.image_url}}"
               mode="widthFix"
-              bindload="onImageLoad"
             ></image>
           </view>
 
@@ -136,7 +134,6 @@
 
   <!-- 底部输入栏 -->
   <view class="input-bar">
-    <!-- 语音录制模式 -->
     <view class="voice-mode" wx:if="{{inputMode === 'voice'}}">
       <view
         class="voice-btn"
@@ -148,7 +145,6 @@
       </view>
     </view>
 
-    <!-- 文字输入模式 -->
     <view class="text-mode" wx:else>
       <view class="mode-switch" bindtap="onSwitchMode">
         <text class="switch-icon">🎤</text>
@@ -172,7 +168,6 @@
       </view>
     </view>
 
-    <!-- 发送按钮 -->
     <view class="send-btn" wx:if="{{inputText.length > 0 && inputMode === 'text'}}" bindtap="onSendText">
       <text class="send-text">发送</text>
     </view>

@@ -107,7 +107,7 @@ const routes = [
         path: 'chat-audit',
         name: 'ChatAudit',
         component: () => import('@/views/chat-audit/index.vue'),
-        meta: { title: '聊天审计', icon: 'ChatDotSquare' }
+        meta: { title: '聊天审计', icon: 'ChatDotSquare', group: 'chat' }
       },
       {
         path: 'system/config',
@@ -132,6 +132,36 @@ const routes = [
         name: 'GrayRelease',
         component: () => import('@/views/gray/index.vue'),
         meta: { title: '灰度发布', icon: 'Connection' }
+      },
+      {
+        path: 'platform/accounts',
+        name: 'PlatformAccounts',
+        component: () => import('@/views/platform/accounts.vue'),
+        meta: { title: '平台官方账号', icon: 'UserFilled', group: 'platform' }
+      },
+      {
+        path: 'after-sale/keywords',
+        name: 'AfterSaleKeywords',
+        component: () => import('@/views/after-sale/keywords.vue'),
+        meta: { title: '售后关键词', icon: 'Warning', group: 'platform' }
+      },
+      {
+        path: 'group-monitor',
+        name: 'GroupMonitor',
+        component: () => import('@/views/group-monitor/index.vue'),
+        meta: { title: '群聊监察', icon: 'ChatDotRound', group: 'chat' }
+      },
+      {
+        path: 'after-sale/manage',
+        name: 'AfterSaleManage',
+        component: () => import('@/views/after-sale/manage.vue'),
+        meta: { title: '售后介入', icon: 'Service', group: 'chat' }
+      },
+      {
+        path: 'punishment',
+        name: 'PunishmentRecords',
+        component: () => import('@/views/punishment/index.vue'),
+        meta: { title: '处罚记录', icon: 'Lock', group: 'security' }
       }
     ]
   },

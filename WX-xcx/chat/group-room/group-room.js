@@ -7,11 +7,10 @@ const innerAudioContext = wx.createInnerAudioContext();
 
 Page({
   data: {
-    conversationId: '',
-    targetName: '',
-    targetAvatar: '',
-    targetOnline: false,
-    isPlatformOfficial: false,
+    groupId: '',
+    groupName: '',
+    groupType: '',
+    groupTypeLabel: '',
     myAvatar: '',
     myUserId: '',
     messageList: [],
@@ -20,6 +19,7 @@ Page({
     recording: false,
     willCancel: false,
     scrollToView: '',
+    showGroupInfo: false,
     showMorePanel: false,
     loadingMore: false,
     hasMoreHistory: true,
@@ -27,17 +27,22 @@ Page({
     pageSize: 20,
     voiceStartY: 0,
     currentPlayingId: null,
-    // 介入状态
-    interveneStatus: 0,
-    showInterveneBanner: false,
-    interveneBannerText: ''
+    // 群信息
+    memberList: [],
+    announcement: '',
+    isAdmin: false,
+    isCreator: false,
+    showAnnouncementModal: false,
+    editAnnouncementText: '',
+    showMuteAction: false,
+    selectedMember: null
   },
 
   onLoad(options) {
-    const { conversationId, targetName } = options;
+    const { groupId, groupName } = options;
     this.setData({
-      conversationId: conversationId || '',
-      targetName: decodeURIComponent(targetName || '聊天')
+      groupId: groupId || '',
+      groupName: decodeURIComponent(groupName || '群聊')
     });
 
     const userInfo = wx.getStorageSync('user_info');
@@ -48,39 +53,17 @@ Page({
       });
     }
 
-    this.loadConversationInfo();
     this.initRecorder();
     this.initAudio();
+    this.loadGroupInfo();
     this.loadMessages();
     this.initWebSocket();
-    this.markAsRead();
   },
 
   onUnload() {
     this.stopVoice();
     innerAudioContext.destroy();
-    websocket.off('chat_message', this.onReceiveMessage);
-    websocket.off('platform_intervene', this.onPlatformIntervene);
-  },
-
-  loadConversationInfo() {
-    request.get('/api/v1/chat/conversation/detail', {
-      conversation_id: this.data.conversationId
-    }).then((res) => {
-      this.setData({
-        isPlatformOfficial: res.is_platform_official || false,
-        targetAvatar: res.target_avatar || '',
-        targetOnline: res.target_online || false,
-        interveneStatus: res.intervene_status || 0
-      });
-
-      if (res.intervene_status === 1) {
-        this.setData({
-          showInterveneBanner: true,
-          interveneBannerText: '平台已介入本次会话'
-        });
-      }
-    }).catch(() => {});
+    websocket.off('group_chat', this.onReceiveGroupMessage);
   },
 
   initRecorder() {
@@ -116,12 +99,11 @@ Page({
   },
 
   initWebSocket() {
-    websocket.on('chat_message', this.onReceiveMessage);
-    websocket.on('platform_intervene', this.onPlatformIntervene);
+    websocket.on('group_chat', this.onReceiveGroupMessage);
   },
 
-  onReceiveMessage(data) {
-    if (data.conversation_id === this.data.conversationId) {
+  onReceiveGroupMessage(data) {
+    if (data.group_id === this.data.groupId) {
       const msg = this.formatMessage(data);
       this.setData({
         messageList: [...this.data.messageList, msg]
@@ -130,24 +112,26 @@ Page({
     }
   },
 
-  onPlatformIntervene(data) {
-    if (data.conversation_id !== this.data.conversationId) return;
-    this.setData({
-      interveneStatus: 1,
-      showInterveneBanner: true,
-      interveneBannerText: '平台已介入本次会话'
-    });
-  },
-
-  markAsRead() {
-    request.post('/api/v1/chat/read', {
-      conversation_id: this.data.conversationId
+  loadGroupInfo() {
+    request.get('/api/v1/group/detail', {
+      group_id: this.data.groupId
+    }).then((res) => {
+      const typeMap = { chat: '闲聊群', welfare: '福利群', after_sale: '售后群' };
+      this.setData({
+        groupName: res.group_name || this.data.groupName,
+        groupType: res.group_type || '',
+        groupTypeLabel: typeMap[res.group_type] || '闲聊群',
+        memberList: res.members || [],
+        announcement: res.announcement || '',
+        isAdmin: res.is_admin || false,
+        isCreator: res.is_creator || false
+      });
     }).catch(() => {});
   },
 
   loadMessages() {
-    request.get('/api/v1/chat/messages', {
-      conversation_id: this.data.conversationId,
+    request.get('/api/v1/group/messages', {
+      group_id: this.data.groupId,
       page: this.data.page,
       page_size: this.data.pageSize
     }).then((res) => {
@@ -170,18 +154,28 @@ Page({
   formatMessage(item) {
     return {
       ...item,
-      from_self: item.from_self || false,
+      from_self: item.user_id === this.data.myUserId,
       playing: false,
-      sensitive_blocked: item.sensitive_blocked || false,
-      is_platform_official: item.is_platform_official || false
+      sensitive_blocked: item.sensitive_blocked || false
     };
+  },
+
+  getMessageTypeLabel(type) {
+    const typeMap = {
+      text: '',
+      image: '[图片]',
+      voice: '[语音]',
+      system: '[系统消息]',
+      announcement: '[群公告]'
+    };
+    return typeMap[type] || '';
   },
 
   scrollToBottom() {
     if (this.data.messageList.length > 0) {
       const lastMsg = this.data.messageList[this.data.messageList.length - 1];
       this.setData({
-        scrollToView: 'msg-' + lastMsg.msg_id
+        scrollToView: 'msg-' + (lastMsg.msg_id || lastMsg.id)
       });
     }
   },
@@ -198,6 +192,14 @@ Page({
 
   onBack() {
     wx.navigateBack();
+  },
+
+  onTapGroupName() {
+    this.setData({ showGroupInfo: !this.data.showGroupInfo });
+  },
+
+  onHideGroupInfo() {
+    this.setData({ showGroupInfo: false });
   },
 
   onMore() {
@@ -221,7 +223,8 @@ Page({
       type: 'text',
       content: text,
       from_self: true,
-      sending: true
+      sending: true,
+      user_id: this.data.myUserId
     };
 
     this.setData({
@@ -230,9 +233,8 @@ Page({
     });
     this.scrollToBottom();
 
-    request.post('/api/v1/chat/send', {
-      conversation_id: this.data.conversationId,
-      type: 'text',
+    request.post('/api/v1/group/send_text', {
+      group_id: this.data.groupId,
       content: text
     }).then((res) => {
       this.updateMessageStatus(tempMsgId, res);
@@ -288,7 +290,8 @@ Page({
       type: 'image',
       image_url: filePath,
       from_self: true,
-      sending: true
+      sending: true,
+      user_id: this.data.myUserId
     };
 
     this.setData({
@@ -296,20 +299,20 @@ Page({
     });
     this.scrollToBottom();
 
+    const token = wx.getStorageSync('token') || '';
     wx.uploadFile({
-      url: 'https://api.example.com/api/v1/chat/upload',
+      url: 'https://api.example.com/api/v1/group/upload',
       filePath: filePath,
       name: 'file',
       header: {
-        'Authorization': 'Bearer ' + (wx.getStorageSync('token') || '')
+        'Authorization': 'Bearer ' + token
       },
       success: (res) => {
         try {
           const data = JSON.parse(res.data);
           if (data.code === 0) {
-            request.post('/api/v1/chat/send', {
-              conversation_id: this.data.conversationId,
-              type: 'image',
+            request.post('/api/v1/group/send_image', {
+              group_id: this.data.groupId,
               image_url: data.data.url
             }).then((res) => {
               this.updateMessageStatus(tempMsgId, res);
@@ -374,7 +377,8 @@ Page({
       type: 'voice',
       duration: Math.round(duration / 1000),
       from_self: true,
-      sending: true
+      sending: true,
+      user_id: this.data.myUserId
     };
 
     this.setData({
@@ -382,20 +386,20 @@ Page({
     });
     this.scrollToBottom();
 
+    const token = wx.getStorageSync('token') || '';
     wx.uploadFile({
-      url: 'https://api.example.com/api/v1/chat/upload',
+      url: 'https://api.example.com/api/v1/group/upload',
       filePath: filePath,
       name: 'file',
       header: {
-        'Authorization': 'Bearer ' + (wx.getStorageSync('token') || '')
+        'Authorization': 'Bearer ' + token
       },
       success: (res) => {
         try {
           const data = JSON.parse(res.data);
           if (data.code === 0) {
-            request.post('/api/v1/chat/send', {
-              conversation_id: this.data.conversationId,
-              type: 'voice',
+            request.post('/api/v1/group/send_voice', {
+              group_id: this.data.groupId,
               voice_url: data.data.url,
               duration: Math.round(duration / 1000)
             }).then((res) => {
@@ -459,10 +463,6 @@ Page({
     });
   },
 
-  onImageLoad(e) {
-    // 图片加载完成后，自动滚动到底部
-  },
-
   onLongPressMessage(e) {
     const msg = e.currentTarget.dataset.msg;
     if (!msg.from_self) return;
@@ -489,12 +489,12 @@ Page({
   recallMessage(msg) {
     wx.showModal({
       title: '确认撤回',
-      content: '撤回后对方将无法看到此消息',
+      content: '撤回后其他成员将无法看到此消息',
       success: (res) => {
         if (res.confirm) {
-          request.post('/api/v1/chat/recall', {
+          request.post('/api/v1/group/recall', {
             msg_id: msg.msg_id,
-            conversation_id: this.data.conversationId
+            group_id: this.data.groupId
           }).then(() => {
             this.setMessageRecalled(msg.msg_id);
           }).catch(() => {
@@ -517,32 +517,96 @@ Page({
     });
   },
 
-  onRequestIntervene() {
-    if (this.data.interveneStatus === 1) {
-      wx.showToast({ title: '平台已介入', icon: 'none' });
-      return;
-    }
+  onMemberAction(e) {
+    const member = e.currentTarget.dataset.member;
+    if (member.user_id === this.data.myUserId) return;
 
+    const itemList = [];
+    if (this.data.isAdmin || this.data.isCreator) {
+      itemList.push('禁言', '移出群聊');
+    }
+    if (itemList.length === 0) return;
+
+    this.setData({
+      selectedMember: member,
+      showMuteAction: true
+    });
+
+    wx.showActionSheet({
+      itemList: itemList,
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          this.muteMember(member);
+        } else if (res.tapIndex === 1) {
+          this.kickMember(member);
+        }
+      }
+    });
+  },
+
+  muteMember(member) {
     wx.showModal({
-      title: '申请平台介入',
-      content: '申请后平台方将在48小时内强行介入，确定要申请吗？',
+      title: '禁言成员',
+      content: '确定要禁言「' + member.nickname + '」吗？',
       success: (res) => {
         if (res.confirm) {
-          request.post('/api/v1/chat/request_intervene', {
-            conversation_id: this.data.conversationId
+          request.post('/api/v1/group/mute', {
+            group_id: this.data.groupId,
+            user_id: member.user_id
           }).then(() => {
-            this.setData({
-              interveneStatus: 1,
-              showInterveneBanner: true,
-              interveneBannerText: '您的申请已提交，平台方将在48小时内强行介入，请耐心等待'
-            });
-            wx.showToast({ title: '申请已提交', icon: 'success' });
-          }).catch(() => {
-            wx.showToast({ title: '申请失败', icon: 'none' });
+            wx.showToast({ title: '已禁言', icon: 'success' });
+            this.loadGroupInfo();
           });
         }
       }
     });
+  },
+
+  kickMember(member) {
+    wx.showModal({
+      title: '移出群聊',
+      content: '确定要将「' + member.nickname + '」移出群聊吗？',
+      success: (res) => {
+        if (res.confirm) {
+          request.post('/api/v1/group/kick', {
+            group_id: this.data.groupId,
+            user_id: member.user_id
+          }).then(() => {
+            wx.showToast({ title: '已移出', icon: 'success' });
+            this.loadGroupInfo();
+          });
+        }
+      }
+    });
+  },
+
+  onEditAnnouncement() {
+    this.setData({
+      showAnnouncementModal: true,
+      editAnnouncementText: this.data.announcement
+    });
+  },
+
+  onAnnouncementInput(e) {
+    this.setData({ editAnnouncementText: e.detail.value });
+  },
+
+  onSaveAnnouncement() {
+    const text = this.data.editAnnouncementText.trim();
+    request.post('/api/v1/group/announcement', {
+      group_id: this.data.groupId,
+      content: text
+    }).then(() => {
+      wx.showToast({ title: '公告已更新', icon: 'success' });
+      this.setData({
+        showAnnouncementModal: false,
+        announcement: text
+      });
+    });
+  },
+
+  onCancelAnnouncement() {
+    this.setData({ showAnnouncementModal: false });
   },
 
   setMessageRecalled(msgId) {

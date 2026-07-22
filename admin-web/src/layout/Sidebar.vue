@@ -15,8 +15,30 @@
         :router="true"
         mode="vertical"
       >
+        <!-- 分组菜单 -->
+        <template v-for="group in menuGroups" :key="group.key">
+          <el-sub-menu :index="group.key">
+            <template #title>
+              <el-icon v-if="group.icon">
+                <component :is="group.icon" />
+              </el-icon>
+              <span>{{ group.title }}</span>
+            </template>
+            <el-menu-item
+              v-for="route in group.routes"
+              :key="route.path"
+              :index="'/' + route.path"
+            >
+              <el-icon v-if="route.meta?.icon">
+                <component :is="route.meta.icon" />
+              </el-icon>
+              <template #title>{{ route.meta?.title }}</template>
+            </el-menu-item>
+          </el-sub-menu>
+        </template>
+        <!-- 未分组菜单 -->
         <SidebarItem
-          v-for="route in menuRoutes"
+          v-for="route in ungroupedRoutes"
           :key="route.path"
           :item="route"
           :base-path="route.path"
@@ -30,6 +52,24 @@
 import { useAppStore } from '@/stores/app'
 import SidebarItem from './SidebarItem.vue'
 
+const menuGroupConfig = [
+  {
+    key: 'platform',
+    title: '平台管理',
+    icon: 'Platform'
+  },
+  {
+    key: 'chat',
+    title: '聊天管理',
+    icon: 'ChatDotRound'
+  },
+  {
+    key: 'security',
+    title: '安全中心',
+    icon: 'Lock'
+  }
+]
+
 export default {
   name: 'Sidebar',
   components: { SidebarItem },
@@ -39,10 +79,26 @@ export default {
     }
   },
   computed: {
-    menuRoutes() {
+    allRoutes() {
       return this.$router.options.routes
         .find((route) => route.path === '/')
         ?.children.filter((item) => !item.meta?.hidden) || []
+    },
+    menuGroups() {
+      return menuGroupConfig.map((group) => {
+        const routes = this.allRoutes.filter(
+          (route) => route.meta?.group === group.key
+        )
+        if (routes.length === 0) return null
+        return { ...group, routes }
+      }).filter(Boolean)
+    },
+    ungroupedRoutes() {
+      const groupedPaths = new Set()
+      this.menuGroups.forEach((group) => {
+        group.routes.forEach((route) => groupedPaths.add(route.path))
+      })
+      return this.allRoutes.filter((route) => !groupedPaths.has(route.path))
     },
     activeMenu() {
       const { path } = this.$route

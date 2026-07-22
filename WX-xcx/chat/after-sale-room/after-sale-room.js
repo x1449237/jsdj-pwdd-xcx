@@ -7,13 +7,11 @@ const innerAudioContext = wx.createInnerAudioContext();
 
 Page({
   data: {
-    conversationId: '',
-    targetName: '',
-    targetAvatar: '',
-    targetOnline: false,
-    isPlatformOfficial: false,
+    sessionId: '',
+    orderSn: '',
     myAvatar: '',
     myUserId: '',
+    myRole: '', // player 或 cs
     messageList: [],
     inputText: '',
     inputMode: 'text',
@@ -27,60 +25,41 @@ Page({
     pageSize: 20,
     voiceStartY: 0,
     currentPlayingId: null,
-    // 介入状态
-    interveneStatus: 0,
-    showInterveneBanner: false,
-    interveneBannerText: ''
+    // 介入相关
+    interveneStatus: 0, // 0未介入, 1介入中, 2已解除
+    showInterveneBanner: false, // 客服端红色警示横幅
+    interveneBannerText: '', // 横幅文案
+    autoIntervene: false // 是否关键词自动介入
   },
 
   onLoad(options) {
-    const { conversationId, targetName } = options;
+    const { sessionId, orderSn } = options;
     this.setData({
-      conversationId: conversationId || '',
-      targetName: decodeURIComponent(targetName || '聊天')
+      sessionId: sessionId || '',
+      orderSn: decodeURIComponent(orderSn || '')
     });
 
     const userInfo = wx.getStorageSync('user_info');
     if (userInfo) {
       this.setData({
         myAvatar: userInfo.avatar || '',
-        myUserId: userInfo.user_id || ''
+        myUserId: userInfo.user_id || '',
+        myRole: userInfo.role || 'player'
       });
     }
 
-    this.loadConversationInfo();
     this.initRecorder();
     this.initAudio();
+    this.loadSessionDetail();
     this.loadMessages();
     this.initWebSocket();
-    this.markAsRead();
   },
 
   onUnload() {
     this.stopVoice();
     innerAudioContext.destroy();
-    websocket.off('chat_message', this.onReceiveMessage);
+    websocket.off('after_sale', this.onReceiveAfterSaleMessage);
     websocket.off('platform_intervene', this.onPlatformIntervene);
-  },
-
-  loadConversationInfo() {
-    request.get('/api/v1/chat/conversation/detail', {
-      conversation_id: this.data.conversationId
-    }).then((res) => {
-      this.setData({
-        isPlatformOfficial: res.is_platform_official || false,
-        targetAvatar: res.target_avatar || '',
-        targetOnline: res.target_online || false,
-        interveneStatus: res.intervene_status || 0
-      });
-
-      if (res.intervene_status === 1) {
-        this.setData({
-          showInterveneBanner: true,
-          interveneBannerText: '平台已介入本次会话'
-        });
-      }
-    }).catch(() => {});
   },
 
   initRecorder() {
@@ -116,12 +95,12 @@ Page({
   },
 
   initWebSocket() {
-    websocket.on('chat_message', this.onReceiveMessage);
+    websocket.on('after_sale', this.onReceiveAfterSaleMessage);
     websocket.on('platform_intervene', this.onPlatformIntervene);
   },
 
-  onReceiveMessage(data) {
-    if (data.conversation_id === this.data.conversationId) {
+  onReceiveAfterSaleMessage(data) {
+    if (data.session_id === this.data.sessionId) {
       const msg = this.formatMessage(data);
       this.setData({
         messageList: [...this.data.messageList, msg]
@@ -131,23 +110,47 @@ Page({
   },
 
   onPlatformIntervene(data) {
-    if (data.conversation_id !== this.data.conversationId) return;
+    if (data.session_id !== this.data.sessionId) return;
+
     this.setData({
-      interveneStatus: 1,
-      showInterveneBanner: true,
-      interveneBannerText: '平台已介入本次会话'
+      interveneStatus: 1
     });
+
+    if (data.trigger_type === 'keyword') {
+      // 关键词自动介入
+      if (this.data.myRole === 'player') {
+        this.addSystemMessage('检测到敏感词汇，为了保证您的合法权益不受侵害，平台方已强制介入');
+      } else {
+        this.setData({
+          showInterveneBanner: true,
+          autoIntervene: true,
+          interveneBannerText: '系统检测到敏感词汇，为了保证消费者的合法权益不受侵害，平台方已强制介入。请您务必积极响应并配合举证，超时未响应将按规则判责'
+        });
+      }
+    }
   },
 
-  markAsRead() {
-    request.post('/api/v1/chat/read', {
-      conversation_id: this.data.conversationId
+  loadSessionDetail() {
+    request.get('/api/v1/after_sale/detail', {
+      session_id: this.data.sessionId
+    }).then((res) => {
+      this.setData({
+        orderSn: res.order_sn || this.data.orderSn,
+        interveneStatus: res.intervene_status || 0
+      });
+
+      if (res.intervene_status === 1 && this.data.myRole === 'cs') {
+        this.setData({
+          showInterveneBanner: true,
+          interveneBannerText: '买家已申请平台官方介入，请及时响应并配合举证，超时未处理将按规则判责。'
+        });
+      }
     }).catch(() => {});
   },
 
   loadMessages() {
-    request.get('/api/v1/chat/messages', {
-      conversation_id: this.data.conversationId,
+    request.get('/api/v1/after_sale/messages', {
+      session_id: this.data.sessionId,
       page: this.data.page,
       page_size: this.data.pageSize
     }).then((res) => {
@@ -170,10 +173,9 @@ Page({
   formatMessage(item) {
     return {
       ...item,
-      from_self: item.from_self || false,
+      from_self: item.user_id === this.data.myUserId,
       playing: false,
-      sensitive_blocked: item.sensitive_blocked || false,
-      is_platform_official: item.is_platform_official || false
+      sensitive_blocked: item.sensitive_blocked || false
     };
   },
 
@@ -181,9 +183,22 @@ Page({
     if (this.data.messageList.length > 0) {
       const lastMsg = this.data.messageList[this.data.messageList.length - 1];
       this.setData({
-        scrollToView: 'msg-' + lastMsg.msg_id
+        scrollToView: 'msg-' + (lastMsg.msg_id || lastMsg.id)
       });
     }
+  },
+
+  addSystemMessage(content) {
+    const sysMsg = {
+      msg_id: 'sys-' + util.generateId(),
+      type: 'system',
+      content: content,
+      from_self: false
+    };
+    this.setData({
+      messageList: [...this.data.messageList, sysMsg]
+    });
+    this.scrollToBottom();
   },
 
   onLoadMore() {
@@ -221,7 +236,8 @@ Page({
       type: 'text',
       content: text,
       from_self: true,
-      sending: true
+      sending: true,
+      user_id: this.data.myUserId
     };
 
     this.setData({
@@ -230,9 +246,8 @@ Page({
     });
     this.scrollToBottom();
 
-    request.post('/api/v1/chat/send', {
-      conversation_id: this.data.conversationId,
-      type: 'text',
+    request.post('/api/v1/after_sale/send_text', {
+      session_id: this.data.sessionId,
       content: text
     }).then((res) => {
       this.updateMessageStatus(tempMsgId, res);
@@ -288,7 +303,8 @@ Page({
       type: 'image',
       image_url: filePath,
       from_self: true,
-      sending: true
+      sending: true,
+      user_id: this.data.myUserId
     };
 
     this.setData({
@@ -296,20 +312,20 @@ Page({
     });
     this.scrollToBottom();
 
+    const token = wx.getStorageSync('token') || '';
     wx.uploadFile({
-      url: 'https://api.example.com/api/v1/chat/upload',
+      url: 'https://api.example.com/api/v1/after_sale/upload',
       filePath: filePath,
       name: 'file',
       header: {
-        'Authorization': 'Bearer ' + (wx.getStorageSync('token') || '')
+        'Authorization': 'Bearer ' + token
       },
       success: (res) => {
         try {
           const data = JSON.parse(res.data);
           if (data.code === 0) {
-            request.post('/api/v1/chat/send', {
-              conversation_id: this.data.conversationId,
-              type: 'image',
+            request.post('/api/v1/after_sale/send_image', {
+              session_id: this.data.sessionId,
               image_url: data.data.url
             }).then((res) => {
               this.updateMessageStatus(tempMsgId, res);
@@ -374,7 +390,8 @@ Page({
       type: 'voice',
       duration: Math.round(duration / 1000),
       from_self: true,
-      sending: true
+      sending: true,
+      user_id: this.data.myUserId
     };
 
     this.setData({
@@ -382,20 +399,20 @@ Page({
     });
     this.scrollToBottom();
 
+    const token = wx.getStorageSync('token') || '';
     wx.uploadFile({
-      url: 'https://api.example.com/api/v1/chat/upload',
+      url: 'https://api.example.com/api/v1/after_sale/upload',
       filePath: filePath,
       name: 'file',
       header: {
-        'Authorization': 'Bearer ' + (wx.getStorageSync('token') || '')
+        'Authorization': 'Bearer ' + token
       },
       success: (res) => {
         try {
           const data = JSON.parse(res.data);
           if (data.code === 0) {
-            request.post('/api/v1/chat/send', {
-              conversation_id: this.data.conversationId,
-              type: 'voice',
+            request.post('/api/v1/after_sale/send_voice', {
+              session_id: this.data.sessionId,
               voice_url: data.data.url,
               duration: Math.round(duration / 1000)
             }).then((res) => {
@@ -459,10 +476,6 @@ Page({
     });
   },
 
-  onImageLoad(e) {
-    // 图片加载完成后，自动滚动到底部
-  },
-
   onLongPressMessage(e) {
     const msg = e.currentTarget.dataset.msg;
     if (!msg.from_self) return;
@@ -492,9 +505,9 @@ Page({
       content: '撤回后对方将无法看到此消息',
       success: (res) => {
         if (res.confirm) {
-          request.post('/api/v1/chat/recall', {
+          request.post('/api/v1/after_sale/recall', {
             msg_id: msg.msg_id,
-            conversation_id: this.data.conversationId
+            session_id: this.data.sessionId
           }).then(() => {
             this.setMessageRecalled(msg.msg_id);
           }).catch(() => {
@@ -528,14 +541,20 @@ Page({
       content: '申请后平台方将在48小时内强行介入，确定要申请吗？',
       success: (res) => {
         if (res.confirm) {
-          request.post('/api/v1/chat/request_intervene', {
-            conversation_id: this.data.conversationId
+          request.post('/api/v1/after_sale/request_intervene', {
+            session_id: this.data.sessionId
           }).then(() => {
-            this.setData({
-              interveneStatus: 1,
-              showInterveneBanner: true,
-              interveneBannerText: '您的申请已提交，平台方将在48小时内强行介入，请耐心等待'
-            });
+            this.setData({ interveneStatus: 1 });
+
+            if (this.data.myRole === 'player') {
+              this.addSystemMessage('您的申请已提交，平台方将在48小时内强行介入，请耐心等待');
+            } else {
+              this.setData({
+                showInterveneBanner: true,
+                interveneBannerText: '买家已申请平台官方介入，请及时响应并配合举证，超时未处理将按规则判责。'
+              });
+            }
+
             wx.showToast({ title: '申请已提交', icon: 'success' });
           }).catch(() => {
             wx.showToast({ title: '申请失败', icon: 'none' });

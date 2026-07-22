@@ -1,4 +1,32 @@
 <view class="chat-list-page">
+  <!-- 顶部标签页 -->
+  <view class="tab-bar">
+    <view
+      class="tab-item {{currentTab === 'chat' ? 'tab-item-active' : ''}}"
+      bindtap="onTabChange"
+      data-tab="chat"
+    >
+      <text class="tab-text">订单私聊</text>
+      <view class="tab-indicator" wx:if="{{currentTab === 'chat'}}"></view>
+    </view>
+    <view
+      class="tab-item {{currentTab === 'group' ? 'tab-item-active' : ''}}"
+      bindtap="onTabChange"
+      data-tab="group"
+    >
+      <text class="tab-text">群聊</text>
+      <view class="tab-indicator" wx:if="{{currentTab === 'group'}}"></view>
+    </view>
+    <view
+      class="tab-item {{currentTab === 'after_sale' ? 'tab-item-active' : ''}}"
+      bindtap="onTabChange"
+      data-tab="after_sale"
+    >
+      <text class="tab-text">售后</text>
+      <view class="tab-indicator" wx:if="{{currentTab === 'after_sale'}}"></view>
+    </view>
+  </view>
+
   <!-- 搜索栏 -->
   <view class="search-bar">
     <view class="search-input-wrapper">
@@ -15,8 +43,8 @@
     </view>
   </view>
 
-  <!-- 会话列表 -->
-  <view class="conversation-list">
+  <!-- 订单私聊列表 -->
+  <view class="conversation-list" wx:if="{{currentTab === 'chat'}}">
     <block wx:if="{{conversationList.length > 0}}">
       <view
         wx:for="{{conversationList}}"

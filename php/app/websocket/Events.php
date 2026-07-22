@@ -5,12 +5,14 @@ namespace app\websocket;
 
 use Workerman\Connection\TcpConnection;
 use app\service\ChatService;
+use app\service\GroupChatService;
+use app\service\AfterSaleService;
 use app\service\PlayerDispatchService;
 use think\facade\Log;
 
 /**
  * WebSocket 事件处理
- * 处理心跳、聊天、订单推送、系统消息等事件
+ * 处理心跳、聊天（订单私聊/群聊/售后）、订单推送、系统消息等事件
  */
 class Events
 {
@@ -218,6 +220,94 @@ class Events
                 'type' => 'system_response',
                 'code' => 500,
                 'msg'  => 'System service error',
+            ]));
+        }
+    }
+
+    /**
+     * 群聊消息处理
+     * @param TcpConnection $connection
+     * @param array         $data
+     */
+    public function onGroupChat(TcpConnection $connection, array $data): void
+    {
+        try {
+            $groupId    = $data['group_id'] ?? 0;
+            $senderId   = $data['sender_id'] ?? 0;
+            $senderType = $data['sender_type'] ?? 1;
+            $msgType    = $data['msg_type'] ?? 1;
+            $content    = $data['content'] ?? '';
+
+            if (empty($groupId) || empty($senderId) || empty($content)) {
+                $connection->send(json_encode([
+                    'type' => 'group_chat_response',
+                    'code' => 400,
+                    'msg'  => 'Missing required parameters',
+                ]));
+                return;
+            }
+
+            $groupChatService = new GroupChatService();
+            $result = $groupChatService->sendGroupMessage($groupId, $senderId, $senderType, $msgType, $content);
+
+            $connection->send(json_encode([
+                'type' => 'group_chat_response',
+                'code' => 0,
+                'msg'  => 'success',
+                'data' => $result,
+            ], JSON_UNESCAPED_UNICODE));
+
+            Log::info("Group chat message: group_id={$groupId}, sender_id={$senderId}");
+        } catch (\Throwable $e) {
+            Log::error("Group chat event error: " . $e->getMessage());
+            $connection->send(json_encode([
+                'type' => 'group_chat_response',
+                'code' => 500,
+                'msg'  => 'Group chat service error',
+            ]));
+        }
+    }
+
+    /**
+     * 售后消息处理
+     * @param TcpConnection $connection
+     * @param array         $data
+     */
+    public function onAfterSale(TcpConnection $connection, array $data): void
+    {
+        try {
+            $sessionId  = $data['session_id'] ?? 0;
+            $senderId   = $data['sender_id'] ?? 0;
+            $senderType = $data['sender_type'] ?? 1;
+            $msgType    = $data['msg_type'] ?? 1;
+            $content    = $data['content'] ?? '';
+
+            if (empty($sessionId) || empty($senderId) || empty($content)) {
+                $connection->send(json_encode([
+                    'type' => 'after_sale_response',
+                    'code' => 400,
+                    'msg'  => 'Missing required parameters',
+                ]));
+                return;
+            }
+
+            $afterSaleService = new AfterSaleService();
+            $result = $afterSaleService->sendMessage($sessionId, $senderId, $senderType, $msgType, $content);
+
+            $connection->send(json_encode([
+                'type' => 'after_sale_response',
+                'code' => 0,
+                'msg'  => 'success',
+                'data' => $result,
+            ], JSON_UNESCAPED_UNICODE));
+
+            Log::info("After sale message: session_id={$sessionId}, sender_id={$senderId}");
+        } catch (\Throwable $e) {
+            Log::error("After sale event error: " . $e->getMessage());
+            $connection->send(json_encode([
+                'type' => 'after_sale_response',
+                'code' => 500,
+                'msg'  => 'After sale service error',
             ]));
         }
     }

@@ -1,4 +1,4 @@
-.chat-room-page {
+.after-sale-room-page {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -37,21 +37,15 @@
   align-items: center;
 }
 
-.header-name-row {
-  display: flex;
-  align-items: center;
-}
-
 .header-name {
   font-size: 32rpx;
   font-weight: 500;
   color: #333333;
-  margin-right: 8rpx;
 }
 
-.header-status {
+.header-order {
   font-size: 22rpx;
-  color: #07c160;
+  color: #0f3460;
 }
 
 .header-more {
@@ -151,7 +145,6 @@
   flex-direction: row;
 }
 
-/* 系统消息 */
 .system-message {
   width: 100%;
   text-align: center;
@@ -167,7 +160,6 @@
   border-radius: 8rpx;
 }
 
-/* 消息头像 */
 .msg-avatar {
   width: 72rpx;
   height: 72rpx;
@@ -184,12 +176,10 @@
   margin-right: 16rpx;
 }
 
-/* 消息内容 */
 .msg-content-wrapper {
   max-width: 70%;
 }
 
-/* 发送者信息 */
 .msg-sender {
   display: flex;
   align-items: center;
@@ -201,6 +191,28 @@
   font-size: 22rpx;
   color: #999999;
   margin-right: 8rpx;
+}
+
+/* V标 */
+.v-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 6rpx;
+}
+
+.v-badge-text {
+  font-size: 20rpx;
+  font-weight: bold;
+  border-radius: 4rpx;
+  padding: 0 4rpx;
+}
+
+.v-badge-golden {
+  background: linear-gradient(135deg, #f5af19, #f12711);
+  color: #ffffff;
+  font-size: 22rpx;
+  padding: 2rpx 6rpx;
 }
 
 /* 平台官方标识 */
@@ -228,7 +240,6 @@
   border-top-left-radius: 4rpx;
 }
 
-/* 文字消息 */
 .msg-text {
   padding: 16rpx 24rpx;
   font-size: 28rpx;
@@ -236,7 +247,6 @@
   word-break: break-all;
 }
 
-/* 图片消息 */
 .msg-image {
   padding: 0;
   overflow: hidden;
@@ -249,7 +259,6 @@
   border-radius: 16rpx;
 }
 
-/* 语音消息 */
 .msg-voice {
   display: flex;
   align-items: center;
@@ -270,7 +279,6 @@
   color: #333333;
 }
 
-/* 撤回消息 */
 .msg-recall {
   background-color: transparent;
   padding: 8rpx 16rpx;
@@ -281,7 +289,6 @@
   color: #999999;
 }
 
-/* 敏感词拦截 */
 .sensitive-tip {
   margin-top: 8rpx;
   padding: 6rpx 12rpx;
@@ -374,7 +381,6 @@
   color: #ffffff;
 }
 
-/* 语音模式 */
 .voice-mode {
   display: flex;
   justify-content: center;
@@ -397,7 +403,6 @@
   color: #666666;
 }
 
-/* 语音录制浮层 */
 .voice-overlay {
   position: fixed;
   top: 0;

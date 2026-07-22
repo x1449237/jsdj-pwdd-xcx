@@ -200,6 +200,14 @@ class Worker
                     $events->onChat($connection, $payload);
                     break;
 
+                case 'group_chat':
+                    $events->onGroupChat($connection, $payload);
+                    break;
+
+                case 'after_sale':
+                    $events->onAfterSale($connection, $payload);
+                    break;
+
                 case 'order_push':
                     $events->onOrderPush($connection, $payload);
                     break;

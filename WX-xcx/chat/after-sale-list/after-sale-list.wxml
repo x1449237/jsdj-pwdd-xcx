@@ -1,0 +1,143 @@
+<view class="after-sale-list-page">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input-wrapper">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索售后会话"
+        placeholder-class="placeholder"
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+    </view>
+  </view>
+
+  <!-- 售后会话列表 -->
+  <view class="session-list">
+    <block wx:if="{{sessionList.length > 0}}">
+      <view
+        wx:for="{{sessionList}}"
+        wx:key="session_id"
+        class="session-item"
+        bindtap="onOpenSession"
+        data-session="{{item}}"
+      >
+        <view class="avatar-wrapper">
+          <image class="session-avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+          <view class="unread-badge" wx:if="{{item.unread_count > 0}}">
+            <text>{{item.unread_count > 99 ? '99+' : item.unread_count}}</text>
+          </view>
+        </view>
+
+        <view class="session-info">
+          <view class="info-header">
+            <text class="session-title">{{item.title || '售后会话'}}</text>
+            <text class="intervene-tag {{item.intervene_class}}">{{item.intervene_label}}</text>
+            <text class="time">{{item.last_time}}</text>
+          </view>
+          <view class="info-footer">
+            <text class="order-sn text-ellipsis">{{item.order_sn_preview}}</text>
+            <text class="last-message text-ellipsis">{{item.last_msg_preview || ''}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:if="{{sessionList.length === 0 && !loading}}">
+      <text class="empty-state-icon">🛡️</text>
+      <text class="empty-state-text">暂无售后会话</text>
+      <text class="empty-state-sub">对已完成订单可发起售后申诉</text>
+    </view>
+
+    <view class="loading-wrapper" wx:if="{{loading}}">
+      <text class="loading-more">加载中...</text>
+    </view>
+  </view>
+
+  <!-- 发起申诉按钮 -->
+  <view class="create-btn-wrapper">
+    <view class="create-btn" bindtap="onShowCreateModal">
+      <text class="create-btn-icon">+</text>
+      <text class="create-btn-text">售后申诉</text>
+    </view>
+  </view>
+
+  <!-- 创建申诉弹窗 -->
+  <view class="modal-mask" wx:if="{{showCreateModal}}" bindtap="onHideCreateModal"></view>
+  <view class="create-modal" wx:if="{{showCreateModal}}">
+    <view class="modal-header">
+      <text class="modal-title">售后申诉</text>
+      <view class="modal-close" bindtap="onHideCreateModal">
+        <text>✕</text>
+      </view>
+    </view>
+
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">选择订单</text>
+        <view class="order-selector">
+          <block wx:if="{{orderList.length > 0}}">
+            <view
+              wx:for="{{orderList}}"
+              wx:key="order_id"
+              class="order-option {{appealForm.order_id === item.order_id ? 'order-option-active' : ''}}"
+              bindtap="onOrderSelect"
+              data-id="{{item.order_id}}"
+            >
+              <text class="order-sn-text">{{item.order_sn || '订单' + item.order_id}}</text>
+              <text class="order-amount">{{item.amount || ''}}</text>
+            </view>
+          </block>
+          <view wx:else class="order-empty">
+            <text>暂无已完成订单</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">申诉原因</text>
+        <textarea
+          class="form-textarea"
+          placeholder="请详细描述申诉原因"
+          placeholder-class="form-placeholder"
+          value="{{appealForm.reason}}"
+          bindinput="onReasonInput"
+          maxlength="500"
+          auto-height
+        />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">图片凭证（选填）</text>
+        <view class="image-uploader">
+          <view
+            wx:for="{{appealForm.images}}"
+            wx:key="index"
+            class="image-preview"
+          >
+            <image class="preview-img" src="{{item}}" mode="aspectFill"></image>
+            <view class="image-remove" bindtap="onRemoveImage" data-index="{{index}}">
+              <text>✕</text>
+            </view>
+          </view>
+          <view class="image-add" wx:if="{{appealForm.images.length < 9}}" bindtap="onChooseImage">
+            <text class="add-icon">+</text>
+            <text class="add-text">添加图片</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="modal-footer">
+      <view class="btn-cancel" bindtap="onHideCreateModal">
+        <text>取消</text>
+      </view>
+      <view class="btn-confirm" bindtap="onCreateAppeal">
+        <text>提交</text>
+      </view>
+    </view>
+  </view>
+</view>

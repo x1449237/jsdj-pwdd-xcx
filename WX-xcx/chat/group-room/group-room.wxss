@@ -1,4 +1,4 @@
-.chat-room-page {
+.group-room-page {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -37,21 +37,15 @@
   align-items: center;
 }
 
-.header-name-row {
-  display: flex;
-  align-items: center;
-}
-
 .header-name {
   font-size: 32rpx;
   font-weight: 500;
   color: #333333;
-  margin-right: 8rpx;
 }
 
-.header-status {
+.header-type {
   font-size: 22rpx;
-  color: #07c160;
+  color: #999999;
 }
 
 .header-more {
@@ -68,51 +62,153 @@
   font-weight: bold;
 }
 
-/* 介入警示横幅 */
-.intervene-banner {
+/* 群信息面板 */
+.group-info-panel {
+  background-color: #ffffff;
+  border-bottom: 1rpx solid #eeeeee;
+  max-height: 50vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.info-panel-header {
   display: flex;
   align-items: center;
-  padding: 16rpx 24rpx;
-  background-color: #e94560;
-  flex-shrink: 0;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #f5f5f5;
 }
 
-.intervene-banner-icon {
+.panel-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+.panel-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 28rpx;
-  margin-right: 12rpx;
-  flex-shrink: 0;
+  color: #999999;
 }
 
-.intervene-banner-text {
-  font-size: 24rpx;
-  color: #ffffff;
-  line-height: 1.5;
+.info-section {
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.section-title {
+  font-size: 26rpx;
+  color: #999999;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.announcement-content {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #333333;
+  line-height: 1.6;
+}
+
+.announcement-empty {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  color: #cccccc;
+  text-align: center;
+}
+
+.announcement-edit {
+  margin-top: 16rpx;
+  text-align: right;
+  font-size: 26rpx;
+  color: #e94560;
+}
+
+/* 成员列表 */
+.member-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f9f9f9;
+}
+
+.member-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  margin-right: 16rpx;
+}
+
+.member-info {
   flex: 1;
 }
 
-/* 介入工具栏 */
-.intervene-toolbar {
+.member-name-row {
   display: flex;
+  align-items: center;
+}
+
+.member-name {
+  font-size: 28rpx;
+  color: #333333;
+  margin-right: 8rpx;
+}
+
+.member-role {
+  font-size: 22rpx;
+  color: #999999;
+}
+
+.member-actions {
+  padding: 0 16rpx;
+}
+
+.action-icon {
+  font-size: 32rpx;
+  color: #999999;
+}
+
+/* V标 */
+.v-badge {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  padding: 16rpx 24rpx;
-  background-color: #ffffff;
-  border-bottom: 1rpx solid #eeeeee;
-  flex-shrink: 0;
+  margin-right: 6rpx;
 }
 
-.intervene-btn {
-  padding: 14rpx 48rpx;
-  background-color: #e94560;
-  border-radius: 32rpx;
+.v-badge-text {
+  font-size: 20rpx;
+  font-weight: bold;
+  border-radius: 4rpx;
+  padding: 0 4rpx;
 }
 
-.intervene-btn-disabled {
-  background-color: #cccccc;
-}
-
-.intervene-btn-text {
-  font-size: 26rpx;
+.v-badge-golden {
+  background: linear-gradient(135deg, #f5af19, #f12711);
   color: #ffffff;
+  font-size: 22rpx;
+  padding: 2rpx 6rpx;
+}
+
+/* 平台官方标识 */
+.platform-tag {
+  font-size: 22rpx;
+  color: #f5af19;
   font-weight: 500;
 }
 
@@ -151,7 +247,6 @@
   flex-direction: row;
 }
 
-/* 系统消息 */
 .system-message {
   width: 100%;
   text-align: center;
@@ -167,7 +262,6 @@
   border-radius: 8rpx;
 }
 
-/* 消息头像 */
 .msg-avatar {
   width: 72rpx;
   height: 72rpx;
@@ -184,12 +278,10 @@
   margin-right: 16rpx;
 }
 
-/* 消息内容 */
 .msg-content-wrapper {
   max-width: 70%;
 }
 
-/* 发送者信息 */
 .msg-sender {
   display: flex;
   align-items: center;
@@ -201,13 +293,6 @@
   font-size: 22rpx;
   color: #999999;
   margin-right: 8rpx;
-}
-
-/* 平台官方标识 */
-.platform-tag {
-  font-size: 22rpx;
-  color: #f5af19;
-  font-weight: 500;
 }
 
 .msg-bubble {
@@ -228,7 +313,6 @@
   border-top-left-radius: 4rpx;
 }
 
-/* 文字消息 */
 .msg-text {
   padding: 16rpx 24rpx;
   font-size: 28rpx;
@@ -236,7 +320,6 @@
   word-break: break-all;
 }
 
-/* 图片消息 */
 .msg-image {
   padding: 0;
   overflow: hidden;
@@ -249,7 +332,6 @@
   border-radius: 16rpx;
 }
 
-/* 语音消息 */
 .msg-voice {
   display: flex;
   align-items: center;
@@ -270,7 +352,6 @@
   color: #333333;
 }
 
-/* 撤回消息 */
 .msg-recall {
   background-color: transparent;
   padding: 8rpx 16rpx;
@@ -281,7 +362,6 @@
   color: #999999;
 }
 
-/* 敏感词拦截 */
 .sensitive-tip {
   margin-top: 8rpx;
   padding: 6rpx 12rpx;
@@ -374,7 +454,6 @@
   color: #ffffff;
 }
 
-/* 语音模式 */
 .voice-mode {
   display: flex;
   justify-content: center;
@@ -397,7 +476,6 @@
   color: #666666;
 }
 
-/* 语音录制浮层 */
 .voice-overlay {
   position: fixed;
   top: 0;
@@ -475,4 +553,95 @@
 .panel-label {
   font-size: 22rpx;
   color: #666666;
+}
+
+/* 公告编辑弹窗 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+}
+
+.announcement-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600rpx;
+  background-color: #ffffff;
+  border-radius: 24rpx;
+  z-index: 201;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx 32rpx 24rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+.modal-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #999999;
+}
+
+.modal-body {
+  padding: 32rpx;
+}
+
+.announcement-textarea {
+  width: 100%;
+  min-height: 200rpx;
+  background-color: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  color: #333333;
+  box-sizing: border-box;
+}
+
+.form-placeholder {
+  color: #cccccc;
+}
+
+.modal-footer {
+  display: flex;
+  border-top: 1rpx solid #f5f5f5;
+}
+
+.btn-cancel,
+.btn-confirm {
+  flex: 1;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+}
+
+.btn-cancel {
+  color: #999999;
+  border-right: 1rpx solid #f5f5f5;
+}
+
+.btn-confirm {
+  color: #e94560;
+  font-weight: 600;
 }
