@@ -1,0 +1,157 @@
+<!-- 我的服务 -->
+<view class="page-my-services">
+  <!-- 顶部操作栏 -->
+  <view class="top-bar flex-between bg-white p-md">
+    <text class="title text-lg font-bold">我的服务</text>
+    <button class="btn btn-sm btn-primary" bindtap="addService">新增服务</button>
+  </view>
+
+  <!-- 服务列表 -->
+  <scroll-view class="service-scroll" scroll-y>
+    <view class="service-list" wx:if="{{serviceList.length > 0}}">
+      <view class="service-card card shadow-sm" wx:for="{{serviceList}}" wx:key="id">
+        <!-- 服务头部 -->
+        <view class="service-header flex-between">
+          <view class="service-game flex align-center">
+            <image class="game-icon" src="{{item.gameIcon}}" mode="aspectFill" />
+            <view>
+              <text class="game-name text-lg font-bold">{{item.gameName}}</text>
+              <text class="rank-text text-sm text-secondary ml-sm">{{item.rankName}}</text>
+            </view>
+          </view>
+          <!-- 上架/下架开关 -->
+          <switch
+            class="status-switch"
+            checked="{{item.status === 1}}"
+            bindchange="toggleServiceStatus"
+            data-id="{{item.id}}"
+            data-status="{{item.status}}"
+            color="#e94560"
+          />
+        </view>
+
+        <!-- 服务详情 -->
+        <view class="service-body">
+          <view class="service-info-row flex-between">
+            <text class="info-label text-secondary">价格</text>
+            <text class="info-value text-primary font-bold">¥{{item.priceText}}</text>
+          </view>
+          <view class="service-info-row flex-between">
+            <text class="info-label text-secondary">段位</text>
+            <text class="info-value">{{item.rankName}}</text>
+          </view>
+          <view class="service-info-row flex-between">
+            <text class="info-label text-secondary">描述</text>
+            <text class="info-value text-ellipsis">{{item.description || '暂无描述'}}</text>
+          </view>
+          <view class="service-tags flex flex-wrap" wx:if="{{item.tags && item.tags.length > 0}}">
+            <text class="tag tag-primary" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+          </view>
+        </view>
+
+        <!-- 操作按钮 -->
+        <view class="service-footer flex-between">
+          <view class="service-status">
+            <text class="status-badge {{item.status === 1 ? 'badge-online' : 'badge-offline'}}">
+              {{item.status === 1 ? '已上架' : '已下架'}}
+            </text>
+          </view>
+          <view class="flex">
+            <button class="btn btn-sm btn-outline" bindtap="editService" data-id="{{item.id}}">编辑</button>
+            <button class="btn btn-sm btn-danger ml-sm" bindtap="deleteService" data-id="{{item.id}}">删除</button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!loading && serviceList.length === 0}}">
+      <image class="empty-state-image" src="/assets/images/empty-service.png" mode="aspectFit" />
+      <text class="empty-state-text">暂无服务</text>
+      <text class="empty-state-sub text-tip mt-sm">点击右上角新增服务</text>
+    </view>
+  </scroll-view>
+</view>
+
+<!-- 编辑/新增服务弹窗 -->
+<view class="modal-mask" wx:if="{{showEditModal}}" bindtap="closeEditModal">
+  <view class="modal-dialog" catchtap="noop">
+    <view class="modal-title text-lg font-bold">{{editingService.id ? '编辑服务' : '新增服务'}}</view>
+
+    <scroll-view class="modal-body" scroll-y>
+      <!-- 游戏选择 -->
+      <view class="form-group">
+        <view class="form-label">游戏</view>
+        <picker mode="selector" range="{{gameList}}" range-key="name" bindchange="onGameChange" value="{{gameIndex}}">
+          <view class="form-input flex-between">
+            <text class="{{editingService.gameName ? '' : 'form-placeholder'}}">
+              {{editingService.gameName || '请选择游戏'}}
+            </text>
+            <text class="icon-arrow text-tip">></text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 段位选择 -->
+      <view class="form-group">
+        <view class="form-label">段位</view>
+        <picker mode="selector" range="{{rankList}}" bindchange="onRankChange" value="{{rankIndex}}">
+          <view class="form-input flex-between">
+            <text class="{{editingService.rankName ? '' : 'form-placeholder'}}">
+              {{editingService.rankName || '请选择段位'}}
+            </text>
+            <text class="icon-arrow text-tip">></text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 价格 -->
+      <view class="form-group">
+        <view class="form-label">价格（元）</view>
+        <input
+          class="form-input"
+          type="digit"
+          placeholder="请输入价格"
+          placeholder-class="form-placeholder"
+          value="{{editingService.price}}"
+          bindinput="onPriceInput"
+        />
+      </view>
+
+      <!-- 描述 -->
+      <view class="form-group">
+        <view class="form-label">服务描述</view>
+        <textarea
+          class="form-textarea"
+          placeholder="请输入服务描述（选填）"
+          placeholder-class="form-placeholder"
+          value="{{editingService.description}}"
+          bindinput="onDescInput"
+          maxlength="200"
+        />
+        <view class="text-right text-tip text-xs">{{editingService.description.length || 0}}/200</view>
+      </view>
+
+      <!-- 标签 -->
+      <view class="form-group">
+        <view class="form-label">服务标签</view>
+        <view class="tag-select flex flex-wrap">
+          <view
+            class="tag-item {{util.isTagSelected(editingService.tags, item) ? 'tag-item-selected' : ''}}"
+            wx:for="{{tagOptions}}"
+            wx:key="*this"
+            bindtap="toggleTag"
+            data-tag="{{item}}"
+          >
+            {{item}}
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="modal-footer flex">
+      <button class="btn btn-sm btn-ghost flex-1" bindtap="closeEditModal">取消</button>
+      <button class="btn btn-sm btn-primary flex-1 ml-sm" bindtap="saveService">保存</button>
+    </view>
+  </view>
+</view>

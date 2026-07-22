@@ -1,0 +1,222 @@
+.orders-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 40rpx;
+}
+
+/* Tab切换 */
+.tab-bar {
+  display: flex;
+  background-color: #ffffff;
+  padding: 0 32rpx;
+  border-bottom: 1rpx solid #eeeeee;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 28rpx 0;
+  font-size: 28rpx;
+  color: #666666;
+  position: relative;
+}
+
+.tab-item.tab-active {
+  color: #e94560;
+  font-weight: bold;
+}
+
+.tab-item.tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48rpx;
+  height: 4rpx;
+  background-color: #e94560;
+  border-radius: 2rpx;
+}
+
+/* 筛选栏 */
+.filter-bar {
+  background-color: #ffffff;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #eeeeee;
+}
+
+.filter-scroll {
+  white-space: nowrap;
+  padding: 0 24rpx;
+}
+
+.filter-item {
+  display: inline-block;
+  padding: 10rpx 24rpx;
+  margin-right: 16rpx;
+  font-size: 24rpx;
+  color: #666666;
+  background-color: #f5f5f5;
+  border-radius: 32rpx;
+  border: 2rpx solid transparent;
+}
+
+.filter-item.filter-active {
+  color: #e94560;
+  background-color: rgba(233, 69, 96, 0.08);
+  border-color: #e94560;
+}
+
+/* 订单列表 */
+.order-list {
+  padding: 16rpx 24rpx;
+}
+
+.order-card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+  margin-bottom: 16rpx;
+}
+
+.order-id {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.order-status {
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.order-body {
+  margin-bottom: 16rpx;
+}
+
+.order-info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10rpx;
+  font-size: 26rpx;
+}
+
+.order-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  color: #999999;
+  flex-shrink: 0;
+}
+
+.info-value {
+  color: #333333;
+}
+
+.order-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f5f5f5;
+}
+
+.action-btn {
+  padding: 10rpx 28rpx;
+  font-size: 24rpx;
+  border-radius: 32rpx;
+  border: none;
+  line-height: 1.5;
+}
+
+.action-btn::after {
+  border: none;
+}
+
+.action-online {
+  background-color: rgba(7, 193, 96, 0.1);
+  color: #07c160;
+}
+
+.action-offline {
+  background-color: rgba(255, 151, 106, 0.1);
+  color: #ff976a;
+}
+
+.action-detail {
+  background-color: #f5f5f5;
+  color: #666666;
+}
+
+/* 大额验证失败列表 */
+.risk-list {
+  padding: 16rpx 24rpx;
+}
+
+.risk-card {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  border-left: 6rpx solid #e94560;
+}
+
+.risk-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.risk-badge {
+  padding: 4rpx 16rpx;
+  font-size: 22rpx;
+  color: #ffffff;
+  background-color: #e94560;
+  border-radius: 4rpx;
+  margin-right: 12rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 0;
+}
+
+.empty-state-text {
+  font-size: 28rpx;
+  color: #999999;
+}
+
+.loading-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx 0;
+}
+
+.loading-more {
+  text-align: center;
+  padding: 20rpx 0;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.no-more {
+  text-align: center;
+  padding: 20rpx 0;
+  font-size: 24rpx;
+  color: #cccccc;
+}

@@ -1,0 +1,90 @@
+<view class="reward-page">
+  <!-- 打手信息 -->
+  <view class="player-header">
+    <image class="player-avatar" src="{{playerInfo.avatar}}" mode="aspectFill"></image>
+    <text class="player-name">{{playerInfo.nickname}}</text>
+    <text class="player-desc">感谢TA的精彩表现，给TA一点鼓励吧</text>
+  </view>
+
+  <!-- 打赏金额选择 -->
+  <view class="section">
+    <view class="section-title">选择打赏金额</view>
+    <view class="amount-grid">
+      <view
+        wx:for="{{presetAmounts}}"
+        wx:key="*this"
+        class="amount-item {{selectedAmount === item ? 'amount-selected' : ''}}"
+        bindtap="onSelectAmount"
+        data-amount="{{item}}"
+      >
+        <text class="amount-icon">🎁</text>
+        <text class="amount-value">¥{{item}}</text>
+      </view>
+    </view>
+
+    <!-- 自定义金额 -->
+    <view class="custom-amount">
+      <view class="custom-input-wrapper {{isCustomAmount ? 'custom-active' : ''}}">
+        <text class="custom-unit">¥</text>
+        <input
+          class="custom-input"
+          type="digit"
+          placeholder="自定义金额"
+          placeholder-class="placeholder"
+          value="{{customAmount}}"
+          bindinput="onCustomAmountInput"
+          bindfocus="onCustomFocus"
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷金额 -->
+  <view class="quick-amounts">
+    <text class="quick-label">快捷金额：</text>
+    <view class="quick-list">
+      <view
+        wx:for="{{quickAmounts}}"
+        wx:key="*this"
+        class="quick-item {{selectedAmount === item ? 'quick-selected' : ''}}"
+        bindtap="onSelectAmount"
+        data-amount="{{item}}"
+      >
+        ¥{{item}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 留言 -->
+  <view class="section">
+    <view class="section-title">留言（选填）</view>
+    <view class="message-section">
+      <textarea
+        class="message-input"
+        placeholder="给打手留言，表达您的感谢..."
+        placeholder-class="placeholder"
+        value="{{message}}"
+        bindinput="onMessageInput"
+        maxlength="100"
+        auto-height
+      />
+      <text class="char-count">{{message.length || 0}}/100</text>
+    </view>
+  </view>
+
+  <!-- 底部支付按钮 -->
+  <view class="bottom-bar">
+    <view class="summary">
+      <text class="summary-label">打赏金额：</text>
+      <text class="summary-amount">¥{{finalAmount}}</text>
+    </view>
+    <button
+      class="reward-btn {{paying ? 'btn-disabled' : ''}}"
+      bindtap="onReward"
+      loading="{{paying}}"
+      disabled="{{paying}}"
+    >
+      确认打赏
+    </button>
+  </view>
+</view>

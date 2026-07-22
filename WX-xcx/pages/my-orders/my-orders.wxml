@@ -1,0 +1,126 @@
+<view class="my-orders-page">
+  <!-- Tab切换 -->
+  <view class="tabs">
+    <view
+      class="tab-item {{currentTab === index ? 'active' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="index"
+      data-index="{{index}}"
+      bindtap="onTabChange"
+    >
+      <text>{{item}}</text>
+      <view class="tab-line" wx:if="{{currentTab === index}}"></view>
+    </view>
+  </view>
+
+  <!-- 订单列表 -->
+  <view class="order-list">
+    <view
+      class="order-card"
+      wx:for="{{orders}}"
+      wx:key="id"
+      bindtap="onOrderTap"
+      data-id="{{item.id}}"
+    >
+      <view class="order-header">
+        <text class="order-no">订单号：{{item.order_no}}</text>
+        <text class="order-status" style="color: {{item.statusColor}}">{{item.statusText}}</text>
+      </view>
+
+      <view class="order-body">
+        <view class="order-game-info">
+          <image class="game-icon" src="{{item.game_icon}}" mode="aspectFit"></image>
+          <view class="game-detail">
+            <text class="game-name">{{item.game_name}}</text>
+            <text class="service-name">{{item.service_name}}</text>
+          </view>
+        </view>
+
+        <view class="order-player-info" wx:if="{{item.player}}">
+          <image class="player-avatar" src="{{item.player.avatar}}" mode="aspectFill"></image>
+          <view class="player-detail">
+            <text class="player-name">{{item.player.nickname}}</text>
+            <text class="player-rank">{{item.player.rank}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="order-footer">
+        <text class="order-amount">
+          <text class="amount-symbol">¥</text>
+          <text class="amount-value">{{item.amount}}</text>
+        </text>
+        <view class="order-actions">
+          <button
+            class="btn btn-sm btn-outline"
+            wx:if="{{item.status === 0}}"
+            bindtap="onCancelOrder"
+            data-id="{{item.id}}"
+            catchtap
+          >
+            取消订单
+          </button>
+          <button
+            class="btn btn-sm btn-primary"
+            wx:if="{{item.status === 0}}"
+            bindtap="onPayOrder"
+            data-id="{{item.id}}"
+            catchtap
+          >
+            去支付
+          </button>
+          <button
+            class="btn btn-sm btn-primary"
+            wx:if="{{item.status === 3}}"
+            bindtap="onConfirmOrder"
+            data-id="{{item.id}}"
+            catchtap
+          >
+            确认验收
+          </button>
+          <button
+            class="btn btn-sm btn-outline"
+            wx:if="{{item.status === 2 || item.status === 3}}"
+            bindtap="onContactPlayer"
+            data-id="{{item.id}}"
+            catchtap
+          >
+            联系打手
+          </button>
+          <button
+            class="btn btn-sm btn-outline"
+            wx:if="{{item.status === 4}}"
+            bindtap="onReOrder"
+            data-id="{{item.id}}"
+            catchtap
+          >
+            再来一单
+          </button>
+          <button
+            class="btn btn-sm btn-outline"
+            wx:if="{{item.status === 4}}"
+            bindtap="onAppeal"
+            data-id="{{item.id}}"
+            catchtap
+          >
+            申诉
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <view class="loading-more" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+    <view class="no-more" wx:if="{{noMore && orders.length > 0}}">
+      <text>没有更多了</text>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && orders.length === 0}}">
+    <image class="empty-state-image" src="/assets/images/empty-order.png" mode="aspectFit"></image>
+    <text class="empty-state-text">暂无订单</text>
+    <button class="btn btn-primary btn-sm" style="margin-top: 32rpx;" bindtap="onGoHome">去下单</button>
+  </view>
+</view>

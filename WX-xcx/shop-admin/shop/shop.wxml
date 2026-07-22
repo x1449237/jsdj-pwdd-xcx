@@ -1,0 +1,121 @@
+<view class="shop-page">
+  <view class="page-header">
+    <text class="header-title">店铺装饰</text>
+    <text class="header-desc">配置店铺展示信息，吸引更多用户</text>
+  </view>
+
+  <view class="shop-form">
+    <!-- 店铺Logo -->
+    <view class="form-card">
+      <view class="card-title">店铺Logo</view>
+      <view class="logo-section">
+        <image
+          class="shop-logo"
+          src="{{shopInfo.logo || '/assets/images/default-shop.png'}}"
+          mode="aspectFill"
+          bindtap="onChooseLogo"
+        ></image>
+        <view class="logo-tip">
+          <text class="tip-text">点击更换Logo</text>
+          <text class="tip-sub">建议尺寸 200x200px</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 店铺Banner -->
+    <view class="form-card">
+      <view class="card-title">店铺Banner</view>
+      <view class="banner-section">
+        <image
+          class="shop-banner"
+          src="{{shopInfo.banner || '/assets/images/default-banner.png'}}"
+          mode="aspectFill"
+          bindtap="onChooseBanner"
+        ></image>
+        <view class="banner-tip">
+          <text class="tip-text">点击更换Banner</text>
+          <text class="tip-sub">建议尺寸 750x360px</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 店铺名称 -->
+    <view class="form-card">
+      <view class="card-title">店铺名称</view>
+      <view class="input-section">
+        <input
+          class="text-input"
+          placeholder="请输入店铺名称"
+          placeholder-class="placeholder"
+          value="{{shopInfo.shopName}}"
+          bindinput="onShopNameInput"
+          maxlength="20"
+        />
+        <text class="char-count">{{shopInfo.shopName.length || 0}}/20</text>
+      </view>
+    </view>
+
+    <!-- 店铺描述 -->
+    <view class="form-card">
+      <view class="card-title">店铺描述</view>
+      <view class="textarea-section">
+        <textarea
+          class="text-area"
+          placeholder="请输入店铺描述，介绍您的服务特色..."
+          placeholder-class="placeholder"
+          value="{{shopInfo.description}}"
+          bindinput="onDescriptionInput"
+          maxlength="200"
+          auto-height
+        />
+        <text class="char-count">{{shopInfo.description.length || 0}}/200</text>
+      </view>
+    </view>
+
+    <!-- 主题色 -->
+    <view class="form-card">
+      <view class="card-title">主题色</view>
+      <view class="color-selector">
+        <view
+          wx:for="{{colorOptions}}"
+          wx:key="value"
+          class="color-item {{shopInfo.themeColor === item.value ? 'color-selected' : ''}}"
+          style="background-color: {{item.value}}"
+          bindtap="onSelectColor"
+          data-color="{{item.value}}"
+        >
+          <text wx:if="{{shopInfo.themeColor === item.value}}" class="check-mark">✓</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 公告 -->
+    <view class="form-card">
+      <view class="card-title">店铺公告</view>
+      <view class="textarea-section">
+        <textarea
+          class="text-area"
+          placeholder="请输入店铺公告，如活动通知、服务调整等..."
+          placeholder-class="placeholder"
+          value="{{shopInfo.notice}}"
+          bindinput="onNoticeInput"
+          maxlength="500"
+          auto-height
+        />
+        <text class="char-count">{{shopInfo.notice.length || 0}}/500</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部保存按钮 -->
+  <view class="bottom-bar">
+    <button
+      class="save-btn {{saving ? 'btn-disabled' : ''}}"
+      bindtap="onSave"
+      loading="{{saving}}"
+      disabled="{{saving}}"
+    >
+      保存设置
+    </button>
+  </view>
+</view>

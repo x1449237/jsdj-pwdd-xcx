@@ -1,0 +1,240 @@
+.reward-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 140rpx;
+}
+
+/* 打手信息 */
+.player-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48rpx 32rpx 36rpx;
+  background: linear-gradient(135deg, #1a1a2e, #0f3460);
+}
+
+.player-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin-bottom: 16rpx;
+  border: 4rpx solid rgba(255, 255, 255, 0.2);
+}
+
+.player-name {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 8rpx;
+}
+
+.player-desc {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 金额选择 */
+.section {
+  margin: 20rpx 0;
+}
+
+.section-title {
+  padding: 0 32rpx 16rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #666666;
+}
+
+.amount-grid {
+  background-color: #ffffff;
+  margin: 0 24rpx;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.amount-item {
+  width: calc(33.33% - 11rpx);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 0;
+  background-color: #f5f5f5;
+  border-radius: 12rpx;
+  border: 2rpx solid transparent;
+  transition: all 0.2s;
+}
+
+.amount-item.amount-selected {
+  background-color: rgba(233, 69, 96, 0.06);
+  border-color: #e94560;
+}
+
+.amount-icon {
+  font-size: 36rpx;
+  margin-bottom: 8rpx;
+}
+
+.amount-value {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333333;
+}
+
+.amount-selected .amount-value {
+  color: #e94560;
+}
+
+/* 自定义金额 */
+.custom-amount {
+  margin: 16rpx 24rpx 0;
+}
+
+.custom-input-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+  height: 88rpx;
+  border: 2rpx solid #eeeeee;
+  transition: border-color 0.2s;
+}
+
+.custom-input-wrapper.custom-active {
+  border-color: #e94560;
+}
+
+.custom-unit {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-right: 12rpx;
+}
+
+.custom-input {
+  flex: 1;
+  height: 100%;
+  font-size: 32rpx;
+  color: #333333;
+}
+
+.placeholder {
+  color: #cccccc;
+}
+
+/* 快捷金额 */
+.quick-amounts {
+  display: flex;
+  align-items: center;
+  padding: 0 32rpx;
+  margin-top: 12rpx;
+}
+
+.quick-label {
+  font-size: 24rpx;
+  color: #999999;
+  flex-shrink: 0;
+  margin-right: 12rpx;
+}
+
+.quick-list {
+  display: flex;
+  gap: 12rpx;
+}
+
+.quick-item {
+  padding: 8rpx 20rpx;
+  font-size: 24rpx;
+  color: #666666;
+  background-color: #ffffff;
+  border-radius: 32rpx;
+  border: 2rpx solid #eeeeee;
+}
+
+.quick-item.quick-selected {
+  color: #e94560;
+  border-color: #e94560;
+  background-color: rgba(233, 69, 96, 0.04);
+}
+
+/* 留言 */
+.message-section {
+  background-color: #ffffff;
+  margin: 0 24rpx;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+}
+
+.message-input {
+  width: 100%;
+  min-height: 100rpx;
+  font-size: 28rpx;
+  color: #333333;
+  line-height: 1.6;
+}
+
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 22rpx;
+  color: #999999;
+  margin-top: 8rpx;
+}
+
+/* 底部支付 */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  padding: 20rpx 32rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.08);
+  z-index: 10;
+}
+
+.summary {
+  display: flex;
+  align-items: baseline;
+}
+
+.summary-label {
+  font-size: 28rpx;
+  color: #666666;
+}
+
+.summary-amount {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #e94560;
+}
+
+.reward-btn {
+  padding: 0 48rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ffd700, #ffb800);
+  border-radius: 40rpx;
+  border: none;
+  color: #333333;
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.reward-btn::after {
+  border: none;
+}
+
+.reward-btn.btn-disabled {
+  opacity: 0.5;
+}

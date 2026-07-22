@@ -1,0 +1,96 @@
+<view class="order-card {{extraClass}}" bindtap="onTap">
+  <!-- 订单状态标签 -->
+  <view class="card-header">
+    <view class="header-left">
+      <text class="order-no text-sm text-tip">订单号：{{order.order_no}}</text>
+    </view>
+    <view class="header-right">
+      <text class="tag {{statusTagClass}}">{{orderStatusText}}</text>
+    </view>
+  </view>
+
+  <!-- 服务信息 -->
+  <view class="card-body">
+    <view class="service-info">
+      <image class="game-icon" src="{{order.game_icon}}" mode="aspectFit"></image>
+      <view class="service-detail">
+        <text class="game-name text-md font-bold">{{order.game_name}}</text>
+        <text class="service-type text-sm text-tip">{{order.service_type}}</text>
+      </view>
+      <view class="service-extra">
+        <text class="game-rank text-sm text-secondary">{{order.rank}}</text>
+      </view>
+    </view>
+
+    <!-- 打手/玩家信息 -->
+    <view class="user-info">
+      <image class="user-avatar" src="{{order.user_avatar}}" mode="aspectFill"></image>
+      <view class="user-detail">
+        <text class="user-name text-md">{{order.user_nickname}}</text>
+        <view class="user-tags">
+          <text class="tag tag-primary" wx:if="{{order.user_level}}">{{order.user_level}}</text>
+          <text class="tag tag-gold" wx:if="{{order.user_rate}}">好评率 {{order.user_rate}}%</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 金额与时间 -->
+    <view class="order-meta">
+      <view class="meta-item">
+        <text class="meta-label text-sm text-tip">金额</text>
+        <text class="meta-value text-primary font-bold">¥{{order.amount}}</text>
+      </view>
+      <view class="meta-item">
+        <text class="meta-label text-sm text-tip">时长</text>
+        <text class="meta-value text-md">{{order.duration}}小时</text>
+      </view>
+      <view class="meta-item">
+        <text class="meta-label text-sm text-tip">下单时间</text>
+        <text class="meta-value text-sm">{{order.create_time}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 操作按钮插槽 -->
+  <view class="card-footer" wx:if="{{showActions}}">
+    <view class="footer-actions">
+      <slot name="actions">
+        <button
+          wx:if="{{order.status === 'pending'}}"
+          class="btn btn-sm btn-outline"
+          bindtap="onCancel"
+        >
+          取消订单
+        </button>
+        <button
+          wx:if="{{order.status === 'pending'}}"
+          class="btn btn-sm btn-primary"
+          bindtap="onPay"
+        >
+          去支付
+        </button>
+        <button
+          wx:if="{{order.status === 'doing'}}"
+          class="btn btn-sm btn-primary"
+          bindtap="onContact"
+        >
+          联系打手
+        </button>
+        <button
+          wx:if="{{order.status === 'done'}}"
+          class="btn btn-sm btn-outline"
+          bindtap="onEvaluate"
+        >
+          评价
+        </button>
+        <button
+          wx:if="{{order.status === 'appeal'}}"
+          class="btn btn-sm btn-danger"
+          bindtap="onViewAppeal"
+        >
+          查看申诉
+        </button>
+      </slot>
+    </view>
+  </view>
+</view>

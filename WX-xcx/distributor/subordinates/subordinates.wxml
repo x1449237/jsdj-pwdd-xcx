@@ -1,0 +1,91 @@
+<!-- 下级管理 -->
+<view class="page-subordinates">
+  <!-- 搜索栏 -->
+  <view class="search-bar bg-white p-md">
+    <view class="search-input-wrapper flex align-center">
+      <text class="search-icon text-tip">🔍</text>
+      <input
+        class="search-input flex-1"
+        placeholder="搜索下级昵称"
+        placeholder-class="form-placeholder"
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        bindconfirm="onSearch"
+        confirm-type="search"
+      />
+      <text class="search-clear text-tip" wx:if="{{searchKeyword}}" bindtap="clearSearch">✕</text>
+    </view>
+  </view>
+
+  <!-- Tab 切换 -->
+  <view class="tab-bar flex bg-white">
+    <view class="tab-item flex-1 flex-center {{activeTab === 1 ? 'tab-active' : ''}}" bindtap="switchTab" data-tab="1">
+      <text>一级下级</text>
+      <text class="tab-count ml-sm" wx:if="{{level1Total > 0}}">{{level1Total}}</text>
+    </view>
+    <view class="tab-item flex-1 flex-center {{activeTab === 2 ? 'tab-active' : ''}}" bindtap="switchTab" data-tab="2">
+      <text>二级下级</text>
+      <text class="tab-count ml-sm" wx:if="{{level2Total > 0}}">{{level2Total}}</text>
+    </view>
+  </view>
+
+  <!-- 下级列表 -->
+  <scroll-view
+    class="sub-scroll"
+    scroll-y
+    bindscrolltolower="onLoadMore"
+    lower-threshold="100"
+  >
+    <view class="sub-list" wx:if="{{subList.length > 0}}">
+      <view class="sub-card card shadow-sm" wx:for="{{subList}}" wx:key="userId">
+        <view class="sub-header flex-between">
+          <view class="sub-user flex align-center">
+            <image class="sub-avatar" src="{{item.avatar}}" mode="aspectFill" />
+            <view class="sub-user-info">
+              <text class="sub-name text-md font-bold">{{item.nickname}}</text>
+              <view class="flex align-center mt-xs">
+                <text class="sub-level tag tag-warning" wx:if="{{item.level === 1}}">一级</text>
+                <text class="sub-level tag tag-primary" wx:if="{{item.level === 2}}">二级</text>
+                <text class="sub-parent text-xs text-tip ml-sm" wx:if="{{item.parentName}}">
+                  上级：{{item.parentName}}
+                </text>
+              </view>
+            </view>
+          </view>
+          <view class="sub-status">
+            <text class="status-text text-xs {{item.isRealName ? 'text-success' : 'text-warning'}}">
+              {{item.isRealName ? '已实名' : '未实名'}}
+            </text>
+          </view>
+        </view>
+
+        <view class="sub-body flex-between mt-sm">
+          <view class="sub-info-item">
+            <text class="info-label text-tip text-xs">注册时间</text>
+            <text class="info-value text-secondary text-sm">{{item.registerTimeText}}</text>
+          </view>
+          <view class="sub-info-item text-right">
+            <text class="info-label text-tip text-xs">完成订单</text>
+            <text class="info-value text-primary text-sm font-bold">{{item.orderCount}} 单</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!loading && subList.length === 0}}">
+      <image class="empty-state-image" src="/assets/images/empty-subordinate.png" mode="aspectFit" />
+      <text class="empty-state-text" wx:if="{{searchKeyword}}">未搜索到相关下级</text>
+      <text class="empty-state-text" wx:else>暂无{{activeTab === 1 ? '一级' : '二级'}}下级</text>
+      <text class="empty-state-sub text-tip text-sm mt-sm">分享您的邀请码邀请好友加入</text>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="loading-more" wx:if="{{loadingMore}}">
+      <text>加载中...</text>
+    </view>
+    <view class="no-more" wx:if="{{!hasMore && subList.length > 0}}">
+      <text>—— 没有更多了 ——</text>
+    </view>
+  </scroll-view>
+</view>

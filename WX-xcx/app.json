@@ -1,0 +1,181 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/register/register",
+    "pages/index/index",
+    "pages/player-detail/player-detail",
+    "pages/my-orders/my-orders",
+    "pages/personal-center/personal-center",
+    "pages/appeal-submit/appeal-submit",
+    "pages/appeal-list/appeal-list",
+    "pages/appeal-detail/appeal-detail",
+    "pages/realname/realname",
+    "pages/guardian/guardian",
+    "pages/agreement/agreement"
+  ],
+  "subPackages": [
+    {
+      "root": "package-order",
+      "name": "order",
+      "pages": [
+        "order-create/order-create",
+        "order-confirm/order-confirm",
+        "order-detail/order-detail"
+      ]
+    },
+    {
+      "root": "package-game",
+      "name": "game",
+      "pages": [
+        "game-list/game-list",
+        "game-category/game-category"
+      ]
+    },
+    {
+      "root": "package-player",
+      "name": "player",
+      "pages": [
+        "player-list/player-list",
+        "player-apply/player-apply"
+      ]
+    },
+    {
+      "root": "package-message",
+      "name": "message",
+      "pages": [
+        "message-list/message-list",
+        "message-detail/message-detail"
+      ]
+    },
+    {
+      "root": "package-wallet",
+      "name": "wallet",
+      "pages": [
+        "balance/balance",
+        "withdraw/withdraw",
+        "transaction-list/transaction-list"
+      ]
+    },
+    {
+      "root": "package-settings",
+      "name": "settings",
+      "pages": [
+        "settings/settings",
+        "real-name-auth/real-name-auth",
+        "about/about"
+      ]
+    },
+    {
+      "root": "player",
+      "name": "player-package",
+      "pages": [
+        "order-center/order-center",
+        "my-services/my-services",
+        "income/income"
+      ]
+    },
+    {
+      "root": "distributor",
+      "name": "distributor-package",
+      "pages": [
+        "center/center",
+        "subordinates/subordinates",
+        "commission/commission"
+      ]
+    },
+    {
+      "root": "shop-admin",
+      "name": "shop-admin",
+      "pages": [
+        "login/login",
+        "orders/orders",
+        "shop/shop",
+        "risk/risk"
+      ]
+    },
+    {
+      "root": "dispatcher",
+      "name": "dispatcher",
+      "pages": [
+        "center/center",
+        "history/history"
+      ]
+    },
+    {
+      "root": "chat",
+      "name": "chat",
+      "pages": [
+        "list/list",
+        "room/room"
+      ]
+    },
+    {
+      "root": "order-flow",
+      "name": "order-flow",
+      "pages": [
+        "create/create",
+        "detail/detail",
+        "evaluate/evaluate",
+        "reward/reward"
+      ]
+    }
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#1a1a2e",
+    "navigationBarTitleText": "大神接单",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5f5f5",
+    "backgroundTextStyle": "dark",
+    "enablePullDownRefresh": false
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#e94560",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "assets/icons/home.png",
+        "selectedIconPath": "assets/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/my-orders/my-orders",
+        "text": "订单",
+        "iconPath": "assets/icons/order.png",
+        "selectedIconPath": "assets/icons/order-active.png"
+      },
+      {
+        "pagePath": "package-message/message-list/message-list",
+        "text": "消息",
+        "iconPath": "assets/icons/message.png",
+        "selectedIconPath": "assets/icons/message-active.png"
+      },
+      {
+        "pagePath": "pages/personal-center/personal-center",
+        "text": "我的",
+        "iconPath": "assets/icons/mine.png",
+        "selectedIconPath": "assets/icons/mine-active.png"
+      }
+    ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "需要获取您的位置信息用于订单匹配"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation",
+    "chooseAddress",
+    "chooseLocation"
+  ],
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json",
+  "usingComponents": {
+    "order-card": "/components/order-card/order-card",
+    "player-card": "/components/player-card/player-card",
+    "voice-recorder": "/components/voice-recorder/voice-recorder",
+    "message-item": "/components/message-item/message-item"
+  }
+}

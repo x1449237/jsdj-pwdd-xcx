@@ -1,0 +1,135 @@
+/* 分销中心 */
+.page-distributor-center {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  padding-bottom: var(--spacing-xl);
+}
+
+/* ========== 邀请码区域 ========== */
+.invite-section {
+  margin: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  background: linear-gradient(135deg, #1a1a2e, #0f3460);
+}
+
+.invite-title {
+  font-size: var(--font-size-sm);
+}
+
+.invite-code-wrapper {
+  padding: 8rpx 20rpx;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-sm);
+  border: 2rpx dashed rgba(255, 255, 255, 0.3);
+}
+
+.invite-code {
+  letter-spacing: 4rpx;
+}
+
+.copy-btn {
+  padding: 4rpx 12rpx;
+  background-color: rgba(233, 69, 96, 0.15);
+  border-radius: 4rpx;
+  border: 1rpx solid var(--color-primary);
+}
+
+.invite-tip {
+  line-height: 1.5;
+}
+
+/* ========== 收益总览 ========== */
+.overview-section {
+  margin: 0 var(--spacing-md) var(--spacing-sm);
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.overview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  background-color: var(--color-bg);
+  border-radius: var(--border-radius-sm);
+}
+
+.overview-label {
+  margin-bottom: 4rpx;
+}
+
+.overview-value {
+  line-height: 1.2;
+}
+
+/* ========== 分销规则 ========== */
+.rule-section {
+  margin: 0 var(--spacing-md) var(--spacing-sm);
+}
+
+.rule-row {
+  margin-bottom: var(--spacing-sm);
+}
+
+.rule-dot {
+  width: 48rpx;
+  flex-shrink: 0;
+  font-weight: bold;
+  font-size: var(--font-size-sm);
+}
+
+.rule-text {
+  line-height: 1.6;
+  flex: 1;
+}
+
+/* ========== 快速入口 ========== */
+.quick-entry-section {
+  margin-top: var(--spacing-md);
+}
+
+.entry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+  padding: 0 var(--spacing-md);
+}
+
+.entry-item {
+  padding: var(--spacing-lg) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+}
+
+.entry-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-subordinates {
+  background: linear-gradient(135deg, #e8f4fd, #d0e8f7);
+}
+
+.icon-commission {
+  background: linear-gradient(135deg, #fff8e1, #ffecb3);
+}
+
+.entry-icon .iconfont {
+  font-size: 36rpx;
+}
+
+.entry-name {
+  font-weight: 500;
+}
+
+.entry-desc {
+  margin-top: 4rpx;
+}

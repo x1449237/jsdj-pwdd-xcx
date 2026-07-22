@@ -1,0 +1,120 @@
+<view class="create-page">
+  <!-- 服务信息 -->
+  <view class="section">
+    <view class="section-title">服务信息</view>
+    <view class="service-card">
+      <view class="service-row">
+        <text class="s-label">游戏：</text>
+        <text class="s-value">{{serviceInfo.gameName}}</text>
+      </view>
+      <view class="service-row">
+        <text class="s-label">段位：</text>
+        <text class="s-value">{{serviceInfo.rank}}</text>
+      </view>
+      <view class="service-row">
+        <text class="s-label">服务：</text>
+        <text class="s-value">{{serviceInfo.serviceName}}</text>
+      </view>
+      <view class="service-row">
+        <text class="s-label">时长：</text>
+        <text class="s-value">{{serviceInfo.duration}}小时</text>
+      </view>
+      <view class="service-row">
+        <text class="s-label">单价：</text>
+        <text class="s-value text-primary font-bold">¥{{serviceInfo.price}}/小时</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 打手信息 -->
+  <view class="section">
+    <view class="section-title">打手信息</view>
+    <view class="player-card">
+      <image class="player-avatar" src="{{playerInfo.avatar}}" mode="aspectFill"></image>
+      <view class="player-info">
+        <text class="player-name">{{playerInfo.nickname}}</text>
+        <view class="player-stats">
+          <text class="stat">⭐ {{playerInfo.rating}}</text>
+          <text class="stat">📦 {{playerInfo.orderCount}}单</text>
+        </view>
+        <view class="player-tags">
+          <text class="tag" wx:for="{{playerInfo.tags}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 金额确认 -->
+  <view class="section">
+    <view class="section-title">金额确认</view>
+    <view class="amount-card">
+      <view class="amount-row">
+        <text class="a-label">服务时长</text>
+        <text class="a-value">{{serviceInfo.duration}}小时</text>
+      </view>
+      <view class="amount-row">
+        <text class="a-label">单价</text>
+        <text class="a-value">¥{{serviceInfo.price}}/小时</text>
+      </view>
+      <view class="amount-row amount-total">
+        <text class="a-label">合计</text>
+        <text class="a-value text-primary font-bold">¥{{totalAmount}}</text>
+      </view>
+    </view>
+
+    <!-- 未成年人限额提示 -->
+    <view class="minor-tip" wx:if="{{isMinor}}">
+      <text class="tip-icon">⚠️</text>
+      <view class="tip-content">
+        <text class="tip-title">未成年人消费限额提示</text>
+        <text class="tip-desc">根据相关规定，未成年人单笔消费限额¥{{minorLimit}}，您的当前订单金额已超出限额。</text>
+        <text class="tip-action" bindtap="onGuardianVerify">点击进行监护人验证 ></text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 备注 -->
+  <view class="section">
+    <view class="section-title">备注</view>
+    <view class="remark-section">
+      <textarea
+        class="remark-input"
+        placeholder="请输入备注信息，如游戏ID、特殊要求等..."
+        placeholder-class="placeholder"
+        value="{{remark}}"
+        bindinput="onRemarkInput"
+        maxlength="200"
+        auto-height
+      />
+      <text class="char-count">{{remark.length || 0}}/200</text>
+    </view>
+  </view>
+
+  <!-- 电子签入口 -->
+  <view class="section">
+    <view class="esign-banner" bindtap="onOpenESign">
+      <view class="esign-icon">📝</view>
+      <view class="esign-info">
+        <text class="esign-title">电子签约</text>
+        <text class="esign-desc">签署电子合同，保障双方权益</text>
+      </view>
+      <text class="esign-arrow">></text>
+    </view>
+  </view>
+
+  <!-- 底部支付栏 -->
+  <view class="bottom-bar">
+    <view class="total-section">
+      <text class="total-label">合计：</text>
+      <text class="total-amount">¥{{totalAmount}}</text>
+    </view>
+    <button
+      class="pay-btn {{paying ? 'btn-disabled' : ''}}"
+      bindtap="onPay"
+      loading="{{paying}}"
+      disabled="{{paying}}"
+    >
+      立即支付
+    </button>
+  </view>
+</view>

@@ -1,0 +1,40 @@
+<view class="appeal-list-page">
+  <view class="appeal-header">
+    <text class="appeal-title">申诉中心</text>
+  </view>
+
+  <view class="appeal-list" wx:if="{{appeals.length > 0}}">
+    <view
+      class="appeal-card"
+      wx:for="{{appeals}}"
+      wx:key="id"
+      bindtap="onAppealTap"
+      data-id="{{item.id}}"
+    >
+      <view class="appeal-card-header">
+        <text class="appeal-type">{{item.typeText}}</text>
+        <text class="appeal-status" style="color: {{item.statusColor}}">{{item.statusText}}</text>
+      </view>
+      <view class="appeal-card-body">
+        <text class="appeal-desc">{{item.description}}</text>
+      </view>
+      <view class="appeal-card-footer">
+        <text class="appeal-time">{{item.create_time}}</text>
+        <view class="appeal-card-arrow">›</view>
+      </view>
+    </view>
+
+    <view class="loading-more" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+    <view class="no-more" wx:if="{{noMore}}">
+      <text>没有更多了</text>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <image class="empty-state-image" src="/assets/images/empty.png" mode="aspectFit"></image>
+    <text class="empty-state-text">暂无申诉记录</text>
+    <button class="btn btn-primary btn-sm" style="margin-top: 32rpx;" bindtap="onGoSubmit">提交申诉</button>
+  </view>
+</view>

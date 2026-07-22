@@ -1,0 +1,144 @@
+<view class="dispatch-page">
+  <!-- 待分配订单列表 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">待分配订单</text>
+      <text class="section-count">{{pendingOrders.length}}个</text>
+    </view>
+
+    <block wx:if="{{pendingOrders.length > 0}}">
+      <view
+        wx:for="{{pendingOrders}}"
+        wx:key="order_id"
+        class="order-card {{selectedOrder && selectedOrder.order_id === item.order_id ? 'order-selected' : ''}}"
+        bindtap="onSelectOrder"
+        data-order="{{item}}"
+      >
+        <view class="order-header">
+          <text class="order-id">{{item.order_id}}</text>
+          <text class="order-time">{{item.create_time}}</text>
+        </view>
+        <view class="order-body">
+          <view class="order-row">
+            <text class="row-label">游戏：</text>
+            <text class="row-value">{{item.game_name}}</text>
+          </view>
+          <view class="order-row">
+            <text class="row-label">服务：</text>
+            <text class="row-value">{{item.service_name}}</text>
+          </view>
+          <view class="order-row">
+            <text class="row-label">金额：</text>
+            <text class="row-value text-primary font-bold">¥{{item.amount}}</text>
+          </view>
+          <view class="order-row">
+            <text class="row-label">用户：</text>
+            <text class="row-value">{{item.user_name}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:if="{{pendingOrders.length === 0 && !loading}}">
+      <text class="empty-state-text">暂无待分配订单</text>
+    </view>
+
+    <view class="loading-wrapper" wx:if="{{loading}}">
+      <text class="loading-more">加载中...</text>
+    </view>
+  </view>
+
+  <!-- 在线打手列表 -->
+  <view class="section" wx:if="{{selectedOrder}}">
+    <view class="section-header">
+      <text class="section-title">选择打手</text>
+      <text class="section-count">{{onlinePlayers.length}}人在线</text>
+    </view>
+
+    <block wx:if="{{onlinePlayers.length > 0}}">
+      <view
+        wx:for="{{onlinePlayers}}"
+        wx:key="player_id"
+        class="player-card {{selectedPlayer && selectedPlayer.player_id === item.player_id ? 'player-selected' : ''}}"
+        bindtap="onSelectPlayer"
+        data-player="{{item}}"
+      >
+        <view class="player-avatar">
+          <image src="{{item.avatar}}" mode="aspectFill"></image>
+          <view class="online-dot"></view>
+        </view>
+        <view class="player-info">
+          <text class="player-name">{{item.nickname}}</text>
+          <view class="player-tags">
+            <text class="player-tag" wx:for="{{item.games}}" wx:key="*this" wx:for-item="game">{{game}}</text>
+          </view>
+          <view class="player-stats">
+            <text class="stat-item">⭐ {{item.rating}}</text>
+            <text class="stat-item">📦 {{item.order_count}}单</text>
+            <text class="stat-item">💬 {{item.response_rate}}%回复</text>
+          </view>
+        </view>
+        <view class="player-check">
+          <text class="check-icon" wx:if="{{selectedPlayer && selectedPlayer.player_id === item.player_id}}">✓</text>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:if="{{onlinePlayers.length === 0 && !playerLoading}}">
+      <text class="empty-state-text">当前无在线打手</text>
+    </view>
+
+    <view class="loading-wrapper" wx:if="{{playerLoading}}">
+      <text class="loading-more">加载中...</text>
+    </view>
+  </view>
+
+  <!-- 底部派单按钮 -->
+  <view class="bottom-bar" wx:if="{{selectedOrder}}">
+    <view class="dispatch-summary">
+      <text class="summary-text">已选订单：{{selectedOrder.order_id}}</text>
+      <text class="summary-text" wx:if="{{selectedPlayer}}">指派打手：{{selectedPlayer.nickname}}</text>
+    </view>
+    <button
+      class="dispatch-btn {{!selectedPlayer ? 'btn-disabled' : ''}}"
+      bindtap="onDispatch"
+      disabled="{{!selectedPlayer}}"
+    >
+      {{selectedPlayer ? '确认派单' : '请选择打手'}}
+    </button>
+  </view>
+
+  <!-- 派单确认弹窗 -->
+  <view class="modal-mask" wx:if="{{showConfirmModal}}" bindtap="onCloseModal"></view>
+  <view class="confirm-modal" wx:if="{{showConfirmModal}}">
+    <view class="modal-header">
+      <text class="modal-title">确认派单</text>
+    </view>
+    <view class="modal-body">
+      <view class="modal-row">
+        <text class="modal-label">订单编号：</text>
+        <text class="modal-value">{{selectedOrder.order_id}}</text>
+      </view>
+      <view class="modal-row">
+        <text class="modal-label">游戏服务：</text>
+        <text class="modal-value">{{selectedOrder.game_name}} - {{selectedOrder.service_name}}</text>
+      </view>
+      <view class="modal-row">
+        <text class="modal-label">订单金额：</text>
+        <text class="modal-value text-primary font-bold">¥{{selectedOrder.amount}}</text>
+      </view>
+      <view class="modal-row">
+        <text class="modal-label">指派打手：</text>
+        <text class="modal-value">{{selectedPlayer.nickname}}</text>
+      </view>
+      <view class="modal-row">
+        <text class="modal-label">打手评分：</text>
+        <text class="modal-value">⭐ {{selectedPlayer.rating}}</text>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="modal-btn cancel-btn" bindtap="onCloseModal">取消</button>
+      <button class="modal-btn confirm-btn" bindtap="onConfirmDispatch" loading="{{dispatching}}">确认派单</button>
+    </view>
+  </view>
+</view>

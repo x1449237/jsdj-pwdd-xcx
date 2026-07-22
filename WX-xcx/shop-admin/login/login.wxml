@@ -1,0 +1,88 @@
+<view class="login-page">
+  <view class="login-header">
+    <image class="logo" src="/assets/images/logo.png" mode="aspectFit"></image>
+    <text class="app-name">店铺管理</text>
+    <text class="app-slogan">内置管理端 - 商家登录</text>
+  </view>
+
+  <view class="login-body">
+    <view class="login-form">
+      <view class="form-group">
+        <view class="input-wrapper">
+          <image class="input-icon" src="/assets/icons/user.png" mode="aspectFit"></image>
+          <input
+            class="form-input"
+            type="text"
+            placeholder="请输入管理员账号"
+            placeholder-class="placeholder"
+            value="{{account}}"
+            bindinput="onAccountInput"
+            maxlength="20"
+          />
+        </view>
+      </view>
+
+      <view class="form-group">
+        <view class="input-wrapper">
+          <image class="input-icon" src="/assets/icons/lock.png" mode="aspectFit"></image>
+          <input
+            class="form-input"
+            type="password"
+            password="{{showPassword}}"
+            placeholder="请输入管理员密码"
+            placeholder-class="placeholder"
+            value="{{password}}"
+            bindinput="onPasswordInput"
+            maxlength="20"
+          />
+          <view class="eye-icon" bindtap="onTogglePassword">
+            <text>{{showPassword ? '👁' : '👁‍🗨'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="form-group">
+        <view class="input-wrapper">
+          <image class="input-icon" src="/assets/icons/fingerprint.png" mode="aspectFit"></image>
+          <input
+            class="form-input"
+            type="text"
+            placeholder="请输入店铺安全码"
+            placeholder-class="placeholder"
+            value="{{shopCode}}"
+            bindinput="onShopCodeInput"
+            maxlength="6"
+          />
+        </view>
+      </view>
+
+      <button
+        class="login-btn {{loading ? 'btn-disabled' : ''}}"
+        bindtap="onLogin"
+        loading="{{loading}}"
+        disabled="{{loading}}"
+      >
+        登录管理端
+      </button>
+    </view>
+
+    <view class="tips-section" wx:if="{{isFirstLogin}}">
+      <view class="tip-item">
+        <text class="tip-icon">🔐</text>
+        <text class="tip-text">首次登录请使用店主账号及初始密码</text>
+      </view>
+      <view class="tip-item">
+        <text class="tip-icon">⚠️</text>
+        <text class="tip-text">登录后请及时修改密码，保障店铺安全</text>
+      </view>
+      <view class="tip-item">
+        <text class="tip-icon">📞</text>
+        <text class="tip-text">如忘记密码，请联系平台客服重置</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="login-footer">
+    <text class="footer-text">仅限店铺管理员登录</text>
+  </view>
+</view>

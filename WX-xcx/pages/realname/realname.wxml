@@ -1,0 +1,132 @@
+<view class="realname-page">
+  <view class="page-header">
+    <text class="page-title">实名认证</text>
+    <text class="page-desc">根据监管要求，使用平台服务需完成实名认证</text>
+  </view>
+
+  <!-- 基本信息填写 -->
+  <view class="card">
+    <view class="form-group">
+      <view class="form-label">真实姓名</view>
+      <input
+        class="form-input"
+        placeholder="请输入真实姓名"
+        placeholder-class="form-placeholder"
+        value="{{realName}}"
+        bindinput="onNameInput"
+        maxlength="20"
+      />
+    </view>
+    <view class="form-group">
+      <view class="form-label">身份证号</view>
+      <input
+        class="form-input"
+        type="idcard"
+        placeholder="请输入身份证号码"
+        placeholder-class="form-placeholder"
+        value="{{idCard}}"
+        bindinput="onIdCardInput"
+        maxlength="18"
+      />
+    </view>
+  </view>
+
+  <!-- 活体检测区域 -->
+  <view class="card">
+    <view class="form-label">活体检测</view>
+    <view class="liveness-area">
+      <view class="liveness-frame {{livenessStatus}}">
+        <view class="frame-circle">
+          <image
+            wx:if="{{livenessStatus === 'idle'}}"
+            class="frame-icon"
+            src="/assets/icons/face-scan.png"
+            mode="aspectFit"
+          ></image>
+          <view wx:if="{{livenessStatus === 'idle'}}" class="frame-hint">
+            <text>请将面部置于取景框内</text>
+          </view>
+          <view wx:if="{{livenessStatus === 'scanning'}}" class="frame-scanning">
+            <view class="scanning-wave"></view>
+            <text class="scanning-text">正在检测中…</text>
+          </view>
+          <view wx:if="{{livenessStatus === 'success'}}" class="frame-result success">
+            <text class="result-icon">✓</text>
+            <text class="result-text">检测通过</text>
+          </view>
+          <view wx:if="{{livenessStatus === 'fail'}}" class="frame-result fail">
+            <text class="result-icon">✗</text>
+            <text class="result-text">检测失败</text>
+            <text class="result-reason" wx:if="{{livenessFailReason}}">{{livenessFailReason}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="liveness-actions">
+        <button
+          wx:if="{{livenessStatus === 'idle' || livenessStatus === 'fail'}}"
+          class="btn btn-primary btn-block"
+          bindtap="onStartLiveness"
+          loading="{{livenessLoading}}"
+          disabled="{{!realName || !idCard}}"
+        >
+          {{livenessStatus === 'fail' ? '重新检测' : '开始活体检测'}}
+        </button>
+        <button
+          wx:if="{{livenessStatus === 'scanning'}}"
+          class="btn btn-secondary btn-block btn-disabled"
+        >
+          检测中，请稍候…
+        </button>
+        <button
+          wx:if="{{livenessStatus === 'success'}}"
+          class="btn btn-outline btn-block"
+          bindtap="onStartLiveness"
+        >
+          重新检测
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 未成年人提示 -->
+  <view class="card minor-card" wx:if="{{isMinor}}">
+    <view class="minor-header">
+      <text class="minor-icon">⚠️</text>
+      <text class="minor-title">未成年人温馨提示</text>
+    </view>
+    <view class="minor-content">
+      <text class="minor-text">根据国家相关法律法规，未成年人使用平台服务将受到以下限制：</text>
+      <view class="minor-limit-list">
+        <view class="limit-item">
+          <text class="limit-dot">•</text>
+          <text class="limit-text">单笔消费不得超过 <text class="text-warning">¥100</text></text>
+        </view>
+        <view class="limit-item">
+          <text class="limit-dot">•</text>
+          <text class="limit-text">每月累计消费不得超过 <text class="text-warning">¥400</text></text>
+        </view>
+        <view class="limit-item">
+          <text class="limit-dot">•</text>
+          <text class="limit-text">每日22:00至次日8:00不可使用陪玩服务</text>
+        </view>
+      </view>
+      <view class="minor-guardian" wx:if="{{overLimit}}">
+        <text class="minor-guardian-text">如需超额消费，需要监护人进行验证授权</text>
+        <button class="btn btn-primary btn-sm" bindtap="onGoGuardian">监护人验证</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-wrapper">
+    <button
+      class="btn btn-primary btn-block"
+      bindtap="onSubmit"
+      loading="{{submitting}}"
+      disabled="{{!realName || !idCard || livenessStatus !== 'success'}}"
+    >
+      提交认证
+    </button>
+  </view>
+</view>

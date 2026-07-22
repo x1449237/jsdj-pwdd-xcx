@@ -1,0 +1,233 @@
+.realname-page {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  padding-bottom: var(--spacing-xl);
+}
+
+.page-header {
+  padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-md);
+  text-align: center;
+}
+
+.page-title {
+  display: block;
+  font-size: var(--font-size-xxl);
+  font-weight: bold;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.page-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tip);
+}
+
+/* 活体检测 */
+.liveness-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.liveness-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: var(--spacing-md) 0;
+}
+
+.frame-circle {
+  width: 360rpx;
+  height: 360rpx;
+  border-radius: 50%;
+  border: 4rpx dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg);
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.liveness-frame.scanning .frame-circle {
+  border-color: var(--color-primary);
+  border-style: solid;
+  animation: frame-pulse 1.5s ease-in-out infinite;
+}
+
+.liveness-frame.success .frame-circle {
+  border-color: var(--color-success);
+  border-style: solid;
+  background-color: rgba(7, 193, 96, 0.05);
+}
+
+.liveness-frame.fail .frame-circle {
+  border-color: var(--color-danger);
+  border-style: solid;
+  background-color: rgba(233, 69, 96, 0.05);
+}
+
+@keyframes frame-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.3); }
+  50% { box-shadow: 0 0 0 20rpx rgba(233, 69, 96, 0); }
+}
+
+.frame-icon {
+  width: 120rpx;
+  height: 120rpx;
+  opacity: 0.4;
+}
+
+.frame-hint {
+  margin-top: var(--spacing-sm);
+}
+
+.frame-hint text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tip);
+}
+
+.frame-scanning {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.scanning-wave {
+  width: 80rpx;
+  height: 4rpx;
+  background-color: var(--color-primary);
+  border-radius: 2rpx;
+  animation: wave-move 1s ease-in-out infinite;
+  margin-bottom: var(--spacing-sm);
+}
+
+@keyframes wave-move {
+  0%, 100% { transform: scaleX(1); opacity: 0.5; }
+  50% { transform: scaleX(2); opacity: 1; }
+}
+
+.scanning-text {
+  font-size: var(--font-size-md);
+  color: var(--color-primary);
+}
+
+.frame-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.result-icon {
+  font-size: 64rpx;
+  font-weight: bold;
+}
+
+.frame-result.success .result-icon {
+  color: var(--color-success);
+}
+
+.frame-result.fail .result-icon {
+  color: var(--color-danger);
+}
+
+.result-text {
+  font-size: var(--font-size-lg);
+  margin-top: var(--spacing-xs);
+  font-weight: 500;
+}
+
+.frame-result.success .result-text {
+  color: var(--color-success);
+}
+
+.frame-result.fail .result-text {
+  color: var(--color-danger);
+}
+
+.result-reason {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tip);
+  margin-top: var(--spacing-xs);
+  text-align: center;
+}
+
+.liveness-actions {
+  width: 100%;
+  margin-top: var(--spacing-md);
+}
+
+/* 未成年人提示 */
+.minor-card {
+  border-left: 6rpx solid var(--color-warning);
+}
+
+.minor-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.minor-icon {
+  font-size: var(--font-size-lg);
+  margin-right: var(--spacing-xs);
+}
+
+.minor-title {
+  font-size: var(--font-size-lg);
+  font-weight: bold;
+  color: var(--color-warning);
+}
+
+.minor-content {
+  padding-left: var(--spacing-sm);
+}
+
+.minor-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.minor-limit-list {
+  margin-top: var(--spacing-sm);
+}
+
+.limit-item {
+  display: flex;
+  align-items: center;
+  margin-top: var(--spacing-xs);
+}
+
+.limit-dot {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tip);
+  margin-right: var(--spacing-xs);
+}
+
+.limit-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.minor-guardian {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1rpx solid var(--color-border);
+}
+
+.minor-guardian-text {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-right: var(--spacing-md);
+}
+
+/* 提交区域 */
+.submit-wrapper {
+  padding: var(--spacing-lg) var(--spacing-md);
+}

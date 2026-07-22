@@ -1,0 +1,143 @@
+.order-card {
+  background-color: var(--color-bg-white);
+  border-radius: var(--border-radius-md);
+  margin: var(--spacing-sm) var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.order-no {
+  font-family: monospace;
+}
+
+.card-body {
+  padding: var(--spacing-md);
+}
+
+.service-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.game-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: var(--border-radius-sm);
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.service-detail {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-name {
+  margin-bottom: 4rpx;
+}
+
+.service-extra {
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  border-top: 1rpx solid var(--color-border);
+  border-bottom: 1rpx solid var(--color-border);
+  margin-bottom: var(--spacing-md);
+}
+
+.user-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.user-detail {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  margin-bottom: 4rpx;
+}
+
+.user-tags {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.order-meta {
+  display: flex;
+  justify-content: space-between;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.meta-label {
+  margin-bottom: 4rpx;
+}
+
+.meta-value {
+  font-weight: 500;
+}
+
+.card-footer {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-top: 1rpx solid var(--color-border);
+}
+
+.footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+.footer-actions .btn-sm {
+  min-width: 140rpx;
+}
+
+/* 状态标签 */
+.tag-pending {
+  background-color: rgba(255, 151, 106, 0.1);
+  color: var(--color-warning);
+}
+
+.tag-doing {
+  background-color: rgba(233, 69, 96, 0.1);
+  color: var(--color-primary);
+}
+
+.tag-done {
+  background-color: rgba(7, 193, 96, 0.1);
+  color: var(--color-success);
+}
+
+.tag-cancel {
+  background-color: rgba(153, 153, 153, 0.1);
+  color: var(--color-text-tip);
+}
+
+.tag-appeal {
+  background-color: rgba(233, 69, 96, 0.1);
+  color: var(--color-danger);
+}

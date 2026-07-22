@@ -1,0 +1,173 @@
+<view class="guardian-page">
+  <view class="page-header">
+    <text class="page-title">监护人验证</text>
+    <text class="page-desc">未成年人超额消费需监护人验证授权</text>
+  </view>
+
+  <!-- 监护人信息填写 -->
+  <view class="card">
+    <view class="card-title">监护人信息</view>
+    <view class="form-group">
+      <view class="form-label">监护人姓名</view>
+      <input
+        class="form-input"
+        placeholder="请输入监护人真实姓名"
+        placeholder-class="form-placeholder"
+        value="{{guardianName}}"
+        bindinput="onNameInput"
+        maxlength="20"
+      />
+    </view>
+    <view class="form-group">
+      <view class="form-label">监护人身份证号</view>
+      <input
+        class="form-input"
+        type="idcard"
+        placeholder="请输入监护人身份证号码"
+        placeholder-class="form-placeholder"
+        value="{{guardianIdCard}}"
+        bindinput="onIdCardInput"
+        maxlength="18"
+      />
+    </view>
+    <view class="form-group">
+      <view class="form-label">监护人手机号</view>
+      <input
+        class="form-input"
+        type="number"
+        placeholder="请输入监护人手机号码"
+        placeholder-class="form-placeholder"
+        value="{{guardianPhone}}"
+        bindinput="onPhoneInput"
+        maxlength="11"
+      />
+    </view>
+  </view>
+
+  <!-- 监护人活体检测 -->
+  <view class="card">
+    <view class="card-title">监护人活体检测</view>
+    <view class="liveness-area">
+      <view class="liveness-frame {{livenessStatus}}">
+        <view class="frame-circle">
+          <image
+            wx:if="{{livenessStatus === 'idle'}}"
+            class="frame-icon"
+            src="/assets/icons/face-scan.png"
+            mode="aspectFit"
+          ></image>
+          <view wx:if="{{livenessStatus === 'idle'}}" class="frame-hint">
+            <text>请监护人将面部置于取景框内</text>
+          </view>
+          <view wx:if="{{livenessStatus === 'scanning'}}" class="frame-scanning">
+            <view class="scanning-wave"></view>
+            <text class="scanning-text">正在检测中…</text>
+          </view>
+          <view wx:if="{{livenessStatus === 'success'}}" class="frame-result success">
+            <text class="result-icon">✓</text>
+            <text class="result-text">检测通过</text>
+          </view>
+          <view wx:if="{{livenessStatus === 'fail'}}" class="frame-result fail">
+            <text class="result-icon">✗</text>
+            <text class="result-text">检测失败</text>
+            <text class="result-reason" wx:if="{{livenessFailReason}}">{{livenessFailReason}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="liveness-actions">
+        <button
+          wx:if="{{livenessStatus === 'idle' || livenessStatus === 'fail'}}"
+          class="btn btn-primary btn-block"
+          bindtap="onStartLiveness"
+          loading="{{livenessLoading}}"
+          disabled="{{!guardianName || !guardianIdCard}}"
+        >
+          {{livenessStatus === 'fail' ? '重新检测' : '开始活体检测'}}
+        </button>
+        <button
+          wx:if="{{livenessStatus === 'scanning'}}"
+          class="btn btn-secondary btn-block btn-disabled"
+        >
+          检测中，请稍候…
+        </button>
+        <button
+          wx:if="{{livenessStatus === 'success'}}"
+          class="btn btn-outline btn-block"
+          bindtap="onStartLiveness"
+        >
+          重新检测
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 免责声明 -->
+  <view class="card">
+    <view class="card-title">免责声明</view>
+    <view class="disclaimer-content">
+      <scroll-view scroll-y class="disclaimer-scroll">
+        <text class="disclaimer-text">
+          监护人声明：
+          
+          1. 本人确认是上述未成年人的合法监护人，所提供的身份信息真实有效。
+          
+          2. 本人已充分了解并同意未成年人在本平台使用陪玩服务的相关规则。
+          
+          3. 本人自愿为未成年人的消费行为提供担保和授权，并承担相应的法律责任。
+          
+          4. 本人确认本次授权仅针对超额消费限额，不影响平台其他服务规则。
+          
+          5. 本平台将严格按照法律法规保护监护人及未成年人的个人信息。
+          
+          6. 如发现冒用他人身份或虚假授权，本平台有权立即终止服务并追究法律责任。
+          
+          7. 本人已阅读并理解上述全部内容，同意承担相应责任。
+        </text>
+      </scroll-view>
+    </view>
+    <view class="disclaimer-agree">
+      <view class="agreement-check" bindtap="onToggleDisclaimer">
+        <view class="checkbox {{disclaimerAgreed ? 'checked' : ''}}">
+          <text wx:if="{{disclaimerAgreed}}" class="check-icon">✓</text>
+        </view>
+        <text class="agreement-text">我已阅读并同意以上免责声明</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- CA电子签名 -->
+  <view class="card">
+    <view class="card-title">CA电子签名</view>
+    <view class="signature-area">
+      <view class="signature-canvas-wrapper">
+        <canvas
+          class="signature-canvas"
+          canvas-id="signatureCanvas"
+          id="signatureCanvas"
+          disable-scroll="{{true}}"
+          bindtouchstart="onSignatureStart"
+          bindtouchmove="onSignatureMove"
+          bindtouchend="onSignatureEnd"
+        ></canvas>
+        <view class="signature-hint" wx:if="{{!signatureDrawn}}">
+          <text>请在方框内手写签名</text>
+        </view>
+      </view>
+      <view class="signature-actions">
+        <button class="btn btn-ghost btn-sm" bindtap="onClearSignature">清除重签</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-wrapper">
+    <button
+      class="btn btn-primary btn-block"
+      bindtap="onSubmit"
+      loading="{{submitting}}"
+      disabled="{{!guardianName || !guardianIdCard || !guardianPhone || livenessStatus !== 'success' || !disclaimerAgreed || !signatureDrawn}}"
+    >
+      提交验证
+    </button>
+  </view>
+</view>

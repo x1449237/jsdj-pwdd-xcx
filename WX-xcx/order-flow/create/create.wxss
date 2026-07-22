@@ -1,0 +1,292 @@
+.create-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 140rpx;
+}
+
+.section {
+  margin: 20rpx 0;
+}
+
+.section-title {
+  padding: 0 32rpx 16rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #666666;
+}
+
+/* 服务信息 */
+.service-card {
+  background-color: #ffffff;
+  margin: 0 24rpx;
+  border-radius: 16rpx;
+  padding: 24rpx;
+}
+
+.service-row {
+  display: flex;
+  margin-bottom: 12rpx;
+  font-size: 28rpx;
+}
+
+.service-row:last-child {
+  margin-bottom: 0;
+}
+
+.s-label {
+  color: #999999;
+  flex-shrink: 0;
+}
+
+.s-value {
+  color: #333333;
+}
+
+/* 打手信息 */
+.player-card {
+  background-color: #ffffff;
+  margin: 0 24rpx;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+}
+
+.player-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  margin-right: 20rpx;
+}
+
+.player-info {
+  flex: 1;
+}
+
+.player-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.player-stats {
+  display: flex;
+  gap: 24rpx;
+  margin-bottom: 8rpx;
+}
+
+.stat {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.player-tags {
+  display: flex;
+  gap: 8rpx;
+}
+
+.player-tags .tag {
+  padding: 2rpx 12rpx;
+  font-size: 20rpx;
+  color: #e94560;
+  background-color: rgba(233, 69, 96, 0.08);
+  border-radius: 4rpx;
+}
+
+/* 金额确认 */
+.amount-card {
+  background-color: #ffffff;
+  margin: 0 24rpx;
+  border-radius: 16rpx;
+  padding: 24rpx;
+}
+
+.amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+  font-size: 28rpx;
+}
+
+.amount-row:last-child {
+  margin-bottom: 0;
+}
+
+.amount-total {
+  padding-top: 16rpx;
+  margin-top: 12rpx;
+  border-top: 1rpx solid #f5f5f5;
+}
+
+.a-label {
+  color: #999999;
+}
+
+.a-value {
+  color: #333333;
+}
+
+/* 未成年人限额提示 */
+.minor-tip {
+  margin: 16rpx 24rpx 0;
+  background-color: rgba(255, 151, 106, 0.08);
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  display: flex;
+  border-left: 4rpx solid #ff976a;
+}
+
+.tip-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+}
+
+.tip-content {
+  flex: 1;
+}
+
+.tip-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #ff976a;
+  margin-bottom: 6rpx;
+}
+
+.tip-desc {
+  display: block;
+  font-size: 24rpx;
+  color: #999999;
+  line-height: 1.5;
+  margin-bottom: 8rpx;
+}
+
+.tip-action {
+  font-size: 24rpx;
+  color: #e94560;
+}
+
+/* 备注 */
+.remark-section {
+  background-color: #ffffff;
+  margin: 0 24rpx;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+}
+
+.remark-input {
+  width: 100%;
+  min-height: 100rpx;
+  font-size: 28rpx;
+  color: #333333;
+  line-height: 1.6;
+}
+
+.placeholder {
+  color: #cccccc;
+}
+
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 22rpx;
+  color: #999999;
+  margin-top: 8rpx;
+}
+
+/* 电子签入口 */
+.esign-banner {
+  background-color: #ffffff;
+  margin: 0 24rpx;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+  border: 2rpx solid rgba(233, 69, 96, 0.15);
+}
+
+.esign-icon {
+  font-size: 44rpx;
+  margin-right: 16rpx;
+}
+
+.esign-info {
+  flex: 1;
+}
+
+.esign-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 4rpx;
+}
+
+.esign-desc {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.esign-arrow {
+  font-size: 32rpx;
+  color: #cccccc;
+}
+
+/* 底部支付栏 */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  padding: 20rpx 32rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.08);
+  z-index: 10;
+}
+
+.total-section {
+  display: flex;
+  align-items: baseline;
+}
+
+.total-label {
+  font-size: 28rpx;
+  color: #666666;
+}
+
+.total-amount {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #e94560;
+}
+
+.pay-btn {
+  padding: 0 48rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e94560, #c23152);
+  border-radius: 40rpx;
+  border: none;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.pay-btn::after {
+  border: none;
+}
+
+.pay-btn.btn-disabled {
+  opacity: 0.5;
+}

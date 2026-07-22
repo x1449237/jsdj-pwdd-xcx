@@ -1,0 +1,76 @@
+<view class="message-item {{extraClass}}" data-mid="{{message.id}}" bindlongpress="onLongPress">
+  <!-- 系统消息 -->
+  <view wx:if="{{message.type === 'system'}}" class="message-system">
+    <text class="system-text text-xs text-tip">{{message.content}}</text>
+  </view>
+
+  <!-- 自己发送的消息 -->
+  <view wx:elif="{{message.isSelf}}" class="message-self">
+    <view class="message-bubble-wrapper">
+      <view class="message-bubble bubble-self">
+        <!-- 文字消息 -->
+        <text wx:if="{{message.type === 'text'}}" class="bubble-text">{{message.content}}</text>
+
+        <!-- 语音消息 -->
+        <view wx:if="{{message.type === 'voice'}}" class="bubble-voice" bindtap="onPlayVoice">
+          <text class="voice-icon">🔊</text>
+          <text class="voice-duration">{{message.voiceDuration}}″</text>
+          <view class="voice-waves">
+            <view class="voice-wave" wx:for="{{4}}" wx:key="index"></view>
+          </view>
+        </view>
+
+        <!-- 图片消息 -->
+        <image
+          wx:if="{{message.type === 'image'}}"
+          class="bubble-image"
+          src="{{message.imageUrl}}"
+          mode="aspectFill"
+          bindtap="onPreviewImage"
+        ></image>
+      </view>
+
+      <view class="message-meta">
+        <text wx:if="{{message.isRead}}" class="meta-read text-xs text-success">已读</text>
+        <text wx:else class="meta-read text-xs text-tip">未读</text>
+        <text class="meta-time text-xs text-tip">{{message.time}}</text>
+      </view>
+    </view>
+
+    <image class="message-avatar" src="{{message.avatar}}" mode="aspectFill"></image>
+  </view>
+
+  <!-- 对方发送的消息 -->
+  <view wx:else class="message-other">
+    <image class="message-avatar" src="{{message.avatar}}" mode="aspectFill"></image>
+
+    <view class="message-bubble-wrapper">
+      <view class="message-bubble bubble-other">
+        <!-- 文字消息 -->
+        <text wx:if="{{message.type === 'text'}}" class="bubble-text">{{message.content}}</text>
+
+        <!-- 语音消息 -->
+        <view wx:if="{{message.type === 'voice'}}" class="bubble-voice" bindtap="onPlayVoice">
+          <text class="voice-icon">🔊</text>
+          <text class="voice-duration">{{message.voiceDuration}}″</text>
+          <view class="voice-waves">
+            <view class="voice-wave" wx:for="{{4}}" wx:key="index"></view>
+          </view>
+        </view>
+
+        <!-- 图片消息 -->
+        <image
+          wx:if="{{message.type === 'image'}}"
+          class="bubble-image"
+          src="{{message.imageUrl}}"
+          mode="aspectFill"
+          bindtap="onPreviewImage"
+        ></image>
+      </view>
+
+      <view class="message-meta">
+        <text class="meta-time text-xs text-tip">{{message.time}}</text>
+      </view>
+    </view>
+  </view>
+</view>

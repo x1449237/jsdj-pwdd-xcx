@@ -1,0 +1,87 @@
+<!-- 分销中心 -->
+<view class="page-distributor-center">
+  <!-- 邀请码区域 -->
+  <view class="invite-section bg-dark">
+    <view class="invite-header flex-between">
+      <text class="invite-title text-white">我的邀请码</text>
+      <view class="invite-code-wrapper flex align-center" bindtap="copyInviteCode">
+        <text class="invite-code text-white text-xxl font-bold">{{inviteCode}}</text>
+        <text class="copy-btn text-xs text-primary ml-sm">复制</text>
+      </view>
+    </view>
+    <view class="invite-tip text-tip text-xs mt-sm">
+      <text>分享邀请码给好友，好友注册并下单后您可获得佣金奖励</text>
+    </view>
+  </view>
+
+  <!-- 收益总览 -->
+  <view class="overview-section card shadow-sm">
+    <view class="section-title text-lg font-bold mb-md">收益总览</view>
+    <view class="overview-grid">
+      <view class="overview-item">
+        <text class="overview-label text-tip text-sm">累计佣金</text>
+        <text class="overview-value text-primary text-xl font-bold">¥{{totalCommission}}</text>
+      </view>
+      <view class="overview-item">
+        <text class="overview-label text-tip text-sm">本月佣金</text>
+        <text class="overview-value text-primary text-xl font-bold">¥{{monthCommission}}</text>
+      </view>
+      <view class="overview-item">
+        <text class="overview-label text-tip text-sm">一级下级</text>
+        <text class="overview-value text-secondary text-xl font-bold">{{level1Count}}人</text>
+      </view>
+      <view class="overview-item">
+        <text class="overview-label text-tip text-sm">二级下级</text>
+        <text class="overview-value text-secondary text-xl font-bold">{{level2Count}}人</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分销规则说明 -->
+  <view class="rule-section card shadow-sm">
+    <view class="section-title text-lg font-bold mb-md">分销规则</view>
+    <view class="rule-list">
+      <view class="rule-row flex">
+        <text class="rule-dot text-primary">1.</text>
+        <text class="rule-text text-secondary text-sm">分享您的邀请码给好友注册，好友即成为您的一级下级。</text>
+      </view>
+      <view class="rule-row flex">
+        <text class="rule-dot text-primary">2.</text>
+        <text class="rule-text text-secondary text-sm">一级下级再分享邀请码，其好友成为您的二级下级。支持强制2级分销关系。</text>
+      </view>
+      <view class="rule-row flex">
+        <text class="rule-dot text-primary">3.</text>
+        <text class="rule-text text-secondary text-sm">一级下级每完成一笔订单，您可获得订单金额 <text class="text-primary font-bold">5%</text> 的佣金。</text>
+      </view>
+      <view class="rule-row flex">
+        <text class="rule-dot text-primary">4.</text>
+        <text class="rule-text text-secondary text-sm">二级下级每完成一笔订单，您可获得订单金额 <text class="text-primary font-bold">2%</text> 的佣金。</text>
+      </view>
+      <view class="rule-row flex">
+        <text class="rule-dot text-primary">5.</text>
+        <text class="rule-text text-secondary text-sm">下级首次完成订单，您可额外获得 <text class="text-primary font-bold">¥10.00</text> 首单奖励。</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快速入口 -->
+  <view class="quick-entry-section">
+    <view class="section-title text-lg font-bold mb-md pl-md">快速入口</view>
+    <view class="entry-grid">
+      <view class="entry-item card shadow-sm flex-center flex-col" bindtap="goSubordinates">
+        <view class="entry-icon icon-subordinates">
+          <text class="iconfont">👥</text>
+        </view>
+        <text class="entry-name text-md mt-sm">下级管理</text>
+        <text class="entry-desc text-xs text-tip mt-xs">查看下级详情</text>
+      </view>
+      <view class="entry-item card shadow-sm flex-center flex-col" bindtap="goCommission">
+        <view class="entry-icon icon-commission">
+          <text class="iconfont">💰</text>
+        </view>
+        <text class="entry-name text-md mt-sm">佣金收益</text>
+        <text class="entry-desc text-xs text-tip mt-xs">查看佣金明细</text>
+      </view>
+    </view>
+  </view>
+</view>

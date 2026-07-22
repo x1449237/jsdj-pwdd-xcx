@@ -1,0 +1,42 @@
+# 依赖目录
+node_modules/
+vendor/
+
+# 构建产物
+admin-web/dist/
+admin-web/dist-ssr/
+
+# 环境配置（敏感信息）
+.env
+.env.local
+.env.*.local
+
+# 日志文件
+*.log
+runtime/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 上传文件目录
+php/public/uploads/
+php/runtime/
+
+# 备份文件
+*.sql.gz
+*.sql.bak
+
+# 微信小程序
+WX-xcx/node_modules/
+
+# 锁文件
+package-lock.json
+composer.lock

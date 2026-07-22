@@ -1,0 +1,126 @@
+<view class="appeal-detail-page">
+  <!-- 申诉状态 -->
+  <view class="status-bar">
+    <view class="status-card">
+      <text class="status-label">申诉状态</text>
+      <text class="status-value" style="color: {{appeal.statusColor}}">{{appeal.statusText}}</text>
+    </view>
+  </view>
+
+  <!-- 申诉信息 -->
+  <view class="info-section">
+    <view class="section-title">
+      <text class="title-text">申诉信息</text>
+    </view>
+    <view class="info-list">
+      <view class="info-item">
+        <text class="info-label">申诉编号</text>
+        <text class="info-value">{{appeal.appeal_no}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">申诉类型</text>
+        <text class="info-value">{{appeal.typeText}}</text>
+      </view>
+      <view class="info-item" wx:if="{{appeal.phone}}">
+        <text class="info-label">手机号</text>
+        <text class="info-value">{{appeal.phone}}</text>
+      </view>
+      <view class="info-item" wx:if="{{appeal.order_no}}">
+        <text class="info-label">关联订单</text>
+        <text class="info-value">{{appeal.order_no}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">提交时间</text>
+        <text class="info-value">{{appeal.create_time}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 申诉描述 -->
+  <view class="info-section">
+    <view class="section-title">
+      <text class="title-text">申诉描述</text>
+    </view>
+    <view class="desc-content">
+      <text>{{appeal.description}}</text>
+    </view>
+  </view>
+
+  <!-- 证据附件 -->
+  <view class="info-section" wx:if="{{appeal.video_url || appeal.images}}">
+    <view class="section-title">
+      <text class="title-text">证据附件</text>
+    </view>
+    <view class="evidence-section">
+      <view class="video-item" wx:if="{{appeal.video_url}}" bindtap="onPreviewVideo">
+        <text class="video-icon">📹</text>
+        <text class="video-text">运营商录屏</text>
+        <text class="video-tip">点击播放</text>
+      </view>
+      <view class="image-list" wx:if="{{appeal.images && appeal.images.length > 0}}">
+        <image
+          class="evidence-image"
+          wx:for="{{appeal.images}}"
+          wx:key="*this"
+          src="{{item}}"
+          mode="aspectFill"
+          bindtap="onPreviewImage"
+          data-url="{{item}}"
+        ></image>
+      </view>
+    </view>
+  </view>
+
+  <!-- 处理结果 -->
+  <view class="info-section" wx:if="{{appeal.result}}">
+    <view class="section-title">
+      <text class="title-text">处理结果</text>
+    </view>
+    <view class="result-content">
+      <text>{{appeal.result}}</text>
+    </view>
+  </view>
+
+  <!-- 沟通记录 -->
+  <view class="info-section">
+    <view class="section-title">
+      <text class="title-text">沟通记录</text>
+    </view>
+    <view class="chat-list" wx:if="{{messages.length > 0}}">
+      <view class="chat-item" wx:for="{{messages}}" wx:key="id">
+        <view class="chat-user">
+          <text class="chat-user-name">{{item.sender_name}}</text>
+          <text class="chat-time">{{item.create_time}}</text>
+        </view>
+        <view class="chat-content">
+          <text>{{item.content}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty-state" wx:else>
+      <text class="empty-state-text">暂无沟通记录</text>
+    </view>
+  </view>
+
+  <!-- 补充说明 -->
+  <view class="reply-section" wx:if="{{appeal.status === 0 || appeal.status === 1}}">
+    <view class="reply-input-wrapper">
+      <textarea
+        class="reply-input"
+        placeholder="补充说明..."
+        value="{{replyText}}"
+        bindinput="onReplyInput"
+        maxlength="200"
+        auto-height
+      />
+    </view>
+    <button
+      class="btn btn-primary btn-sm reply-btn"
+      loading="{{replying}}"
+      disabled="{{!replyText.trim()}}"
+      bindtap="onSendReply"
+    >
+      发送
+    </button>
+  </view>
+</view>

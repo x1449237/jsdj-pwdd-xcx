@@ -1,0 +1,170 @@
+/* 我的服务 */
+.page-my-services {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== 顶部操作栏 ========== */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+/* ========== 服务列表 ========== */
+.service-scroll {
+  flex: 1;
+  height: 0;
+}
+
+.service-list {
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.service-card {
+  margin-bottom: var(--spacing-sm);
+}
+
+.service-header {
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.game-icon {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: var(--border-radius-sm);
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.game-name {
+  margin-right: 4rpx;
+}
+
+.rank-text {
+  display: inline;
+}
+
+.status-switch {
+  transform: scale(0.8);
+}
+
+/* ========== 服务详情 ========== */
+.service-body {
+  padding: var(--spacing-sm) 0;
+}
+
+.service-info-row {
+  padding: 8rpx 0;
+}
+
+.info-label {
+  flex-shrink: 0;
+  margin-right: var(--spacing-md);
+}
+
+.info-value {
+  max-width: 400rpx;
+}
+
+.service-tags {
+  margin-top: var(--spacing-sm);
+  gap: 8rpx;
+}
+
+/* ========== 服务底部 ========== */
+.service-footer {
+  padding-top: var(--spacing-sm);
+  border-top: 1rpx solid var(--color-border);
+}
+
+.status-badge {
+  font-size: var(--font-size-xs);
+  padding: 4rpx 16rpx;
+  border-radius: 4rpx;
+}
+
+.badge-online {
+  background-color: rgba(7, 193, 96, 0.1);
+  color: var(--color-success);
+}
+
+.badge-offline {
+  background-color: rgba(153, 153, 153, 0.1);
+  color: var(--color-text-tip);
+}
+
+/* ========== 空状态 ========== */
+.empty-state-sub {
+  font-size: var(--font-size-sm);
+}
+
+/* ========== 弹窗 ========== */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-dialog {
+  width: 640rpx;
+  max-height: 80vh;
+  background-color: var(--color-bg-white);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-title {
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.modal-body {
+  flex: 1;
+  height: 0;
+  padding: 0 var(--spacing-xs);
+}
+
+.modal-footer {
+  margin-top: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.icon-arrow {
+  font-size: var(--font-size-sm);
+}
+
+/* ========== 标签选择 ========== */
+.tag-select {
+  gap: 12rpx;
+}
+
+.tag-item {
+  padding: 10rpx 24rpx;
+  font-size: var(--font-size-sm);
+  border-radius: 32rpx;
+  background-color: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 2rpx solid transparent;
+  transition: all 0.2s;
+}
+
+.tag-item-selected {
+  background-color: rgba(233, 69, 96, 0.08);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}

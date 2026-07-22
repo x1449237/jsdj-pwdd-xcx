@@ -1,0 +1,92 @@
+<!-- 佣金收益 -->
+<view class="page-commission">
+  <!-- 佣金汇总 -->
+  <view class="commission-summary bg-dark">
+    <view class="summary-header flex-between">
+      <text class="summary-title text-white">佣金收益</text>
+      <view class="flex align-center">
+        <text class="summary-total-label text-tip text-xs">累计</text>
+        <text class="summary-total text-white text-xxl font-bold ml-sm">¥{{totalCommission}}</text>
+      </view>
+    </view>
+    <view class="summary-stats flex mt-md">
+      <view class="stat-item flex-1">
+        <text class="stat-value text-white text-xl font-bold">{{pendingCount}}</text>
+        <text class="stat-label text-tip text-xs">待结算</text>
+      </view>
+      <view class="stat-item flex-1">
+        <text class="stat-value text-success text-xl font-bold">{{settledCount}}</text>
+        <text class="stat-label text-tip text-xs">已结算</text>
+      </view>
+      <view class="stat-item flex-1">
+        <text class="stat-value text-warning text-xl font-bold">{{firstOrderCount}}</text>
+        <text class="stat-label text-tip text-xs">首单奖励</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 佣金列表 -->
+  <view class="commission-section">
+    <view class="section-header flex-between p-md bg-white">
+      <text class="section-title text-lg font-bold">佣金明细</text>
+      <picker mode="selector" range="{{statusFilter}}" bindchange="onStatusChange" value="{{statusIndex}}">
+        <view class="status-picker flex align-center">
+          <text class="text-secondary text-sm">{{statusFilter[statusIndex] || '全部状态'}}</text>
+          <text class="text-tip ml-sm">▼</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="commission-list" wx:if="{{commissionList.length > 0}}">
+      <view class="commission-card card shadow-sm" wx:for="{{commissionList}}" wx:key="id">
+        <!-- 首单奖励标识 -->
+        <view class="first-order-badge" wx:if="{{item.isFirstOrder}}">
+          <text class="badge-text">🎉 首单奖励</text>
+        </view>
+
+        <view class="commission-header flex-between">
+          <view class="flex align-center">
+            <image class="source-avatar" src="{{item.sourceAvatar}}" mode="aspectFill" />
+            <view>
+              <text class="source-name text-md">{{item.sourceName}}</text>
+              <view class="flex align-center mt-xs">
+                <text class="level-tag tag tag-warning" wx:if="{{item.level === 1}}">一级</text>
+                <text class="level-tag tag tag-primary" wx:if="{{item.level === 2}}">二级</text>
+                <text class="text-xs text-tip ml-sm">{{item.orderNo}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="commission-amount text-right">
+            <text class="amount-value text-lg font-bold text-primary">+¥{{item.amountText}}</text>
+            <text class="amount-rate text-xs text-tip mt-xs">{{item.rateText}}</text>
+          </view>
+        </view>
+
+        <view class="commission-footer flex-between mt-sm">
+          <text class="commission-time text-xs text-tip">{{item.timeText}}</text>
+          <view class="flex align-center">
+            <text class="status-dot {{item.status === 1 ? 'dot-settled' : 'dot-pending'}}"></text>
+            <text class="status-text text-xs {{item.status === 1 ? 'text-success' : 'text-warning'}}">
+              {{item.statusText}}
+            </text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!loading && commissionList.length === 0}}">
+      <image class="empty-state-image" src="/assets/images/empty-commission.png" mode="aspectFit" />
+      <text class="empty-state-text">暂无佣金记录</text>
+      <text class="empty-state-sub text-tip text-sm mt-sm">快去邀请好友加入吧</text>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="loading-more" wx:if="{{loadingMore}}">
+      <text>加载中...</text>
+    </view>
+    <view class="no-more" wx:if="{{!hasMore && commissionList.length > 0}}">
+      <text>—— 没有更多了 ——</text>
+    </view>
+  </view>
+</view>

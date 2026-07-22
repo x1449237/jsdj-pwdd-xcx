@@ -1,0 +1,58 @@
+<view class="chat-list-page">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input-wrapper">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索聊天"
+        placeholder-class="placeholder"
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+    </view>
+  </view>
+
+  <!-- 会话列表 -->
+  <view class="conversation-list">
+    <block wx:if="{{conversationList.length > 0}}">
+      <view
+        wx:for="{{conversationList}}"
+        wx:key="conversation_id"
+        class="conversation-item"
+        bindtap="onOpenChat"
+        data-conversation="{{item}}"
+        bindlongpress="onLongPress"
+        data-conversation="{{item}}"
+      >
+        <view class="avatar-wrapper">
+          <image class="avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+          <view class="unread-badge" wx:if="{{item.unread_count > 0}}">
+            <text>{{item.unread_count > 99 ? '99+' : item.unread_count}}</text>
+          </view>
+        </view>
+
+        <view class="conversation-info">
+          <view class="info-header">
+            <text class="nickname">{{item.nickname}}</text>
+            <text class="time">{{item.last_time}}</text>
+          </view>
+          <view class="info-footer">
+            <text class="last-message text-ellipsis">{{item.last_message}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:if="{{conversationList.length === 0 && !loading}}">
+      <text class="empty-state-icon">💬</text>
+      <text class="empty-state-text">暂无聊天消息</text>
+    </view>
+
+    <view class="loading-wrapper" wx:if="{{loading}}">
+      <text class="loading-more">加载中...</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,111 @@
+.player-card {
+  background-color: var(--color-bg-white);
+  border-radius: var(--border-radius-md);
+  margin: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.player-main {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  margin-right: var(--spacing-md);
+}
+
+.player-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+}
+
+.online-dot {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--color-bg-white);
+}
+
+.online-dot.online {
+  background-color: var(--color-success);
+}
+
+.online-dot.offline {
+  background-color: var(--color-text-tip);
+}
+
+.player-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.info-top {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4rpx;
+}
+
+.player-nickname {
+  max-width: 200rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gender-icon {
+  margin-left: 4rpx;
+}
+
+.gender-male {
+  font-size: var(--font-size-sm);
+  color: #4a90d9;
+}
+
+.gender-female {
+  font-size: var(--font-size-sm);
+  color: #e94560;
+}
+
+.info-tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 4rpx;
+}
+
+.info-meta {
+  display: flex;
+  align-items: center;
+}
+
+.player-price {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.price-symbol {
+  font-weight: 500;
+}
+
+.price-value {
+  line-height: 1;
+}
+
+.player-status {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-xs);
+  padding-top: var(--spacing-xs);
+  border-top: 1rpx dashed var(--color-border);
+}

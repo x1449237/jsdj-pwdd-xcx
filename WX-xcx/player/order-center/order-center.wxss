@@ -1,0 +1,294 @@
+/* 接单中心 */
+.page-order-center {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== WebSocket 状态条 ========== */
+.ws-status {
+  display: flex;
+  align-items: center;
+  padding: 12rpx var(--spacing-md);
+  font-size: var(--font-size-xs);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.ws-connected {
+  background-color: rgba(7, 193, 96, 0.08);
+}
+
+.ws-disconnected {
+  background-color: rgba(233, 69, 96, 0.08);
+}
+
+.ws-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  margin-right: 8rpx;
+  flex-shrink: 0;
+}
+
+.ws-connected .ws-dot {
+  background-color: var(--color-success);
+}
+
+.ws-disconnected .ws-dot {
+  background-color: var(--color-danger);
+}
+
+.ws-text {
+  flex: 1;
+}
+
+.ws-connected .ws-text {
+  color: var(--color-success);
+}
+
+.ws-disconnected .ws-text {
+  color: var(--color-danger);
+}
+
+.ws-retry {
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  padding: 4rpx 16rpx;
+  border: 1rpx solid var(--color-primary);
+  border-radius: 4rpx;
+  margin-left: var(--spacing-sm);
+}
+
+/* ========== 新订单推送通知条 ========== */
+.new-order-notice {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #fff7e6, #fffbe6);
+  padding: 16rpx var(--spacing-md);
+  margin: 0 var(--spacing-md) var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  border-left: 6rpx solid var(--color-warning);
+  transform: translateY(-100%);
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.new-order-notice.notice-show {
+  transform: translateY(0);
+  opacity: 1;
+  max-height: 120rpx;
+}
+
+.notice-icon {
+  width: 56rpx;
+  height: 56rpx;
+  background-color: var(--color-warning);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.notice-icon .iconfont {
+  font-size: 28rpx;
+  color: #fff;
+}
+
+.notice-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.notice-title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: bold;
+}
+
+.notice-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tip);
+  margin-top: 4rpx;
+}
+
+.notice-close {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notice-close .iconfont {
+  font-size: 24rpx;
+  color: var(--color-text-tip);
+}
+
+/* ========== 订单滚动区 ========== */
+.order-scroll {
+  flex: 1;
+  height: 0;
+}
+
+.order-list {
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-xl);
+}
+
+/* ========== 订单卡片 ========== */
+.order-card {
+  margin-bottom: var(--spacing-sm);
+}
+
+.order-header {
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.game-icon {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: var(--border-radius-sm);
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.game-text {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.game-name {
+  max-width: 200rpx;
+}
+
+.amount-symbol {
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+.amount-value {
+  font-weight: bold;
+}
+
+/* ========== 订单详情 ========== */
+.order-body {
+  padding: var(--spacing-sm) 0;
+}
+
+.order-info-row {
+  padding: 10rpx 0;
+}
+
+.info-label {
+  flex-shrink: 0;
+  margin-right: var(--spacing-md);
+}
+
+.info-value {
+  max-width: 400rpx;
+}
+
+.player-info {
+  gap: 8rpx;
+}
+
+.player-avatar {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.player-name {
+  max-width: 160rpx;
+}
+
+/* ========== 操作区 ========== */
+.order-actions {
+  padding-top: var(--spacing-sm);
+  border-top: 1rpx solid var(--color-border);
+}
+
+.action-left {
+  flex: 1;
+}
+
+.free-count {
+  font-size: var(--font-size-xs);
+}
+
+.action-right {
+  flex-shrink: 0;
+}
+
+.btn-reject {
+  border-color: var(--color-text-tip);
+  color: var(--color-text-tip);
+}
+
+.countdown-tip {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+}
+
+.countdown-icon {
+  margin-right: 4rpx;
+}
+
+/* ========== 空状态 ========== */
+.empty-state-sub {
+  font-size: var(--font-size-sm);
+}
+
+/* ========== 弹窗 ========== */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-dialog {
+  width: 600rpx;
+  background-color: var(--color-bg-white);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+}
+
+.modal-title {
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.modal-body {
+  padding: var(--spacing-md) 0;
+}
+
+.reject-info {
+  background-color: var(--color-bg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+}
+
+.modal-footer {
+  margin-top: var(--spacing-md);
+}

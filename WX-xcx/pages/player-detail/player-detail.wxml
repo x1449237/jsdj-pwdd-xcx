@@ -1,0 +1,127 @@
+<view class="player-detail-page">
+  <!-- 玩家信息头部 -->
+  <view class="player-header">
+    <view class="player-bg"></view>
+    <view class="player-header-content">
+      <image class="player-avatar-lg" src="{{player.avatar}}" mode="aspectFill"></image>
+      <view class="player-basic-info">
+        <view class="player-name-row">
+          <text class="player-name">{{player.nickname}}</text>
+          <text class="player-gender">{{player.gender === 1 ? '♂' : '♀'}}</text>
+          <view class="online-badge" wx:if="{{player.is_online}}">在线</view>
+        </view>
+        <view class="player-tags">
+          <text class="tag tag-gold" wx:for="{{player.tags}}" wx:key="*this">{{item}}</text>
+        </view>
+        <view class="player-rank-info">
+          <text class="tag tag-primary">{{player.rank}}</text>
+          <text class="tag tag-primary">{{player.server}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 数据统计 -->
+  <view class="stats-section">
+    <view class="stat-item">
+      <text class="stat-value">{{player.good_rate}}%</text>
+      <text class="stat-label">好评率</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-value">{{player.order_count}}</text>
+      <text class="stat-label">接单数</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-value">{{player.online_hours}}h</text>
+      <text class="stat-label">在线时长</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-value">{{player.fans_count}}</text>
+      <text class="stat-label">粉丝</text>
+    </view>
+  </view>
+
+  <!-- 个人简介 -->
+  <view class="intro-section" wx:if="{{player.intro}}">
+    <view class="section-title">
+      <text class="title-text">个人简介</text>
+    </view>
+    <view class="intro-content">
+      <text>{{player.intro}}</text>
+    </view>
+  </view>
+
+  <!-- 服务列表 -->
+  <view class="service-section">
+    <view class="section-title">
+      <text class="title-text">服务项目</text>
+    </view>
+    <view class="service-list">
+      <view
+        class="service-item"
+        wx:for="{{player.services}}"
+        wx:key="id"
+        bindtap="onSelectService"
+        data-index="{{index}}"
+      >
+        <view class="service-info">
+          <text class="service-name">{{item.name}}</text>
+          <text class="service-desc">{{item.description}}</text>
+          <text class="service-duration">预计{{item.estimated_duration}}分钟</text>
+        </view>
+        <view class="service-price">
+          <text class="price-symbol">¥</text>
+          <text class="price-value">{{item.price}}</text>
+          <text class="price-unit">/{{item.unit}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 评价列表 -->
+  <view class="review-section">
+    <view class="section-title">
+      <text class="title-text">用户评价 ({{reviews.length}})</text>
+      <text class="title-more" bindtap="onMoreReview">查看全部</text>
+    </view>
+
+    <view class="review-list" wx:if="{{reviews.length > 0}}">
+      <view class="review-item" wx:for="{{reviews}}" wx:key="id">
+        <view class="review-user">
+          <image class="review-avatar" src="{{item.user_avatar}}" mode="aspectFill"></image>
+          <view class="review-user-info">
+            <text class="review-user-name">{{item.user_name}}</text>
+            <view class="review-stars">
+              <text wx:for="{{[1,2,3,4,5]}}" wx:key="*this" class="star {{item.rating >= item ? 'active' : ''}}">★</text>
+            </view>
+          </view>
+          <text class="review-time">{{item.create_time}}</text>
+        </view>
+        <view class="review-content">
+          <text>{{item.content}}</text>
+        </view>
+        <view class="review-tags" wx:if="{{item.tags}}">
+          <text class="review-tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:else>
+      <text class="empty-state-text">暂无评价</text>
+    </view>
+  </view>
+
+  <!-- 底部下单按钮 -->
+  <view class="bottom-bar">
+    <view class="bottom-price">
+      <text class="price-label">最低</text>
+      <text class="price-symbol">¥</text>
+      <text class="price-value">{{player.min_price || 0}}</text>
+      <text class="price-unit">起</text>
+    </view>
+    <button class="btn btn-primary order-btn" bindtap="onOrder">立即下单</button>
+  </view>
+</view>

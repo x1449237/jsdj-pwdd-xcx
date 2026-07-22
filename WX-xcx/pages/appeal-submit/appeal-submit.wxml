@@ -1,0 +1,148 @@
+<view class="appeal-submit-page">
+  <view class="appeal-header">
+    <text class="appeal-title">提交申诉</text>
+    <text class="appeal-desc">请填写申诉信息，我们会尽快处理</text>
+  </view>
+
+  <view class="appeal-form">
+    <!-- 申诉类型 -->
+    <view class="form-group">
+      <view class="form-label">申诉类型</view>
+      <view class="appeal-type-options">
+        <view
+          class="type-item {{appealType === 'phone' ? 'active' : ''}}"
+          bindtap="onSelectType"
+          data-type="phone"
+        >
+          <text class="type-icon">📱</text>
+          <text class="type-name">手机号申诉</text>
+          <text class="type-desc">手机号被占用、无法绑定等</text>
+        </view>
+        <view
+          class="type-item {{appealType === 'order' ? 'active' : ''}}"
+          bindtap="onSelectType"
+          data-type="order"
+        >
+          <text class="type-icon">📋</text>
+          <text class="type-name">订单申诉</text>
+          <text class="type-desc">订单纠纷、退款等问题</text>
+        </view>
+        <view
+          class="type-item {{appealType === 'account' ? 'active' : ''}}"
+          bindtap="onSelectType"
+          data-type="account"
+        >
+          <text class="type-icon">🔒</text>
+          <text class="type-name">账号申诉</text>
+          <text class="type-desc">账号被封禁、异常等</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 关联订单 -->
+    <view class="form-group" wx:if="{{appealType === 'order'}}">
+      <view class="form-label">关联订单</view>
+      <picker mode="selector" range="{{orderList}}" range-key="order_no" bindchange="onOrderChange">
+        <view class="form-picker">
+          <text class="{{selectedOrder ? '' : 'form-placeholder'}}">
+            {{selectedOrder ? selectedOrder.order_no : '请选择关联订单'}}
+          </text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 手机号 -->
+    <view class="form-group">
+      <view class="form-label">手机号</view>
+      <input
+        class="form-input"
+        type="number"
+        placeholder="请输入您的手机号"
+        value="{{phone}}"
+        bindinput="onPhoneInput"
+        maxlength="11"
+      />
+    </view>
+
+    <!-- 申诉描述 -->
+    <view class="form-group">
+      <view class="form-label">申诉描述</view>
+      <textarea
+        class="form-textarea"
+        placeholder="请详细描述您遇到的问题..."
+        value="{{description}}"
+        bindinput="onDescriptionInput"
+        maxlength="500"
+        auto-height
+      ></textarea>
+      <view class="form-count">{{description.length}}/500</view>
+    </view>
+
+    <!-- 运营商录屏上传 -->
+    <view class="form-group">
+      <view class="form-label">
+        <text>运营商录屏（≤15秒）</text>
+        <text class="label-tip">需要包含运营商APP中的本人信息</text>
+      </view>
+      <view class="video-upload">
+        <view class="upload-area" wx:if="{{!videoPath}}" bindtap="onChooseVideo">
+          <text class="upload-icon">📹</text>
+          <text class="upload-text">点击上传运营商录屏</text>
+          <text class="upload-tip">支持mp4格式，最长15秒</text>
+        </view>
+        <view class="video-preview" wx:else>
+          <video
+            class="preview-video"
+            src="{{videoPath}}"
+            controls
+            object-fit="contain"
+          ></video>
+          <view class="video-actions">
+            <text class="action-btn" bindtap="onPreviewVideo">预览</text>
+            <text class="action-btn delete" bindtap="onDeleteVideo">删除</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 截图上传 -->
+    <view class="form-group">
+      <view class="form-label">
+        <text>截图证据</text>
+        <text class="label-tip">可选，最多3张</text>
+      </view>
+      <view class="image-upload">
+        <view
+          class="image-item"
+          wx:for="{{images}}"
+          wx:key="*this"
+          bindtap="onPreviewImage"
+          data-url="{{item}}"
+        >
+          <image class="image-preview" src="{{item}}" mode="aspectFill"></image>
+          <view class="image-delete" bindtap="onDeleteImage" data-index="{{index}}" catchtap>×</view>
+        </view>
+        <view
+          class="upload-area image-upload-area"
+          wx:if="{{images.length < 3}}"
+          bindtap="onChooseImage"
+        >
+          <text class="upload-icon">+</text>
+          <text class="upload-text-sm">上传图片</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="submit-section">
+    <button
+      class="btn btn-primary btn-block"
+      loading="{{submitting}}"
+      disabled="{{!canSubmit}}"
+      bindtap="onSubmit"
+    >
+      提交申诉
+    </button>
+  </view>
+</view>

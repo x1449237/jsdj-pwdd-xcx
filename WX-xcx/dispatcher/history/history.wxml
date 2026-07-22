@@ -1,0 +1,88 @@
+<view class="history-page">
+  <!-- 状态筛选 -->
+  <view class="filter-bar">
+    <scroll-view scroll-x class="filter-scroll">
+      <view
+        class="filter-item {{currentStatus === 'all' ? 'filter-active' : ''}}"
+        bindtap="onStatusFilter"
+        data-status="all"
+      >
+        全部
+      </view>
+      <view
+        wx:for="{{statusList}}"
+        wx:key="value"
+        class="filter-item {{currentStatus === item.value ? 'filter-active' : ''}}"
+        bindtap="onStatusFilter"
+        data-status="{{item.value}}"
+      >
+        {{item.label}}
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 派单记录列表 -->
+  <view class="history-list">
+    <block wx:if="{{recordList.length > 0}}">
+      <view
+        class="record-card"
+        wx:for="{{recordList}}"
+        wx:key="dispatch_id"
+      >
+        <view class="record-header">
+          <text class="dispatch-id">派单号：{{item.dispatch_id}}</text>
+          <text class="dispatch-status" style="color: {{item.statusColor}}">{{item.statusText}}</text>
+        </view>
+
+        <view class="record-body">
+          <view class="record-row">
+            <text class="row-label">订单编号：</text>
+            <text class="row-value">{{item.order_id}}</text>
+          </view>
+          <view class="record-row">
+            <text class="row-label">游戏服务：</text>
+            <text class="row-value">{{item.game_name}} - {{item.service_name}}</text>
+          </view>
+          <view class="record-row">
+            <text class="row-label">订单金额：</text>
+            <text class="row-value text-primary font-bold">¥{{item.amount}}</text>
+          </view>
+          <view class="record-row">
+            <text class="row-label">打手：</text>
+            <text class="row-value">{{item.player_name}}</text>
+          </view>
+          <view class="record-row">
+            <text class="row-label">用户：</text>
+            <text class="row-value">{{item.user_name}}</text>
+          </view>
+          <view class="record-row">
+            <text class="row-label">派单时间：</text>
+            <text class="row-value">{{item.dispatch_time}}</text>
+          </view>
+          <view class="record-row" wx:if="{{item.finish_time}}">
+            <text class="row-label">完成时间：</text>
+            <text class="row-value">{{item.finish_time}}</text>
+          </view>
+        </view>
+
+        <view class="record-footer" wx:if="{{item.remark}}">
+          <text class="remark-label">备注：</text>
+          <text class="remark-text">{{item.remark}}</text>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:if="{{recordList.length === 0 && !loading}}">
+      <text class="empty-state-icon">📋</text>
+      <text class="empty-state-text">暂无派单记录</text>
+    </view>
+
+    <view class="loading-wrapper" wx:if="{{loading}}">
+      <text class="loading-more">加载中...</text>
+    </view>
+
+    <view class="no-more" wx:if="{{!hasMore && recordList.length > 0}}">
+      <text>— 没有更多了 —</text>
+    </view>
+  </view>
+</view>

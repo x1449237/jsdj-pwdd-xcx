@@ -1,0 +1,114 @@
+<view class="evaluate-page">
+  <!-- 冷静期提示 -->
+  <view class="cooling-tip" wx:if="{{inCoolingPeriod}}">
+    <text class="cooling-icon">⏳</text>
+    <view class="cooling-content">
+      <text class="cooling-title">24小时冷静期</text>
+      <text class="cooling-desc">订单完成后24小时内可进行评价，当前剩余 {{coolingRemaining}}，请理性评价。</text>
+    </view>
+  </view>
+
+  <!-- 星级评分 -->
+  <view class="section">
+    <view class="section-title">星级评分</view>
+    <view class="star-section">
+      <view class="star-row">
+        <text class="star-label">服务态度</text>
+        <view class="star-list">
+          <text
+            wx:for="{{[1,2,3,4,5]}}"
+            wx:key="*this"
+            class="star {{item <= starRating.attitude ? 'star-active' : ''}}"
+            bindtap="onStarTap"
+            data-type="attitude"
+            data-value="{{item}}"
+          >★</text>
+        </view>
+      </view>
+      <view class="star-row">
+        <text class="star-label">技术水平</text>
+        <view class="star-list">
+          <text
+            wx:for="{{[1,2,3,4,5]}}"
+            wx:key="*this"
+            class="star {{item <= starRating.skill ? 'star-active' : ''}}"
+            bindtap="onStarTap"
+            data-type="skill"
+            data-value="{{item}}"
+          >★</text>
+        </view>
+      </view>
+      <view class="star-row">
+        <text class="star-label">沟通效率</text>
+        <view class="star-list">
+          <text
+            wx:for="{{[1,2,3,4,5]}}"
+            wx:key="*this"
+            class="star {{item <= starRating.communication ? 'star-active' : ''}}"
+            bindtap="onStarTap"
+            data-type="communication"
+            data-value="{{item}}"
+          >★</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 评价内容 -->
+  <view class="section">
+    <view class="section-title">评价内容</view>
+    <view class="content-section">
+      <textarea
+        class="content-input"
+        placeholder="分享您的服务体验，帮助更多用户选择..."
+        placeholder-class="placeholder"
+        value="{{content}}"
+        bindinput="onContentInput"
+        maxlength="500"
+        auto-height
+      />
+      <text class="char-count">{{content.length || 0}}/500</text>
+    </view>
+  </view>
+
+  <!-- 标签选择 -->
+  <view class="section">
+    <view class="section-title">标签</view>
+    <view class="tag-section">
+      <view
+        wx:for="{{tagList}}"
+        wx:key="*this"
+        class="eval-tag {{selectedTags.indexOf(item) > -1 ? 'tag-selected' : ''}}"
+        bindtap="onTagTap"
+        data-tag="{{item}}"
+      >
+        {{item}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 匿名选项 -->
+  <view class="section">
+    <view class="anonymous-row">
+      <text class="anonymous-label">匿名评价</text>
+      <switch
+        class="anonymous-switch"
+        checked="{{isAnonymous}}"
+        bindchange="onToggleAnonymous"
+        color="#e94560"
+      />
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section">
+    <button
+      class="submit-btn {{submitting ? 'btn-disabled' : ''}}"
+      bindtap="onSubmit"
+      loading="{{submitting}}"
+      disabled="{{submitting}}"
+    >
+      提交评价
+    </button>
+  </view>
+</view>

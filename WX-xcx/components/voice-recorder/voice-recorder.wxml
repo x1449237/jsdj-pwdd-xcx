@@ -1,0 +1,38 @@
+<view class="voice-recorder {{extraClass}}">
+  <!-- 录音中状态显示 -->
+  <view class="recording-status" wx:if="{{recording}}">
+    <view class="recording-indicator">
+      <view class="wave-bars">
+        <view class="wave-bar" wx:for="{{8}}" wx:key="index" style="animation-delay: {{0.1 * index}}s; height: {{20 + Math.random() * 40}}rpx;"></view>
+      </view>
+      <text class="recording-duration">{{formatDuration}}</text>
+    </view>
+    <view class="recording-cancel-hint" wx:if="{{showCancelHint}}">
+      <view class="cancel-icon">
+        <text>✕</text>
+      </view>
+      <text class="cancel-text">松开取消</text>
+    </view>
+    <view class="recording-send-hint" wx:else>
+      <text class="send-text">上滑取消，松开发送</text>
+    </view>
+  </view>
+
+  <!-- 录音按钮 -->
+  <view class="record-btn-wrapper">
+    <view
+      class="record-btn {{recording ? 'recording' : ''}}"
+      bindtouchstart="onTouchStart"
+      bindtouchmove="onTouchMove"
+      bindtouchend="onTouchEnd"
+      bindtouchcancel="onTouchEnd"
+    >
+      <view class="record-btn-inner">
+        <text class="record-btn-icon">{{recording ? '■' : '🎤'}}</text>
+      </view>
+    </view>
+    <text class="record-btn-label text-xs text-tip">
+      {{recording ? '松开结束' : '按住说话'}}
+    </text>
+  </view>
+</view>

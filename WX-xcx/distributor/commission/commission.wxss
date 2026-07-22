@@ -1,0 +1,126 @@
+/* 佣金收益 */
+.page-commission {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  padding-bottom: var(--spacing-xl);
+}
+
+/* ========== 佣金汇总 ========== */
+.commission-summary {
+  margin: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  background: linear-gradient(135deg, #1a1a2e, #0f3460);
+}
+
+.summary-title {
+  font-size: var(--font-size-md);
+}
+
+.summary-total-label {
+  opacity: 0.7;
+}
+
+.summary-stats {
+  gap: var(--spacing-sm);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.06);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm) 0;
+}
+
+.stat-value {
+  margin-bottom: 4rpx;
+}
+
+/* ========== 佣金明细 ========== */
+.section-header {
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.status-picker {
+  font-size: var(--font-size-sm);
+}
+
+/* ========== 佣金卡片 ========== */
+.commission-list {
+  padding: 0 var(--spacing-md);
+}
+
+.commission-card {
+  margin-bottom: var(--spacing-sm);
+  position: relative;
+}
+
+.first-order-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 4rpx 16rpx;
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  border-radius: 0 var(--border-radius-md) 0 var(--border-radius-sm);
+}
+
+.badge-text {
+  font-size: 20rpx;
+  color: #fff;
+  font-weight: bold;
+}
+
+.commission-header {
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.source-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.source-name {
+  font-weight: 500;
+}
+
+.commission-amount {
+  flex-shrink: 0;
+}
+
+.amount-value {
+  display: block;
+}
+
+.amount-rate {
+  display: block;
+}
+
+.commission-footer {
+  padding-left: 76rpx;
+}
+
+.status-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  margin-right: 6rpx;
+}
+
+.dot-settled {
+  background-color: var(--color-success);
+}
+
+.dot-pending {
+  background-color: var(--color-warning);
+}
+
+/* ========== 空状态 ========== */
+.empty-state-sub {
+  font-size: var(--font-size-sm);
+}

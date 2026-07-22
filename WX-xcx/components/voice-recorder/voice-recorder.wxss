@@ -1,0 +1,144 @@
+.voice-recorder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+}
+
+.recording-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  transition: all 0.3s;
+}
+
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--color-bg);
+  border-radius: var(--border-radius-lg);
+  margin-bottom: var(--spacing-sm);
+}
+
+.wave-bars {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  margin-right: var(--spacing-md);
+}
+
+.wave-bar {
+  width: 6rpx;
+  background-color: var(--color-primary);
+  border-radius: 3rpx;
+  animation: wave-animate 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes wave-animate {
+  0% { transform: scaleY(0.4); }
+  100% { transform: scaleY(1); }
+}
+
+.recording-duration {
+  font-size: var(--font-size-md);
+  color: var(--color-primary);
+  font-weight: 500;
+  font-family: monospace;
+  min-width: 80rpx;
+}
+
+.recording-cancel-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cancel-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background-color: var(--color-danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.cancel-icon text {
+  font-size: var(--font-size-xl);
+  color: var(--color-text-white);
+  font-weight: bold;
+}
+
+.cancel-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+}
+
+.recording-send-hint {
+  margin-top: var(--spacing-sm);
+}
+
+.send-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tip);
+}
+
+.record-btn-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.record-btn {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background-color: var(--color-bg-white);
+  border: 4rpx solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.record-btn.recording {
+  border-color: var(--color-primary);
+  background-color: rgba(233, 69, 96, 0.05);
+  box-shadow: 0 0 0 8rpx rgba(233, 69, 96, 0.1);
+  animation: record-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes record-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.2); }
+  50% { box-shadow: 0 0 0 16rpx rgba(233, 69, 96, 0); }
+}
+
+.record-btn-inner {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background-color: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recording .record-btn-inner {
+  background-color: var(--color-primary);
+}
+
+.record-btn-icon {
+  font-size: 36rpx;
+}
+
+.recording .record-btn-icon {
+  color: var(--color-text-white);
+  font-size: 28rpx;
+}
+
+.record-btn-label {
+  margin-top: var(--spacing-xs);
+}

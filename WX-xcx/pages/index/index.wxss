@@ -1,0 +1,211 @@
+.index-page {
+  padding-bottom: 40rpx;
+  background-color: #f5f5f5;
+}
+
+/* 搜索栏 */
+.search-bar {
+  padding: 16rpx 32rpx;
+  background: linear-gradient(135deg, #1a1a2e, #0f3460);
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  height: 72rpx;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 36rpx;
+  padding: 0 24rpx;
+}
+
+.search-icon {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 12rpx;
+  opacity: 0.6;
+}
+
+.search-placeholder {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Banner */
+.banner-swiper {
+  width: 100%;
+  height: 320rpx;
+}
+
+.banner-image {
+  width: 100%;
+  height: 100%;
+}
+
+/* 分类 */
+.category-section {
+  background-color: #ffffff;
+  padding: 24rpx 0;
+  margin: 16rpx 0;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32rpx;
+  margin-bottom: 20rpx;
+}
+
+.title-text {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+.title-more {
+  font-size: 26rpx;
+  color: #999999;
+}
+
+.category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0 16rpx;
+}
+
+.category-item {
+  width: 20%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 0;
+}
+
+.category-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 16rpx;
+  margin-bottom: 8rpx;
+  background-color: #f5f5f5;
+}
+
+.category-name {
+  font-size: 22rpx;
+  color: #666666;
+}
+
+/* 打手列表 */
+.player-section {
+  margin-top: 16rpx;
+}
+
+.player-list {
+  padding: 0 32rpx;
+}
+
+.player-card {
+  display: flex;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s;
+}
+
+.player-card:active {
+  transform: scale(0.98);
+}
+
+.player-avatar-wrapper {
+  position: relative;
+  margin-right: 24rpx;
+}
+
+.player-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+}
+
+.player-online {
+  position: absolute;
+  bottom: 4rpx;
+  right: 4rpx;
+  width: 20rpx;
+  height: 20rpx;
+  background-color: #07c160;
+  border-radius: 50%;
+  border: 3rpx solid #ffffff;
+}
+
+.player-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.player-name-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6rpx;
+}
+
+.player-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-right: 8rpx;
+}
+
+.player-gender {
+  font-size: 24rpx;
+  color: #e94560;
+}
+
+.player-rank {
+  margin-bottom: 8rpx;
+}
+
+.player-stats {
+  display: flex;
+  margin-bottom: 8rpx;
+}
+
+.stat-item {
+  margin-right: 32rpx;
+}
+
+.stat-value {
+  font-size: 26rpx;
+  font-weight: 500;
+  margin-right: 4rpx;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #999999;
+}
+
+.player-price {
+  align-self: flex-end;
+}
+
+.price-symbol {
+  font-size: 24rpx;
+  color: #e94560;
+  font-weight: bold;
+}
+
+.price-value {
+  font-size: 36rpx;
+  color: #e94560;
+  font-weight: bold;
+}
+
+.price-unit {
+  font-size: 22rpx;
+  color: #999999;
+}

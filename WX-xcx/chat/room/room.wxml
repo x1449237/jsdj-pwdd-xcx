@@ -1,0 +1,185 @@
+<view class="chat-room-page">
+  <!-- 顶部状态栏 -->
+  <view class="chat-header">
+    <view class="header-back" bindtap="onBack">
+      <text class="back-icon">‹</text>
+    </view>
+    <view class="header-info">
+      <text class="header-name">{{targetName}}</text>
+      <text class="header-status">{{targetOnline ? '在线' : '离线'}}</text>
+    </view>
+    <view class="header-more" bindtap="onMore">
+      <text class="more-icon">⋯</text>
+    </view>
+  </view>
+
+  <!-- 消息列表 -->
+  <scroll-view
+    class="message-list"
+    scroll-y
+    scroll-with-animation
+    scroll-into-view="{{scrollToView}}"
+    enable-back-to-top
+    bindscrolltoupper="onLoadMore"
+    upper-threshold="100"
+  >
+    <view class="loading-history" wx:if="{{loadingMore}}">
+      <text>加载中...</text>
+    </view>
+    <view class="no-more-history" wx:if="{{!hasMoreHistory && messageList.length > 0}}">
+      <text>— 以上是历史消息 —</text>
+    </view>
+
+    <view
+      wx:for="{{messageList}}"
+      wx:key="msg_id"
+      id="msg-{{item.msg_id}}"
+      class="message-item {{item.from_self ? 'message-self' : 'message-other'}}"
+    >
+      <!-- 系统消息 -->
+      <view class="system-message" wx:if="{{item.type === 'system'}}">
+        <text class="system-text">{{item.content}}</text>
+      </view>
+
+      <!-- 普通消息 -->
+      <block wx:if="{{item.type !== 'system'}}">
+        <image
+          wx:if="{{!item.from_self}}"
+          class="msg-avatar"
+          src="{{item.avatar}}"
+          mode="aspectFill"
+        ></image>
+
+        <view class="msg-content-wrapper">
+          <!-- 文字消息 -->
+          <view
+            wx:if="{{item.type === 'text'}}"
+            class="msg-bubble msg-text {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
+            bindlongpress="onLongPressMessage"
+            data-msg="{{item}}"
+          >
+            <text>{{item.content}}</text>
+          </view>
+
+          <!-- 图片消息 -->
+          <view
+            wx:if="{{item.type === 'image'}}"
+            class="msg-bubble msg-image {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
+            bindtap="onPreviewImage"
+            data-url="{{item.image_url}}"
+          >
+            <image
+              class="msg-img"
+              src="{{item.image_url}}"
+              mode="widthFix"
+              bindload="onImageLoad"
+            ></image>
+          </view>
+
+          <!-- 语音消息 -->
+          <view
+            wx:if="{{item.type === 'voice'}}"
+            class="msg-bubble msg-voice {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
+            bindtap="onPlayVoice"
+            data-msg="{{item}}"
+          >
+            <text class="voice-icon">{{item.playing ? '🔊' : '🔈'}}</text>
+            <text class="voice-duration">{{item.duration}}"</text>
+          </view>
+
+          <!-- 撤回消息 -->
+          <view
+            wx:if="{{item.type === 'recall'}}"
+            class="msg-bubble msg-recall"
+          >
+            <text class="recall-text">{{item.from_self ? '你撤回了一条消息' : '对方撤回了一条消息'}}</text>
+          </view>
+
+          <!-- 敏感词拦截提示 -->
+          <view wx:if="{{item.sensitive_blocked}}" class="sensitive-tip">
+            <text>⚠️ 消息含有敏感词，发送失败</text>
+          </view>
+        </view>
+
+        <image
+          wx:if="{{item.from_self}}"
+          class="msg-avatar"
+          src="{{myAvatar}}"
+          mode="aspectFill"
+        ></image>
+      </block>
+    </view>
+  </scroll-view>
+
+  <!-- 底部输入栏 -->
+  <view class="input-bar">
+    <!-- 语音录制模式 -->
+    <view class="voice-mode" wx:if="{{inputMode === 'voice'}}">
+      <view
+        class="voice-btn"
+        bindtouchstart="onVoiceStart"
+        bindtouchmove="onVoiceMove"
+        bindtouchend="onVoiceEnd"
+      >
+        <text class="voice-btn-text">{{recording ? '松开 发送' : '按住 说话'}}</text>
+      </view>
+    </view>
+
+    <!-- 文字输入模式 -->
+    <view class="text-mode" wx:else>
+      <view class="mode-switch" bindtap="onSwitchMode">
+        <text class="switch-icon">🎤</text>
+      </view>
+      <view class="input-wrapper">
+        <input
+          class="text-input"
+          type="text"
+          placeholder="输入消息..."
+          placeholder-class="input-placeholder"
+          value="{{inputText}}"
+          bindinput="onTextInput"
+          bindconfirm="onSendText"
+          confirm-type="send"
+          adjust-position="{{false}}"
+          cursor-spacing="20"
+        />
+      </view>
+      <view class="image-btn" bindtap="onChooseImage">
+        <text class="image-icon">🖼</text>
+      </view>
+    </view>
+
+    <!-- 发送按钮（文字模式有内容时显示） -->
+    <view class="send-btn" wx:if="{{inputText.length > 0 && inputMode === 'text'}}" bindtap="onSendText">
+      <text class="send-text">发送</text>
+    </view>
+  </view>
+
+  <!-- 语音录制浮层 -->
+  <view class="voice-overlay" wx:if="{{recording}}">
+    <view class="voice-overlay-content">
+      <view class="voice-wave">
+        <view class="wave-bar" wx:for="{{[1,2,3,4,5,6,7]}}" wx:key="*this" style="animation-delay: {{item * 0.1}}s;"></view>
+      </view>
+      <text class="voice-overlay-tip {{willCancel ? 'cancel-tip' : ''}}">
+        {{willCancel ? '松开手指，取消发送' : '手指上滑，取消发送'}}
+      </text>
+    </view>
+  </view>
+
+  <!-- 更多操作面板 -->
+  <view class="more-panel" wx:if="{{showMorePanel}}">
+    <view class="panel-item" bindtap="onChooseImage">
+      <view class="panel-icon">📷</view>
+      <text class="panel-label">相册</text>
+    </view>
+    <view class="panel-item" bindtap="onTakePhoto">
+      <view class="panel-icon">📸</view>
+      <text class="panel-label">拍照</text>
+    </view>
+    <view class="panel-item" bindtap="onSwitchMode">
+      <view class="panel-icon">🎤</view>
+      <text class="panel-label">语音</text>
+    </view>
+  </view>
+</view>

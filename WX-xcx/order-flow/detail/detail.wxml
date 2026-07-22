@@ -1,0 +1,137 @@
+<view class="detail-page">
+  <!-- 订单状态时间线 -->
+  <view class="timeline-section">
+    <view class="status-header">
+      <text class="status-title" style="color: {{orderInfo.statusColor}}">{{orderInfo.statusText}}</text>
+      <text class="status-desc">{{orderInfo.statusDesc}}</text>
+    </view>
+
+    <view class="timeline">
+      <view
+        wx:for="{{timelineList}}"
+        wx:key="step"
+        class="timeline-item {{item.active ? 'timeline-active' : ''}} {{item.done ? 'timeline-done' : ''}}"
+      >
+        <view class="timeline-dot">
+          <text wx:if="{{item.done}}" class="dot-icon">✓</text>
+          <text wx:else class="dot-text">{{item.step}}</text>
+        </view>
+        <view class="timeline-content">
+          <text class="timeline-title">{{item.title}}</text>
+          <text class="timeline-time" wx:if="{{item.time}}">{{item.time}}</text>
+        </view>
+        <view class="timeline-line" wx:if="{{!item.last}}"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 订单信息 -->
+  <view class="section">
+    <view class="section-title">订单信息</view>
+    <view class="info-card">
+      <view class="info-row">
+        <text class="row-label">订单编号</text>
+        <text class="row-value">{{orderInfo.orderId}}</text>
+      </view>
+      <view class="info-row">
+        <text class="row-label">游戏</text>
+        <text class="row-value">{{orderInfo.gameName}}</text>
+      </view>
+      <view class="info-row">
+        <text class="row-label">服务</text>
+        <text class="row-value">{{orderInfo.serviceName}}</text>
+      </view>
+      <view class="info-row">
+        <text class="row-label">段位</text>
+        <text class="row-value">{{orderInfo.rank}}</text>
+      </view>
+      <view class="info-row">
+        <text class="row-label">金额</text>
+        <text class="row-value text-primary font-bold">¥{{orderInfo.amount}}</text>
+      </view>
+      <view class="info-row">
+        <text class="row-label">下单时间</text>
+        <text class="row-value">{{orderInfo.createTime}}</text>
+      </view>
+      <view class="info-row" wx:if="{{orderInfo.remark}}">
+        <text class="row-label">备注</text>
+        <text class="row-value">{{orderInfo.remark}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 打手/玩家信息 -->
+  <view class="section">
+    <view class="section-title">参与方信息</view>
+    <view class="participant-card">
+      <view class="participant">
+        <image class="p-avatar" src="{{orderInfo.playerAvatar}}" mode="aspectFill"></image>
+        <view class="p-info">
+          <text class="p-role">打手</text>
+          <text class="p-name">{{orderInfo.playerName}}</text>
+          <text class="p-rating">⭐ {{orderInfo.playerRating}}</text>
+        </view>
+        <view class="p-contact" bindtap="onChatWithPlayer">
+          <text class="contact-icon">💬</text>
+          <text class="contact-text">联系</text>
+        </view>
+      </view>
+
+      <view class="divider"></view>
+
+      <view class="participant">
+        <image class="p-avatar" src="{{orderInfo.userAvatar}}" mode="aspectFill"></image>
+        <view class="p-info">
+          <text class="p-role">用户</text>
+          <text class="p-name">{{orderInfo.userName}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 聊天入口 -->
+  <view class="chat-entry" bindtap="onChatWithPlayer">
+    <view class="chat-icon">💬</view>
+    <text class="chat-text">进入聊天</text>
+    <text class="chat-arrow">></text>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-section">
+    <button
+      wx:if="{{orderInfo.status === 3}}"
+      class="action-btn btn-confirm"
+      bindtap="onConfirmComplete"
+    >
+      确认完成
+    </button>
+    <button
+      wx:if="{{orderInfo.status === 4}}"
+      class="action-btn btn-evaluate"
+      bindtap="onGoEvaluate"
+    >
+      去评价
+    </button>
+    <button
+      wx:if="{{orderInfo.status === 4}}"
+      class="action-btn btn-reward"
+      bindtap="onGoReward"
+    >
+      打赏打手
+    </button>
+    <button
+      wx:if="{{orderInfo.canCancel}}"
+      class="action-btn btn-outline"
+      bindtap="onCancelOrder"
+    >
+      取消订单
+    </button>
+    <button
+      wx:if="{{orderInfo.canAppeal}}"
+      class="action-btn btn-outline"
+      bindtap="onAppeal"
+    >
+      申诉
+    </button>
+  </view>
+</view>

@@ -1,0 +1,194 @@
+/* 收益中心 */
+.page-income {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  padding-bottom: var(--spacing-xl);
+}
+
+/* ========== 余额卡片 ========== */
+.balance-card {
+  margin: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+}
+
+.balance-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.balance-title {
+  font-size: var(--font-size-md);
+}
+
+.balance-amounts {
+  margin-bottom: var(--spacing-sm);
+}
+
+.balance-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-label {
+  font-size: var(--font-size-xs);
+  margin-bottom: var(--spacing-xs);
+}
+
+.balance-value-row {
+  gap: 4rpx;
+}
+
+.balance-symbol {
+  font-size: var(--font-size-lg);
+}
+
+.balance-value {
+  line-height: 1.2;
+}
+
+.balance-hint {
+  margin-top: 4rpx;
+}
+
+.balance-divider {
+  width: 1rpx;
+  background-color: rgba(255, 255, 255, 0.15);
+  margin: 0 var(--spacing-md);
+}
+
+.withdraw-btn {
+  height: 80rpx;
+  font-size: var(--font-size-md);
+}
+
+/* ========== 收入明细区域 ========== */
+.income-section {
+  margin-top: var(--spacing-sm);
+}
+
+.section-header {
+  border-bottom: 1rpx solid var(--color-border);
+}
+
+.month-picker {
+  font-size: var(--font-size-sm);
+}
+
+/* ========== 月份分组 ========== */
+.month-divider {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-bg);
+}
+
+.month-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: bold;
+}
+
+.month-total {
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+}
+
+/* ========== 收入项 ========== */
+.income-item {
+  margin-bottom: 2rpx;
+}
+
+.income-type-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.income-type-icon .iconfont {
+  font-size: 24rpx;
+  color: #fff;
+}
+
+.type-service {
+  background-color: var(--color-primary);
+}
+
+.type-tip {
+  background-color: var(--color-warning);
+}
+
+.type-commission {
+  background-color: var(--color-secondary);
+}
+
+.income-type {
+  font-weight: 500;
+}
+
+.income-amount {
+  flex-shrink: 0;
+}
+
+.income-footer {
+  padding-left: 60rpx;
+}
+
+/* ========== 弹窗 ========== */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-dialog {
+  width: 600rpx;
+  max-height: 80vh;
+  background-color: var(--color-bg-white);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+}
+
+.modal-title {
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.modal-body {
+  padding: var(--spacing-sm) 0;
+}
+
+.modal-footer {
+  margin-top: var(--spacing-md);
+}
+
+.rule-item {
+  margin-bottom: var(--spacing-md);
+}
+
+.rule-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: bold;
+  margin-bottom: 4rpx;
+}
+
+.rule-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}

@@ -1,0 +1,116 @@
+<view class="risk-page">
+  <view class="page-header">
+    <text class="header-title">风险用户</text>
+    <text class="header-desc">查看平台风险用户及详细信息（只读）</text>
+  </view>
+
+  <!-- 筛选 -->
+  <view class="filter-bar">
+    <view class="filter-row">
+      <text class="filter-label">风险类型：</text>
+      <view class="filter-options">
+        <view
+          class="filter-tag {{currentRiskType === '' ? 'tag-active' : ''}}"
+          bindtap="onRiskTypeFilter"
+          data-type=""
+        >
+          全部
+        </view>
+        <view
+          wx:for="{{riskTypeList}}"
+          wx:key="value"
+          class="filter-tag {{currentRiskType === item.value ? 'tag-active' : ''}}"
+          bindtap="onRiskTypeFilter"
+          data-type="{{item.value}}"
+        >
+          {{item.label}}
+        </view>
+      </view>
+    </view>
+
+    <view class="filter-row">
+      <text class="filter-label">风险等级：</text>
+      <view class="filter-options">
+        <view
+          class="filter-tag {{currentRiskLevel === '' ? 'tag-active' : ''}}"
+          bindtap="onRiskLevelFilter"
+          data-level=""
+        >
+          全部
+        </view>
+        <view
+          wx:for="{{riskLevelList}}"
+          wx:key="value"
+          class="filter-tag {{currentRiskLevel === item.value ? 'tag-active' : ''}}"
+          bindtap="onRiskLevelFilter"
+          data-level="{{item.value}}"
+        >
+          {{item.label}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 风险用户列表 -->
+  <view class="risk-list">
+    <block wx:if="{{userList.length > 0}}">
+      <view
+        class="risk-user-card"
+        wx:for="{{userList}}"
+        wx:key="user_id"
+      >
+        <view class="user-header">
+          <image class="user-avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+          <view class="user-info">
+            <text class="user-name">{{item.nickname}}</text>
+            <text class="user-id">ID: {{item.user_id}}</text>
+          </view>
+          <view class="risk-level-badge level-{{item.risk_level}}">
+            {{item.risk_level_text}}
+          </view>
+        </view>
+
+        <view class="user-body">
+          <view class="info-row">
+            <text class="row-label">风险类型：</text>
+            <text class="row-value">{{item.risk_type_text}}</text>
+          </view>
+          <view class="info-row">
+            <text class="row-label">风险原因：</text>
+            <text class="row-value risk-reason">{{item.risk_reason}}</text>
+          </view>
+          <view class="info-row">
+            <text class="row-label">触发时间：</text>
+            <text class="row-value">{{item.trigger_time}}</text>
+          </view>
+          <view class="info-row" wx:if="{{item.related_order_id}}">
+            <text class="row-label">关联订单：</text>
+            <text class="row-value">{{item.related_order_id}}</text>
+          </view>
+          <view class="info-row">
+            <text class="row-label">处理状态：</text>
+            <text class="row-value" style="color: {{item.handle_status_color}}">{{item.handle_status_text}}</text>
+          </view>
+        </view>
+
+        <view class="user-footer" wx:if="{{item.remark}}">
+          <text class="remark-label">备注：</text>
+          <text class="remark-text">{{item.remark}}</text>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty-state" wx:if="{{userList.length === 0 && !loading}}">
+      <text class="empty-state-icon">🛡️</text>
+      <text class="empty-state-text">暂无风险用户</text>
+    </view>
+
+    <view class="loading-wrapper" wx:if="{{loading}}">
+      <text class="loading-more">加载中...</text>
+    </view>
+
+    <view class="no-more" wx:if="{{!hasMore && userList.length > 0}}">
+      <text>— 没有更多了 —</text>
+    </view>
+  </view>
+</view>

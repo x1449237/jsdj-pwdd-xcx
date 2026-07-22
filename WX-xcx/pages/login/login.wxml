@@ -1,0 +1,97 @@
+<view class="login-page">
+  <view class="login-header">
+    <image class="logo" src="/assets/images/logo.png" mode="aspectFit"></image>
+    <text class="app-name">大神接单</text>
+    <text class="app-slogan">专业游戏陪玩，大神带你飞</text>
+  </view>
+
+  <view class="login-body">
+    <view class="login-form">
+      <button
+        class="wechat-login-btn"
+        open-type="getPhoneNumber"
+        bindgetphonenumber="onGetPhoneNumber"
+        loading="{{loading}}"
+        disabled="{{!agreed}}"
+      >
+        <image class="wechat-icon" src="/assets/icons/wechat.png" mode="aspectFit"></image>
+        <text>微信一键登录</text>
+      </button>
+    </view>
+
+    <view class="agreement-wrapper">
+      <view class="agreement-check" bindtap="onToggleAgreement">
+        <view class="checkbox {{agreed ? 'checked' : ''}}">
+          <image wx:if="{{agreed}}" class="check-icon" src="/assets/icons/check.png" mode="aspectFit"></image>
+        </view>
+        <text class="agreement-text">
+          我已阅读并同意
+          <text class="link" catchtap="onShowAgreement" data-type="service">《用户服务协议》</text>
+          和
+          <text class="link" catchtap="onShowAgreement" data-type="privacy">《隐私政策》</text>
+        </text>
+      </view>
+    </view>
+
+    <view class="other-login">
+      <text class="other-text">其他方式</text>
+      <view class="other-icons">
+        <view class="other-item" bindtap="onVisitorLogin">
+          <text class="other-icon">👤</text>
+          <text class="other-label">游客模式</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="login-footer">
+    <text class="footer-text">登录即表示同意上述协议</text>
+  </view>
+</view>
+
+<!-- 首次登录协议弹窗 -->
+<view class="agreement-modal" wx:if="{{showAgreementModal}}">
+  <view class="modal-mask" bindtap="onCloseAgreementModal"></view>
+  <view class="modal-content">
+    <view class="modal-header">
+      <text class="modal-title">用户协议与隐私政策</text>
+    </view>
+    <view class="modal-body">
+      <scroll-view scroll-y class="agreement-scroll">
+        <text class="agreement-content">
+          欢迎使用大神接单小程序！
+
+          一、用户服务协议
+          1. 服务条款的接受
+          本协议是您与大神接单平台之间关于使用本小程序服务所订立的协议。
+
+          2. 服务内容
+          平台提供游戏陪玩匹配服务，包括但不限于打手匹配、订单管理、支付结算等功能。
+
+          3. 用户责任
+          用户应保证提供的信息真实、准确、完整，不得利用平台从事违法违规活动。
+
+          4. 免责声明
+          平台不对因网络故障、系统维护等原因造成的服务中断承担责任。
+
+          二、隐私政策
+          1. 信息收集
+          我们会收集您的微信昵称、头像、手机号码等必要信息。
+
+          2. 信息使用
+          收集的信息仅用于提供和改善我们的服务。
+
+          3. 信息保护
+          我们采用业界领先的安全技术保护您的个人信息。
+
+          4. 信息共享
+          未经您的同意，我们不会将您的信息分享给第三方。
+        </text>
+      </scroll-view>
+    </view>
+    <view class="modal-footer">
+      <button class="modal-btn cancel-btn" bindtap="onRejectAgreement">不同意</button>
+      <button class="modal-btn confirm-btn" bindtap="onAcceptAgreement">同意并继续</button>
+    </view>
+  </view>
+</view>

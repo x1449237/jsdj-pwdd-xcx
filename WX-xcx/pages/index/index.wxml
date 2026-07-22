@@ -1,0 +1,111 @@
+<view class="index-page">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input-wrapper" bindtap="onSearchTap">
+      <image class="search-icon" src="/assets/icons/search.png" mode="aspectFit"></image>
+      <text class="search-placeholder">搜索游戏、打手...</text>
+    </view>
+  </view>
+
+  <!-- Banner轮播 -->
+  <swiper
+    class="banner-swiper"
+    indicator-dots
+    autoplay
+    circular
+    interval="3000"
+    duration="500"
+    indicator-color="rgba(255,255,255,0.5)"
+    indicator-active-color="#e94560"
+  >
+    <swiper-item wx:for="{{banners}}" wx:key="id">
+      <image
+        class="banner-image"
+        src="{{item.image}}"
+        mode="aspectFill"
+        bindtap="onBannerTap"
+        data-id="{{item.id}}"
+      ></image>
+    </swiper-item>
+  </swiper>
+
+  <!-- 游戏分类入口 -->
+  <view class="category-section">
+    <view class="section-title">
+      <text class="title-text">游戏分类</text>
+      <text class="title-more" bindtap="onMoreCategory">更多</text>
+    </view>
+    <view class="category-grid">
+      <view
+        class="category-item"
+        wx:for="{{categories}}"
+        wx:key="id"
+        bindtap="onCategoryTap"
+        data-id="{{item.id}}"
+      >
+        <image class="category-icon" src="{{item.icon}}" mode="aspectFit"></image>
+        <text class="category-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 热门打手 -->
+  <view class="player-section">
+    <view class="section-title">
+      <text class="title-text">热门打手</text>
+      <text class="title-more" bindtap="onMorePlayer">更多</text>
+    </view>
+
+    <view class="player-list">
+      <view
+        class="player-card"
+        wx:for="{{players}}"
+        wx:key="id"
+        bindtap="onPlayerTap"
+        data-id="{{item.id}}"
+      >
+        <view class="player-avatar-wrapper">
+          <image class="player-avatar" src="{{item.avatar}}" mode="aspectFill"></image>
+          <view class="player-online" wx:if="{{item.is_online}}"></view>
+        </view>
+        <view class="player-info">
+          <view class="player-name-row">
+            <text class="player-name">{{item.nickname}}</text>
+            <text class="player-gender">{{item.gender === 1 ? '♂' : '♀'}}</text>
+          </view>
+          <view class="player-rank">
+            <text class="rank-tag tag-gold" wx:if="{{item.rank}}">{{item.rank}}</text>
+          </view>
+          <view class="player-stats">
+            <text class="stat-item">
+              <text class="stat-value text-success">{{item.good_rate}}%</text>
+              <text class="stat-label">好评率</text>
+            </text>
+            <text class="stat-item">
+              <text class="stat-value text-secondary">{{item.order_count}}</text>
+              <text class="stat-label">接单</text>
+            </text>
+          </view>
+          <view class="player-price">
+            <text class="price-symbol">¥</text>
+            <text class="price-value">{{item.price}}</text>
+            <text class="price-unit">/局</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="loading-more" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+    <view class="no-more" wx:if="{{noMore && players.length > 0}}">
+      <text>没有更多了</text>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && players.length === 0}}">
+    <image class="empty-state-image" src="/assets/images/empty.png" mode="aspectFit"></image>
+    <text class="empty-state-text">暂无打手，请稍后再来</text>
+  </view>
+</view>
