@@ -145,6 +145,10 @@ Route::group('api/v1', function () {
         Route::post('after_sale/send_image',    'api/AfterSale/sendImage');
         Route::post('after_sale/request_intervene', 'api/AfterSale/requestIntervene');
 
+        // --- 订阅消息上报 ---
+        Route::post('subscribe/report',         'api.Subscribe/report');
+        Route::get('subscribe/status',          'api.Subscribe/status');
+
     })->middleware(['auth']);
 
     // ========== 打手端接口组（需要JWT user认证 + 打手身份校验） ==========
@@ -348,6 +352,14 @@ Route::group('api/v1', function () {
         Route::get('after_sale_manage/intervene_log', 'admin/AfterSaleManage/interveneLog');
         Route::post('after_sale_manage/resolve',    'admin/AfterSaleManage/resolve');
         Route::get('after_sale_manage/export',      'admin/AfterSaleManage/export');
+
+        // --- 订阅消息模板管理 ---
+        Route::get('subscribe/template/list',       'admin.SubscribeMessage/templateList');
+        Route::post('subscribe/template/create',    'admin.SubscribeMessage/templateCreate');
+        Route::put('subscribe/template/update/:id', 'admin.SubscribeMessage/templateUpdate');
+        Route::delete('subscribe/template/delete/:id','admin.SubscribeMessage/templateDelete');
+        Route::put('subscribe/template/toggle/:id', 'admin.SubscribeMessage/templateToggle');
+        Route::get('subscribe/log/list',            'admin.SubscribeMessage/logList');
 
     })->middleware(['auth_admin']);
 

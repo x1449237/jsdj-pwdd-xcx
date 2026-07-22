@@ -1612,8 +1612,69 @@ CREATE TABLE `after_sale_risk_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='售后风控命中日志表';
 
 -- ============================================================
--- 完成
+-- 68. 微信订阅消息模板配置表
+-- 配置微信小程序订阅消息模板ID及对应场景
 -- ============================================================
+DROP TABLE IF EXISTS `subscribe_message_template`;
+CREATE TABLE `subscribe_message_template` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `template_id` VARCHAR(64) NOT NULL COMMENT '微信模板ID',
+  `template_name` VARCHAR(64) NOT NULL COMMENT '模板名称',
+  `scene` VARCHAR(32) NOT NULL COMMENT '场景标识 appeal_notify/order_notify/chat_notify/platform_intervene/after_sale_remind',
+  `scene_name` VARCHAR(64) NOT NULL COMMENT '场景名称',
+  `fields` JSON DEFAULT NULL COMMENT '模板参数字段映射',
+  `is_enabled` TINYINT(1) DEFAULT 1 COMMENT '是否启用',
+  `sort` INT UNSIGNED DEFAULT 0 COMMENT '排序',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_template_id` (`template_id`),
+  KEY `idx_scene` (`scene`),
+  KEY `idx_is_enabled` (`is_enabled`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='微信订阅消息模板配置表';
+
+-- 预置订阅消息模板（需替换为实际申请的模板ID）
+INSERT INTO `subscribe_message_template` (`template_id`, `template_name`, `scene`, `scene_name`, `fields`, `is_enabled`) VALUES
+('TEMPLATE_ID_PLACEHOLDER_01', '申诉处理通知', 'appeal_notify', '申诉通知', '{"thing1": "申诉类型", "thing2": "处理状态", "time3": "处理时间", "thing4": "备注"}', 1),
+('TEMPLATE_ID_PLACEHOLDER_02', '订单状态变更', 'order_notify', '订单通知', '{"thing1": "订单编号", "thing2": "订单状态", "amount3": "订单金额", "thing4": "备注"}', 1),
+('TEMPLATE_ID_PLACEHOLDER_03', '新消息提醒', 'chat_notify', '聊天通知', '{"thing1": "发送者", "thing2": "消息摘要", "time3": "发送时间", "thing4": "备注"}', 1),
+('TEMPLATE_ID_PLACEHOLDER_04', '平台介入通知', 'platform_intervene', '平台介入', '{"thing1": "订单编号", "thing2": "介入原因", "time3": "介入时间", "thing4": "处理指引"}', 1),
+('TEMPLATE_ID_PLACEHOLDER_05', '售后处理提醒', 'after_sale_remind', '售后提醒', '{"thing1": "售后单号", "thing2": "处理进度", "time3": "提交时间", "thing4": "备注"}', 1);
+
+-- ============================================================
+-- 69. 微信订阅消息发送日志表
+-- ============================================================
+DROP TABLE IF EXISTS `subscribe_message_log`;
+CREATE TABLE `subscribe_message_log` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '接收用户ID',
+  `template_id` VARCHAR(64) NOT NULL COMMENT '模板ID',
+  `scene` VARCHAR(32) NOT NULL COMMENT '场景标识',
+  `openid` VARCHAR(64) DEFAULT '' COMMENT '微信openid',
+  `send_data` JSON DEFAULT NULL COMMENT '发送的模板数据',
+  `send_result` JSON DEFAULT NULL COMMENT '微信API返回结果',
+  `is_success` TINYINT(1) DEFAULT 0 COMMENT '是否成功',
+  `error_msg` VARCHAR(512) DEFAULT '' COMMENT '错误信息',
+  `related_id` VARCHAR(64) DEFAULT '' COMMENT '关联业务ID',
+  `related_type` VARCHAR(32) DEFAULT '' COMMENT '关联业务类型',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_scene` (`scene`),
+  KEY `idx_is_success` (`is_success`),
+  KEY `idx_create_time` (`create_time`),
+  KEY `idx_related` (`related_id`, `related_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='微信订阅消息发送日志表';
+
+-- ============================================================
+-- 70. 微信小程序配置（system_config 补充）
+-- ============================================================
+INSERT INTO `system_config` (`config_key`, `config_value`, `config_type`, `description`, `is_hot_update`) VALUES
+('wechat_appid', 'wx0000000000000000', 'string', '微信小程序AppID', 1),
+('wechat_secret', '', 'string', '微信小程序AppSecret', 1),
+('subscribe_message_switch', '1', 'bool', '订阅消息推送总开关', 1),
+('subscribe_message_retry', '3', 'int', '订阅消息发送重试次数', 1),
+('subscribe_message_timeout', '3', 'int', '订阅消息HTTP请求超时（秒）', 1);
 -- 索引优化建议：
 -- 1. 所有外键关联字段均已建立索引
 -- 2. 频繁查询的 status、create_time 字段均已建立索引

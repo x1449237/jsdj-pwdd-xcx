@@ -10,6 +10,7 @@ use app\model\AppealReminder;
 use app\model\ReminderEscalation;
 use app\model\CronJobLog;
 use app\service\WebSocketService;
+use app\service\WeChatService;
 use think\facade\Log;
 
 /**
@@ -205,7 +206,23 @@ class AppealReminder extends Command
     private function sendSubscribeMessage(AppealReminder $reminder): void
     {
         try {
-            // 微信小程序订阅消息推送
+            // 微信小程序订阅消息推送（通过微信官方API）
+            $wechatService = new WeChatService();
+            $wechatService->sendToUserWithRetry(
+                $reminder->user_id,
+                'appeal_notify',
+                [
+                    'thing1' => '申诉处理',
+                    'thing2' => '已提交，待处理',
+                    'time3'  => date('Y-m-d H:i:s'),
+                    'thing4' => '请耐心等待平台处理结果',
+                ],
+                "/pages/appeal/detail/detail?id={$reminder->appeal_id}",
+                (string) $reminder->appeal_id,
+                'appeal'
+            );
+
+            // WebSocket 实时推送兜底
             $wsService = new WebSocketService();
             $wsService->pushToUser($reminder->user_id, [
                 'event'   => 'appeal_reminder',

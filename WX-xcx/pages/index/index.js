@@ -10,7 +10,8 @@ Page({
     pageSize: 10,
     loading: false,
     noMore: false,
-    keyword: ''
+    keyword: '',
+    subscribeTmplIds: 'TEMPLATE_ID_PLACEHOLDER_01,TEMPLATE_ID_PLACEHOLDER_03,TEMPLATE_ID_PLACEHOLDER_04'
   },
 
   onLoad() {
@@ -174,5 +175,9 @@ Page({
     wx.navigateTo({
       url: '/package-player/player-list/player-list'
     });
+  },
+
+  onSubscribeResult(e) {
+    console.log('订阅消息授权结果:', e.detail);
   }
 });

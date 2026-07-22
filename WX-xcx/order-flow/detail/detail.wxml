@@ -134,4 +134,12 @@
       申诉
     </button>
   </view>
+
+  <subscribe-msg 
+    id="subscribeMsg"
+    tmplIds="{{subscribeTmplIds}}"
+    scene="order"
+    auto="{{true}}"
+    bind:subscribed="onSubscribeResult">
+  </subscribe-msg>
 </view>

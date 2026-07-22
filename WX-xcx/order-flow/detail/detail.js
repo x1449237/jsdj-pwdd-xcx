@@ -5,7 +5,8 @@ Page({
   data: {
     orderId: '',
     orderInfo: {},
-    timelineList: []
+    timelineList: [],
+    subscribeTmplIds: 'TEMPLATE_ID_PLACEHOLDER_02'
   },
 
   onLoad(options) {
@@ -167,5 +168,9 @@ Page({
     wx.navigateTo({
       url: '/order-flow/reward/reward?orderId=' + this.data.orderId
     });
+  },
+
+  onSubscribeResult(e) {
+    console.log('订单页订阅消息授权结果:', e.detail);
   }
 });

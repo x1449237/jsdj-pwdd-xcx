@@ -1,0 +1,51 @@
+.subscribe-msg {
+  position: relative;
+}
+
+.subscribe-tip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 20rpx 30rpx;
+}
+
+.tip-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
+}
+
+.tip-icon {
+  font-size: 36rpx;
+  margin-right: 15rpx;
+}
+
+.tip-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.tip-btn {
+  font-size: 24rpx;
+  color: #fff;
+  background: linear-gradient(135deg, #FF6B35, #FF4500);
+  border-radius: 30rpx;
+  padding: 10rpx 25rpx;
+  margin: 0 15rpx;
+  border: none;
+  line-height: 1.5;
+}
+
+.tip-close {
+  font-size: 32rpx;
+  color: #999;
+  padding: 5rpx 10rpx;
+}

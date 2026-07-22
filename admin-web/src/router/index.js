@@ -140,6 +140,12 @@ const routes = [
         meta: { title: '平台官方账号', icon: 'UserFilled', group: 'platform' }
       },
       {
+        path: 'platform/subscribe',
+        name: 'PlatformSubscribe',
+        component: () => import('@/views/platform/subscribe.vue'),
+        meta: { title: '订阅消息模板', icon: 'Message', group: 'platform' }
+      },
+      {
         path: 'after-sale/keywords',
         name: 'AfterSaleKeywords',
         component: () => import('@/views/after-sale/keywords.vue'),

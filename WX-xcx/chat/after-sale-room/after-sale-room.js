@@ -29,7 +29,8 @@ Page({
     interveneStatus: 0, // 0未介入, 1介入中, 2已解除
     showInterveneBanner: false, // 客服端红色警示横幅
     interveneBannerText: '', // 横幅文案
-    autoIntervene: false // 是否关键词自动介入
+    autoIntervene: false, // 是否关键词自动介入
+    subscribeTmplIds: 'TEMPLATE_ID_PLACEHOLDER_04'
   },
 
   onLoad(options) {
@@ -587,6 +588,10 @@ Page({
   removeMessage(msgId) {
     const list = this.data.messageList.filter(item => item.msg_id !== msgId);
     this.setData({ messageList: list });
+  },
+
+  onSubscribeResult(e) {
+    console.log('售后页订阅消息授权结果:', e.detail);
   },
 
   updateMessageStatus(tempMsgId, serverMsg) {

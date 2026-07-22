@@ -108,4 +108,12 @@
     <image class="empty-state-image" src="/assets/images/empty.png" mode="aspectFit"></image>
     <text class="empty-state-text">暂无打手，请稍后再来</text>
   </view>
+
+  <subscribe-msg 
+    id="subscribeMsg"
+    tmplIds="{{subscribeTmplIds}}"
+    scene="home"
+    auto="{{true}}"
+    bind:subscribed="onSubscribeResult">
+  </subscribe-msg>
 </view>

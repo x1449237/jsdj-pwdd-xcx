@@ -161,6 +161,9 @@ class AfterSaleService
 
             Db::commit();
 
+            // 微信订阅消息推送 - 通知平台管理员
+            $this->sendInterveneNotify($session, $senderId, 'auto', $hitKeywords);
+
             write_action_log('after_sale_auto_intervene', "售后关键词自动介入: 会话ID: {$sessionId}, 命中关键词: " . implode(',', $hitKeywords));
 
             return true;
@@ -201,9 +204,53 @@ class AfterSaleService
             'result'       => 'pending',
         ]);
 
+        // 微信订阅消息推送 - 通知平台管理员
+        $this->sendInterveneNotify($session, $userId, 'manual', []);
+
         write_action_log('after_sale_manual_intervene', "人工申请平台介入: 会话ID: {$sessionId}, 用户ID: {$userId}");
 
         return true;
+    }
+
+    /**
+     * 发送平台介入微信订阅消息通知
+     * @param AfterSaleSession $session
+     * @param int              $triggerUserId
+     * @param string           $triggerType  auto/manual
+     * @param array            $hitKeywords
+     */
+    private function sendInterveneNotify(AfterSaleSession $session, int $triggerUserId, string $triggerType, array $hitKeywords): void
+    {
+        try {
+            // 检查是否测试模式
+            $testMode = SystemConfig::getValue('after_sale_test_mode', '0');
+            if ($testMode === '1' || $testMode === 'true') {
+                Log::info("[订阅消息] 测试模式，跳过推送: session_id={$session->id}");
+                return;
+            }
+
+            $wechatService = new WeChatService();
+
+            // 通知触发者（玩家或客服）
+            $triggerLabel = $triggerType === 'auto' ? '系统自动检测到敏感词汇' : '您已成功提交介入申请';
+            $wechatService->sendToUserWithRetry(
+                $triggerUserId,
+                SubscribeMessageTemplate::SCENE_PLATFORM_INTERVENE,
+                [
+                    'thing1' => $session->order_id ? "订单售后 #{$session->order_id}" : '售后申诉',
+                    'thing2' => $triggerLabel,
+                    'time3'  => date('Y-m-d H:i:s'),
+                    'thing4' => '平台方将尽快介入处理，请耐心等待',
+                ],
+                "/pages/chat/after-sale-room/after-sale-room?sessionId={$session->id}",
+                (string) $session->id,
+                'after_sale_intervene'
+            );
+
+            Log::info("[订阅消息] 平台介入通知已发送: session_id={$session->id}, user_id={$triggerUserId}, type={$triggerType}");
+        } catch (\Throwable $e) {
+            Log::error("[订阅消息] 发送平台介入通知失败: " . $e->getMessage());
+        }
     }
 
     /**

@@ -200,4 +200,12 @@
       <text class="panel-label">语音</text>
     </view>
   </view>
+
+  <subscribe-msg 
+    id="subscribeMsg"
+    tmplIds="{{subscribeTmplIds}}"
+    scene="after_sale"
+    auto="{{true}}"
+    bind:subscribed="onSubscribeResult">
+  </subscribe-msg>
 </view>
