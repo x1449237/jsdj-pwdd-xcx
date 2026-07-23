@@ -1,0 +1,71 @@
+<view class="page">
+  <view class="section">
+    <view class="section-title">1. 选择所属俱乐部</view>
+    <picker mode="selector" range="{{clubs}}" range-key="club_name" bindchange="onClubChange">
+      <view class="picker-box">
+        <text wx:if="{{selectedClubName}}">{{selectedClubName}}</text>
+        <text wx:else class="placeholder">请选择俱乐部</text>
+        <text class="arrow">›</text>
+      </view>
+    </picker>
+    <view class="hint" wx:if="{{clubs.length === 0}}">您尚未加入任何俱乐部，请先加入俱乐部后再申请</view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">2. 视频平台信息</view>
+    <picker mode="selector" range="{{platformOptions}}" bindchange="onPlatformChange">
+      <view class="picker-box">
+        <text wx:if="{{platform}}">{{platform}}</text>
+        <text wx:else class="placeholder">请选择平台</text>
+        <text class="arrow">›</text>
+      </view>
+    </picker>
+    <input class="input" placeholder="平台账号ID（选填）" value="{{platformAccountId}}" bindinput="e => setData({platformAccountId: e.detail.value})" />
+    <input class="input" placeholder="平台主页链接（选填）" value="{{platformAccountUrl}}" bindinput="e => setData({platformAccountUrl: e.detail.value})" />
+    <input class="input" type="number" placeholder="粉丝数（必填）" value="{{fanCount}}" bindinput="e => setData({fanCount: e.detail.value})" />
+    
+    <!-- 预估等级 -->
+    <view class="tier-preview" wx:if="{{fanCount >= 100}}">
+      <text class="tier-label">预估等级：</text>
+      <view class="tier-badge" style="background: {{getEstimatedTier().bg_color}}">
+        <text>{{getEstimatedTier().tier_name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">3. 个人主页截图（必传）</view>
+    <view class="upload-grid">
+      <view class="upload-item" wx:for="{{screenshots}}" wx:key="index">
+        <image src="{{item}}" mode="aspectFill" />
+        <view class="delete-btn" data-index="{{index}}" bindtap="onDeleteScreenshot">✕</view>
+      </view>
+      <view class="upload-item upload-btn" wx:if="{{screenshots.length < 3}}" bindtap="onUploadScreenshot">
+        <text class="plus">+</text>
+        <text class="upload-text">上传截图</text>
+      </view>
+    </view>
+    <view class="hint">请上传视频平台个人主页截图，展示粉丝数</view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">4. 录屏视频（必传）</view>
+    <view class="video-section">
+      <button class="video-btn" wx:if="{{!videoUrl}}" bindtap="onUploadVideo" loading="{{videoUploading}}">
+        {{videoUploading ? '上传中...' : '📹 上传录屏视频'}}
+      </button>
+      <view class="video-preview" wx:if="{{videoUrl}}">
+        <video src="{{videoUrl}}" controls object-fit="contain" />
+        <text class="video-ok">✅ 视频已上传</text>
+        <button class="video-reupload" bindtap="onUploadVideo">重新上传</button>
+      </view>
+    </view>
+    <view class="hint">请从手机桌面开始录屏，依次进入视频平台→个人主页，全程展示粉丝数</view>
+  </view>
+
+  <view class="submit-bar">
+    <button class="submit-btn" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">
+      {{submitting ? '提交中...' : '提交认证申请'}}
+    </button>
+  </view>
+</view>

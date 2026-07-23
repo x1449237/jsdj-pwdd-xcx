@@ -1,0 +1,187 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 120rpx;
+}
+
+.section {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  padding: 30rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.picker-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.placeholder {
+  color: #bbb;
+}
+
+.arrow {
+  font-size: 36rpx;
+  color: #ccc;
+}
+
+.input {
+  margin-top: 16rpx;
+  padding: 20rpx 24rpx;
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+}
+
+.hint {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 12rpx;
+}
+
+.tier-preview {
+  display: flex;
+  align-items: center;
+  margin-top: 16rpx;
+}
+
+.tier-label {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 20rpx;
+  border-radius: 20rpx;
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.upload-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.upload-item {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  position: relative;
+}
+
+.upload-item image {
+  width: 100%;
+  height: 100%;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 4rpx;
+  right: 4rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: rgba(0,0,0,0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 24rpx;
+}
+
+.upload-btn {
+  background: #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx dashed #ddd;
+}
+
+.plus {
+  font-size: 60rpx;
+  color: #ccc;
+  line-height: 1;
+}
+
+.upload-text {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+.video-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.video-btn {
+  width: 100%;
+  padding: 30rpx;
+  background: #f0f0f0;
+  border: 2rpx dashed #ddd;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #666;
+}
+
+.video-preview {
+  width: 100%;
+}
+
+.video-preview video {
+  width: 100%;
+  height: 300rpx;
+  border-radius: 12rpx;
+  background: #000;
+}
+
+.video-ok {
+  display: block;
+  text-align: center;
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #67C23A;
+}
+
+.video-reupload {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #409EFF;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.submit-bar {
+  padding: 30rpx;
+}
+
+.submit-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #7B2FBE, #E87A2A);
+  color: #fff;
+  border-radius: 50rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  padding: 24rpx 0;
+}

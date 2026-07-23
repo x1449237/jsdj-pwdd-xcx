@@ -11,7 +11,8 @@
     "pages/appeal-detail/appeal-detail",
     "pages/realname/realname",
     "pages/guardian/guardian",
-    "pages/agreement/agreement"
+    "pages/agreement/agreement",
+    "pages/up-master/apply/apply"
   ],
   "subPackages": [
     {

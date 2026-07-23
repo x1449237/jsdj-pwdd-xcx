@@ -17,22 +17,62 @@ class UpMasterService
     /**
      * 提交认证申请
      * @param int    $userId
+     * @param int    $clubId
      * @param int    $fanCount
      * @param string $platform
      * @param string $platformAccountId
      * @param string $platformAccountUrl
      * @param array  $screenshots
+     * @param string $videoUrl
      * @return array
      */
     public function submitCertification(
         int $userId,
+        int $clubId,
         int $fanCount,
         string $platform,
         string $platformAccountId,
         string $platformAccountUrl,
-        array $screenshots
+        array $screenshots,
+        string $videoUrl
     ): array {
-        // 判断是否有待审核的申请
+        // 1. 校验俱乐部存在且有效
+        $club = \app\model\UserVBadge::where('id', $clubId)
+            ->where('audit_status', \app\model\UserVBadge::AUDIT_PASSED)
+            ->where('is_active', 1)
+            ->find();
+        if (!$club) {
+            throw new \RuntimeException('俱乐部不存在或未通过审核');
+        }
+
+        // 2. 校验用户属于该俱乐部
+        $isMember = false;
+        // 方式1：检查群聊成员
+        $clubGroupIds = \app\model\GroupChat::where('creator_id', $club->user_id)
+            ->where('status', 1)
+            ->column('id');
+        if (!empty($clubGroupIds)) {
+            $memberCount = \app\model\GroupChatMember::whereIn('group_id', $clubGroupIds)
+                ->where('user_id', $userId)
+                ->where('status', 1)
+                ->count();
+            $isMember = $memberCount > 0;
+        }
+        // 方式2：用户自己就是俱乐部创始人
+        if (!$isMember && $userId == $club->user_id) {
+            $isMember = true;
+        }
+
+        if (!$isMember) {
+            throw new \RuntimeException('您不属于该俱乐部，无法通过该俱乐部申请认证');
+        }
+
+        // 3. 校验录屏材料
+        if (empty($videoUrl)) {
+            throw new \RuntimeException('请上传从手机桌面到个人主页的录屏视频');
+        }
+
+        // 4. 判断是否有待审核的申请
         $pending = UpMasterCertification::where('user_id', $userId)
             ->where('audit_status', UpMasterCertification::AUDIT_PENDING)
             ->find();
@@ -40,7 +80,7 @@ class UpMasterService
             throw new \RuntimeException('您有正在审核中的认证申请，请耐心等待');
         }
 
-        // 计算粉丝数对应等级
+        // 5. 计算粉丝数对应等级
         $tierConfig = $this->getTierByFanCount($fanCount);
         if (!$tierConfig) {
             throw new \RuntimeException('粉丝数未达到最低认证门槛（100粉）');
@@ -48,6 +88,7 @@ class UpMasterService
 
         $cert = UpMasterCertification::create([
             'user_id'             => $userId,
+            'club_id'             => $clubId,
             'tier'                => $tierConfig['tier'],
             'tier_name'           => $tierConfig['tier_name'],
             'fan_count'           => $fanCount,
@@ -55,12 +96,13 @@ class UpMasterService
             'platform_account_id' => $platformAccountId,
             'platform_account_url'=> $platformAccountUrl,
             'screenshot_urls'     => json_encode($screenshots, JSON_UNESCAPED_UNICODE),
+            'video_url'           => $videoUrl,
             'audit_status'        => UpMasterCertification::AUDIT_PENDING,
             'badge_color'         => $tierConfig['bg_color'],
             'badge_size'          => $tierConfig['badge_size'],
         ]);
 
-        write_action_log('up_master_submit', "UP主认证申请: user_id={$userId}, tier={$tierConfig['tier_name']}, fan_count={$fanCount}");
+        write_action_log('up_master_submit', "UP主认证申请: user_id={$userId}, club_id={$clubId}, tier={$tierConfig['tier_name']}, fan_count={$fanCount}");
 
         return $cert->toArray();
     }
@@ -224,7 +266,7 @@ class UpMasterService
      */
     public function getCertificationList(int $page, int $limit, int $auditStatus = -1, int $tier = 0): array
     {
-        $query = UpMasterCertification::order('create_time', 'desc');
+        $query = UpMasterCertification::with(['club'])->order('create_time', 'desc');
 
         if ($auditStatus >= 0) {
             $query->where('audit_status', $auditStatus);
@@ -235,6 +277,12 @@ class UpMasterService
 
         $total = $query->count();
         $list  = $query->page($page, $limit)->select()->toArray();
+
+        // 关联 club_name
+        foreach ($list as &$item) {
+            $item['club_name'] = $item['club']['club_name'] ?? '';
+            unset($item['club']);
+        }
 
         return ['list' => $list, 'total' => $total];
     }

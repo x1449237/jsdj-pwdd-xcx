@@ -153,6 +153,7 @@ Route::group('api/v1', function () {
         Route::post('up_master/submit',         'api.UpMaster/submit');
         Route::get('up_master/my_status',       'api.UpMaster/myStatus');
         Route::get('up_master/my_badge',        'api.UpMaster/myBadge');
+        Route::get('up_master/my_clubs',        'api.UpMaster/myClubs');
         Route::get('up_master/tier_configs',    'api.UpMaster/tierConfigs');
 
     })->middleware(['auth']);

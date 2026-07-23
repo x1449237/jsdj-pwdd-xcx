@@ -32,11 +32,19 @@
               :value="item.value"
             />
           </el-select>
+          <el-input
+            v-model="filters.club_id"
+            placeholder="俱乐部ID"
+            clearable
+            style="width: 140px; margin-left: 12px"
+            @change="handleFilterChange"
+          />
         </div>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe border style="width: 100%">
         <el-table-column prop="nickname" label="用户昵称" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="club_name" label="所属俱乐部" min-width="140" show-overflow-tooltip />
         <el-table-column label="申请等级" width="120" align="center">
           <template #default="{ row }">
             <el-tag
@@ -139,6 +147,32 @@
             {{ currentDetail.remark }}
           </el-descriptions-item>
         </el-descriptions>
+
+        <el-divider content-position="left">俱乐部信息</el-divider>
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="所属俱乐部">{{ currentDetail.club_name || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="俱乐部类型">{{ currentDetail.club_badge_type || '-' }}</el-descriptions-item>
+        </el-descriptions>
+
+        <el-divider content-position="left">录屏视频（从手机桌面→进入平台→个人主页）</el-divider>
+        <el-descriptions :column="1" border>
+          <el-descriptions-item label="视频链接">
+            <a v-if="currentDetail.video_url" :href="currentDetail.video_url" target="_blank" style="color: #409EFF">
+              {{ currentDetail.video_url }}
+            </a>
+            <span v-else style="color: #999">未上传</span>
+          </el-descriptions-item>
+        </el-descriptions>
+        <div v-if="currentDetail.video_url" style="margin-top: 12px">
+          <video
+            :src="currentDetail.video_url"
+            controls
+            style="width: 100%; max-width: 400px; border-radius: 8px; background: #000"
+            preload="metadata"
+          >
+            您的浏览器不支持视频播放
+          </video>
+        </div>
       </template>
     </el-dialog>
 
@@ -237,7 +271,8 @@ export default {
       },
       filters: {
         audit_status: '',
-        tier: ''
+        tier: '',
+        club_id: ''
       },
       tierOptions: Object.entries(TIER_MAP).map(([value, item]) => ({
         value: Number(value),
@@ -289,6 +324,9 @@ export default {
         if (this.filters.tier) {
           params.tier = this.filters.tier
         }
+        if (this.filters.club_id) {
+          params.club_id = this.filters.club_id
+        }
         const res = await request.get('/v1/admin/up_master/list', { params })
         this.tableData = res.data?.list || []
         this.pagination.total = res.data?.total || 0
@@ -315,8 +353,23 @@ export default {
       return STATUS_MAP[status]?.type || 'info'
     },
     handleViewDetail(row) {
-      this.currentDetail = row
-      this.detailDialogVisible = true
+      this.loadDetail(row.id)
+    },
+    async loadDetail(id) {
+      try {
+        const res = await request.get('/v1/admin/up_master/detail', { params: { id } })
+        const data = res.data || {}
+        this.currentDetail = {
+          ...data,
+          club_name: data.club_name || '',
+          club_badge_type: data.club_badge_type || '',
+          video_url: data.video_url || ''
+        }
+        this.detailDialogVisible = true
+      } catch (err) {
+        console.error('获取认证详情失败:', err)
+        ElMessage.error('获取认证详情失败')
+      }
     },
     handleApprove(row) {
       this.approveForm = {

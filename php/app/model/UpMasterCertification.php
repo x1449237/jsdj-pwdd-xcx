@@ -9,6 +9,7 @@ use think\Model;
  * UP主认证等级
  * @property int    $id
  * @property int    $user_id          用户ID
+ * @property int    $club_id          所属俱乐部ID（user_v_badge.id）
  * @property int    $tier             等级 1青铜 2进阶 3高阶 4精英 5巨匠 6至尊
  * @property string $tier_name        等级名称
  * @property int    $fan_count        粉丝数
@@ -17,6 +18,7 @@ use think\Model;
  * @property string $platform_account_id 平台账号ID
  * @property string $platform_account_url 平台主页链接
  * @property string $screenshot_urls  截图凭证(JSON)
+ * @property string $video_url        录屏视频URL
  * @property int    $audit_status     0待审核 1通过 2驳回
  * @property string $audit_remark     审核备注
  * @property string $audit_time       审核时间
@@ -65,6 +67,11 @@ class UpMasterCertification extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
+    public function club()
+    {
+        return $this->belongsTo(UserVBadge::class, 'club_id', 'id');
+    }
+
     public function scopeActive($query)
     {
         $query->where('is_active', 1)->where('audit_status', self::AUDIT_PASSED);
@@ -73,6 +80,11 @@ class UpMasterCertification extends Model
     public function scopeByUser($query, int $userId)
     {
         $query->where('user_id', $userId);
+    }
+
+    public function scopeByClub($query, int $clubId)
+    {
+        $query->where('club_id', $clubId);
     }
 
     public function scopeByTier($query, int $tier)
