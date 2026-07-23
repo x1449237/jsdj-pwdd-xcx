@@ -60,9 +60,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="create_time" label="上传时间" width="180" />
-        <el-table-column label="操作" width="300" fixed="right">
+        <el-table-column label="操作" width="350" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handlePreview(row)">预览</el-button>
+            <el-button type="info" size="small" @click="showVersions(row)">历史版本</el-button>
             <el-button type="warning" size="small" @click="showReplaceDialog(row)">替换</el-button>
             <el-button
               :type="row.is_active ? 'info' : 'success'"
@@ -149,6 +150,31 @@
         style="width: 100%; height: 600px; border: none"
       ></iframe>
     </el-dialog>
+
+    <!-- 历史版本弹窗 -->
+    <el-dialog v-model="versionsVisible" :title="'历史版本 - ' + versionsTitle" width="800px">
+      <el-table :data="versionsData" v-loading="versionsLoading" stripe>
+        <el-table-column label="版本" width="80" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.is_current ? 'success' : 'info'" size="small">
+              {{ row.is_current ? 'v' + row.version + '（当前）' : 'v' + row.version }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="file_name" label="文件名" min-width="200" show-overflow-tooltip />
+        <el-table-column label="大小" width="100">
+          <template #default="{ row }">
+            {{ formatFileSize(row.file_size) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="create_time" label="时间" width="180" />
+        <el-table-column label="操作" width="120">
+          <template #default="{ row }">
+            <el-button type="primary" size="small" @click="openVersion(row)">打开</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -185,7 +211,14 @@ export default {
 
       // 预览
       previewVisible: false,
-      previewUrl: ''
+      previewUrl: '',
+
+      // 历史版本
+      versionsVisible: false,
+      versionsTitle: '',
+      versionsData: [],
+      versionsLoading: false,
+      versionsDocumentId: 0
     }
   },
   mounted() {
@@ -327,6 +360,28 @@ export default {
 
     // ===== 预览 =====
     handlePreview(row) {
+      this.previewUrl = row.file_url
+      this.previewVisible = true
+    },
+
+    // ===== 历史版本 =====
+    async showVersions(row) {
+      this.versionsTitle = row.title
+      this.versionsDocumentId = row.id
+      this.versionsVisible = true
+      this.versionsLoading = true
+      try {
+        const res = await request.get('/v1/admin/document/versions', {
+          document_id: row.id
+        })
+        this.versionsData = res.data || []
+      } catch (e) {
+        ElMessage.error('加载版本历史失败')
+      } finally {
+        this.versionsLoading = false
+      }
+    },
+    openVersion(row) {
       this.previewUrl = row.file_url
       this.previewVisible = true
     },

@@ -1780,3 +1780,22 @@ CREATE TABLE `platform_documents` (
   KEY `idx_doc_type` (`doc_type`),
   KEY `idx_admin_id` (`admin_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='平台文档表（协议/政策/合同）';
+
+-- ============================================================
+-- 39. 平台文档版本历史表
+-- 每次替换时自动保存旧版本，支持历史版本回溯查看
+-- ============================================================
+DROP TABLE IF EXISTS `document_versions`;
+CREATE TABLE `document_versions` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `document_id` BIGINT UNSIGNED NOT NULL COMMENT '关联文档ID',
+  `version` INT UNSIGNED NOT NULL COMMENT '版本号',
+  `file_url` VARCHAR(512) NOT NULL COMMENT 'PDF文件存储路径',
+  `file_name` VARCHAR(255) NOT NULL COMMENT '原始文件名',
+  `file_size` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '文件大小(字节)',
+  `admin_id` BIGINT UNSIGNED NOT NULL COMMENT '操作管理员ID',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_document_id` (`document_id`),
+  KEY `idx_document_version` (`document_id`, `version`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='平台文档版本历史表';

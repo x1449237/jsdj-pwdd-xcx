@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace app\controller\admin;
 
 use app\controller\BaseController;
+use app\model\DocumentVersion;
 use app\model\PlatformDocument;
 use think\Request;
 
@@ -94,6 +95,16 @@ class Document extends BaseController
                 'is_active' => 1,
             ]);
 
+            // 创建初始版本记录
+            DocumentVersion::create([
+                'document_id' => $doc->id,
+                'version'     => 1,
+                'file_url'    => $fileUrl,
+                'file_name'   => $file->getOriginalName(),
+                'file_size'   => $file->getSize(),
+                'admin_id'    => $this->adminId(),
+            ]);
+
             $this->operationLog('admin_document_upload', "上传文档: {$title} (类型: {$docType})");
 
             return $this->success($doc->toArray(), '上传成功');
@@ -141,6 +152,16 @@ class Document extends BaseController
         }
 
         try {
+            // 保存旧版本到历史记录
+            DocumentVersion::create([
+                'document_id' => $doc->id,
+                'version'     => $doc->version,
+                'file_url'    => $doc->file_url,
+                'file_name'   => $doc->file_name,
+                'file_size'   => $doc->file_size,
+                'admin_id'    => $doc->admin_id,
+            ]);
+
             // 旧文件保留不删除，仅逻辑上替换到新文件
             $saveDir = public_path() . 'uploads/documents/';
             if (!is_dir($saveDir)) {
@@ -211,5 +232,49 @@ class Document extends BaseController
         $this->operationLog('admin_document_toggle', "{$status}文档: {$doc->title}");
 
         return $this->success($doc->toArray(), "文档已{$status}");
+    }
+
+    /**
+     * 获取文档所有历史版本（按版本号降序）
+     */
+    public function versions(Request $request)
+    {
+        $documentId = $request->paramInt('document_id', 0);
+        if ($documentId <= 0) {
+            return $this->error('文档ID无效');
+        }
+
+        $doc = PlatformDocument::find($documentId);
+        if (!$doc) {
+            return $this->error('文档不存在', 404);
+        }
+
+        // 历史版本 + 当前版本合并
+        $history = DocumentVersion::where('document_id', $documentId)
+            ->order('version', 'desc')
+            ->select()
+            ->toArray();
+
+        // 当前版本也加入列表
+        $current = [
+            'id'          => 0,
+            'document_id' => $doc->id,
+            'version'     => $doc->version,
+            'file_url'    => $doc->file_url,
+            'file_name'   => $doc->file_name,
+            'file_size'   => $doc->file_size,
+            'admin_id'    => $doc->admin_id,
+            'create_time' => $doc->update_time,
+            'is_current'  => true,
+        ];
+
+        foreach ($history as &$item) {
+            $item['is_current'] = false;
+        }
+
+        // 当前版本在最前面
+        $all = array_merge([$current], $history);
+
+        return $this->success($all);
     }
 }

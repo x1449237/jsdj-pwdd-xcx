@@ -313,6 +313,7 @@ Route::group('api/v1', function () {
         Route::put('document/replace',           'admin/Document/replace');
         Route::delete('document/delete',         'admin/Document/delete');
         Route::put('document/toggle',            'admin/Document/toggle');
+        Route::get('document/versions',          'admin/Document/versions');
 
         // --- 邀请码管理 ---
         Route::post('invite/generate',          'admin/Invite/generate');
