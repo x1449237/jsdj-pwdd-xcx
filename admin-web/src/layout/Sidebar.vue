@@ -59,6 +59,11 @@ const menuGroupConfig = [
     icon: 'Platform'
   },
   {
+    key: 'club',
+    title: '俱乐部管理',
+    icon: 'Medal'
+  },
+  {
     key: 'chat',
     title: '聊天管理',
     icon: 'ChatDotRound'

@@ -186,6 +186,30 @@ const routes = [
         name: 'PunishmentRecords',
         component: () => import('@/views/punishment/index.vue'),
         meta: { title: '处罚记录', icon: 'Lock', group: 'security' }
+      },
+      {
+        path: 'club/list',
+        name: 'ClubList',
+        component: () => import('@/views/club/list.vue'),
+        meta: { title: '俱乐部列表', icon: 'List', group: 'club' }
+      },
+      {
+        path: 'club/detail/:id',
+        name: 'ClubDetail',
+        component: () => import('@/views/club/detail.vue'),
+        meta: { title: '俱乐部详情', hidden: true, group: 'club' }
+      },
+      {
+        path: 'club/deposit',
+        name: 'ClubDeposit',
+        component: () => import('@/views/club/deposit.vue'),
+        meta: { title: '保证金管理', icon: 'Money', group: 'club' }
+      },
+      {
+        path: 'club/transfer',
+        name: 'ClubTransfer',
+        component: () => import('@/views/club/transfer.vue'),
+        meta: { title: '对公打款验证', icon: 'BankCard', group: 'club' }
       }
     ]
   },

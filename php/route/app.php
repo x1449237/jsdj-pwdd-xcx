@@ -290,6 +290,19 @@ Route::group('api/v1', function () {
         Route::put('audit/force_offline',       'admin/Audit/forceOffline');
         Route::get('audit/level_income',        'admin/Audit/levelIncome');
 
+        // --- 俱乐部管理 ---
+        Route::get('club/list',                  'admin/ClubManage/clubList');
+        Route::get('club/detail',                'admin/ClubManage/clubDetail');
+        Route::put('club/freeze',                'admin/ClubManage/freezeClub');
+        Route::put('club/unfreeze',              'admin/ClubManage/unfreezeClub');
+        Route::put('club/cancel',                'admin/ClubManage/cancelClub');
+        Route::get('club/deposit_list',          'admin/ClubManage/depositList');
+        Route::put('club/confirm_deposit',       'admin/ClubManage/confirmDeposit');
+        Route::put('club/refund_deposit',        'admin/ClubManage/refundDeposit');
+        Route::get('club/transfer_list',         'admin/ClubManage/corporateTransferList');
+        Route::put('club/verify_transfer',       'admin/ClubManage/verifyCorporateTransfer');
+        Route::put('club/deposit_config',        'admin/ClubManage/updateDepositConfig');
+
         // --- 资金与提现 ---
         Route::get('finance/withdraw_list',     'admin/Finance/withdrawList');
         Route::put('finance/withdraw_audit',    'admin/Finance/withdrawAudit');
