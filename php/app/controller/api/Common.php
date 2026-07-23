@@ -219,6 +219,7 @@ class Common extends BaseController
             'app_version'         => $configs['app_version'] ?? '1.0.0',
             'minor_amount_limit'  => $configs['minor_amount_limit'] ?? '200',
             'large_amount_threshold' => $configs['large_amount_threshold'] ?? '500',
+            'club_join_switch'    => $configs['club_join_switch'] ?? '1',
         ];
 
         return $this->success($publicConfig);

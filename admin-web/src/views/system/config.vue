@@ -107,6 +107,18 @@
           </el-row>
           <el-row :gutter="20">
             <el-col :span="12">
+              <el-form-item label="俱乐部入驻开关">
+                <el-switch
+                  v-model="formData.switch.clubJoinSwitch"
+                  active-text="开启"
+                  inactive-text="关闭"
+                />
+                <div class="switch-hint">关闭后前端同步隐藏所有俱乐部入驻入口，已入驻俱乐部不受影响</div>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
               <el-form-item label="服务协议URL" prop="serviceAgreementUrl">
                 <el-input
                   v-model="formData.switch.serviceAgreementUrl"
@@ -198,6 +210,7 @@ export default {
         switch: {
           realNameAuth: true,
           aiRiskControl: true,
+          clubJoinSwitch: true,
           serviceAgreementUrl: '',
           privacyPolicyUrl: ''
         },
@@ -293,6 +306,13 @@ export default {
 .save-container {
   text-align: center;
   padding: 20px 0;
+}
+
+.switch-hint {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+  line-height: 1.4;
 }
 
 @media screen and (max-width: 768px) {

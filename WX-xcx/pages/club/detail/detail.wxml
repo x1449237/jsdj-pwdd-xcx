@@ -1,0 +1,35 @@
+<view class="club-detail-page" wx:if="{{!loading && club}}">
+  <view class="club-header">
+    <view class="club-name-row">
+      <text class="club-name">{{club.club_name}}</text>
+      <v-badge badge-type="{{club.badge_type}}"></v-badge>
+    </view>
+    <text class="club-type-label">{{club.badge_type === 'blue_v' ? '企业级俱乐部' : '个人级俱乐部'}}</text>
+  </view>
+
+  <view class="stats-section">
+    <view class="stat-item">
+      <text class="stat-value">{{club.group_count || 0}}</text>
+      <text class="stat-label">群聊</text>
+    </view>
+    <view class="stat-item">
+      <text class="stat-value">{{club.up_master_count || 0}}</text>
+      <text class="stat-label">UP主</text>
+    </view>
+  </view>
+
+  <view class="founder-section" wx:if="{{club.founder}}">
+    <text class="section-title">创始人</text>
+    <view class="founder-card">
+      <image class="founder-avatar" src="{{club.founder.avatar || '/assets/images/default-avatar.png'}}" mode="aspectFill"></image>
+      <view class="founder-info">
+        <text class="founder-name">{{club.founder.nickname}}</text>
+        <text class="founder-id">ID: {{club.founder.id}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+
+<view class="loading-state" wx:if="{{loading}}">
+  <text>加载中...</text>
+</view>

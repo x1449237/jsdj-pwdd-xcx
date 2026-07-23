@@ -882,7 +882,8 @@ INSERT INTO `system_config` (`config_key`, `config_value`, `config_type`, `descr
 ('gray_whitelist', '[]', 'json', '灰度白名单用户ID', 1),
 ('gray_ratio', '0', 'float', '灰度放量比例', 1),
 ('refund_daily_limit_rate', '0.50', 'float', '单日退款熔断比例', 1),
-('rate_limit_batch_per_second', '100', 'int', '批量操作每秒限流', 1);
+('rate_limit_batch_per_second', '100', 'int', '批量操作每秒限流', 1),
+('club_join_switch', '1', 'bool', '俱乐部入驻总开关（关闭后前端同步隐藏所有入驻入口，已入驻俱乐部不受影响）', 1);
 
 -- ============================================================
 -- 35. 操作日志表

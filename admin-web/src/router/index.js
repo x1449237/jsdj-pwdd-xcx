@@ -68,6 +68,12 @@ const routes = [
         meta: { title: '内置管理员审核', icon: 'Checked' }
       },
       {
+        path: 'audit/club',
+        name: 'AuditClub',
+        component: () => import('@/views/audit/club.vue'),
+        meta: { title: '俱乐部入驻审核', icon: 'Checked' }
+      },
+      {
         path: 'invite',
         name: 'Invite',
         component: () => import('@/views/invite/index.vue'),

@@ -8,11 +8,13 @@ Page({
     userInfo: {},
     balance: '0.00',
     joinTapCount: 0,
-    joinTapTimer: null
+    joinTapTimer: null,
+    clubJoinOpen: false  // 俱乐部入驻开关状态
   },
 
   onLoad() {
     this.refreshUserInfo();
+    this.checkClubSwitch();
   },
 
   onShow() {
@@ -21,6 +23,15 @@ Page({
       this.getTabBar().setData({
         selected: 3
       });
+    }
+  },
+
+  async checkClubSwitch() {
+    try {
+      const res = await request.get('/api/v1/club/check_switch');
+      this.setData({ clubJoinOpen: res.data?.club_join_open === true });
+    } catch (e) {
+      this.setData({ clubJoinOpen: false });
     }
   },
 
@@ -147,6 +158,22 @@ Page({
         this.data.joinTapCount = 0;
       }, 2000);
     }
+  },
+
+  onClubJoin() {
+    if (!this.data.isLogin) {
+      this.onLogin();
+      return;
+    }
+    wx.navigateTo({
+      url: '/pages/club/join/join'
+    });
+  },
+
+  onClubList() {
+    wx.navigateTo({
+      url: '/pages/club/list/list'
+    });
   },
 
   onLogout() {

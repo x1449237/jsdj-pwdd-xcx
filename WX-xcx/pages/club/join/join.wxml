@@ -1,0 +1,78 @@
+<view class="club-join-page">
+  <view class="page-header">
+    <text class="page-title">俱乐部入驻</text>
+    <text class="page-desc">提交入驻申请，审核通过后点亮V标</text>
+  </view>
+
+  <view class="form-section">
+    <!-- 俱乐部名称 -->
+    <view class="form-group">
+      <view class="form-label">俱乐部名称</view>
+      <input
+        class="form-input"
+        placeholder="请输入俱乐部名称（2-50字）"
+        maxlength="50"
+        value="{{clubName}}"
+        bindinput="onInput"
+        data-field="clubName"
+      />
+    </view>
+
+    <!-- 俱乐部类型 -->
+    <view class="form-group">
+      <view class="form-label">俱乐部类型</view>
+      <picker
+        mode="selector"
+        range="{{clubTypeOptions}}"
+        value="{{clubTypeIndex}}"
+        bindchange="onClubTypeChange"
+      >
+        <view class="picker-value">
+          <text>{{clubTypeOptions[clubTypeIndex]}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+      <view class="form-hint">
+        <text wx:if="{{clubType === 'blue_v'}}">企业级俱乐部：审核通过后展示蓝色V标</text>
+        <text wx:else>个人级俱乐部：审核通过后展示绿色V标</text>
+      </view>
+    </view>
+
+    <!-- 描述 -->
+    <view class="form-group">
+      <view class="form-label">俱乐部简介（选填）</view>
+      <textarea
+        class="form-textarea"
+        placeholder="简要描述俱乐部信息..."
+        maxlength="200"
+        value="{{description}}"
+        bindinput="onInput"
+        data-field="description"
+      />
+    </view>
+  </view>
+
+  <!-- V标预览 -->
+  <view class="preview-section">
+    <text class="preview-title">审核通过后效果预览</text>
+    <view class="preview-card">
+      <view class="preview-name-row">
+        <text class="preview-name">{{clubName || '俱乐部名称'}}</text>
+        <v-badge badge-type="{{clubType === 'blue_v' ? 'blue_v' : 'green_v'}}"></v-badge>
+      </view>
+      <text class="preview-type">{{clubType === 'blue_v' ? '企业级俱乐部' : '个人级俱乐部'}}</text>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section">
+    <button
+      class="submit-btn"
+      loading="{{submitting}}"
+      disabled="{{submitting || !clubJoinOpen}}"
+      bindtap="onSubmit"
+    >
+      {{clubJoinOpen ? '提交入驻申请' : '入驻功能暂未开放'}}
+    </button>
+  </view>
+</view>

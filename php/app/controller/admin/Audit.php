@@ -14,6 +14,31 @@ use think\Request;
 class Audit extends BaseController
 {
     /**
+     * 俱乐部入驻审核列表
+     */
+    public function clubList(Request $request)
+    {
+        [$page, $limit] = $this->pageParams();
+        $auditStatus = $request->param('audit_status', '');
+        $clubType    = $request->param('club_type', '');
+
+        $query = \app\model\UserVBadge::with(['user'])->order('create_time', 'desc');
+
+        if ($auditStatus !== '') {
+            $query->where('audit_status', (int)$auditStatus);
+        }
+        if (!empty($clubType)) {
+            $query->where('badge_type', $clubType);
+        }
+
+        $total = $query->count();
+        $list  = $query->page($page, $limit)->select()->toArray();
+
+        $this->operationLog('admin_audit_club_list', '查看俱乐部入驻审核列表');
+
+        return $this->page($list, $total, $page, $limit);
+    }
+    /**
      * 打手审核列表
      */
     public function playerList(Request $request)
@@ -51,10 +76,30 @@ class Audit extends BaseController
     public function approve(Request $request)
     {
         $id     = $request->paramInt('id', 0);
+        $type   = $request->param('type', '');
         $remark = $request->param('remark', '');
 
         if ($id <= 0) {
             return $this->error('申请ID无效');
+        }
+
+        // 俱乐部入驻审核
+        if ($type === 'club') {
+            $club = \app\model\UserVBadge::find($id);
+            if (!$club) {
+                return $this->error('俱乐部入驻记录不存在', 404);
+            }
+            if ($club->audit_status != \app\model\UserVBadge::AUDIT_PENDING) {
+                return $this->error('该申请已审核');
+            }
+            $club->audit_status = \app\model\UserVBadge::AUDIT_PASSED;
+            $club->audit_time   = date('Y-m-d H:i:s');
+            $club->auditor_id   = $this->adminId();
+            $club->is_active    = 1;
+            $club->save();
+
+            $this->operationLog('admin_audit_club_approve', "俱乐部入驻审核通过，ID:{$id}，名称:{$club->club_name}");
+            return $this->success(null, '俱乐部入驻审核通过，V标已点亮');
         }
 
         $log = JoinUsLog::find($id);
@@ -83,6 +128,7 @@ class Audit extends BaseController
     public function reject(Request $request)
     {
         $id     = $request->paramInt('id', 0);
+        $type   = $request->param('type', '');
         $remark = $request->param('remark', '');
 
         if ($id <= 0) {
@@ -91,6 +137,25 @@ class Audit extends BaseController
 
         if (empty($remark)) {
             return $this->error('拒绝原因不能为空');
+        }
+
+        // 俱乐部入驻审核
+        if ($type === 'club') {
+            $club = \app\model\UserVBadge::find($id);
+            if (!$club) {
+                return $this->error('俱乐部入驻记录不存在', 404);
+            }
+            if ($club->audit_status != \app\model\UserVBadge::AUDIT_PENDING) {
+                return $this->error('该申请已审核');
+            }
+            $club->audit_status = \app\model\UserVBadge::AUDIT_REJECTED;
+            $club->audit_time   = date('Y-m-d H:i:s');
+            $club->auditor_id   = $this->adminId();
+            $club->is_active    = 0;
+            $club->save();
+
+            $this->operationLog('admin_audit_club_reject', "俱乐部入驻审核拒绝，ID:{$id}，原因: {$remark}");
+            return $this->success(null, '俱乐部入驻申请已驳回');
         }
 
         $log = JoinUsLog::find($id);
@@ -118,8 +183,26 @@ class Audit extends BaseController
      */
     public function forceOffline(Request $request)
     {
+        $id     = $request->paramInt('id', 0);
         $userId = $request->paramInt('user_id', 0);
+        $type   = $request->param('type', '');
         $reason = $request->param('reason', '');
+
+        // 俱乐部强制下架
+        if ($type === 'club') {
+            if ($id <= 0) {
+                return $this->error('俱乐部ID无效');
+            }
+            $club = \app\model\UserVBadge::find($id);
+            if (!$club) {
+                return $this->error('俱乐部不存在', 404);
+            }
+            $club->is_active = 0;
+            $club->save();
+
+            $this->operationLog('admin_audit_club_force_offline', "俱乐部强制下架，ID:{$id}，名称:{$club->club_name}");
+            return $this->success(null, '俱乐部已强制下架，V标已熄灭');
+        }
 
         if ($userId <= 0) {
             return $this->error('用户ID无效');

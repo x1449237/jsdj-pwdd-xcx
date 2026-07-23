@@ -1,0 +1,42 @@
+<view class="club-list-page">
+  <view class="page-header">
+    <text class="page-title">俱乐部</text>
+    <view class="join-btn" wx:if="{{clubJoinOpen}}" bindtap="onJoinClub">
+      <text>入驻</text>
+    </view>
+  </view>
+
+  <view class="club-list" wx:if="{{clubs.length > 0}}">
+    <view
+      class="club-card"
+      wx:for="{{clubs}}"
+      wx:key="id"
+      bindtap="onClubTap"
+      data-id="{{item.id}}"
+    >
+      <view class="club-name-row">
+        <text class="club-name">{{item.club_name}}</text>
+        <v-badge badge-type="{{item.badge_type}}"></v-badge>
+      </view>
+      <view class="club-type">
+        {{item.badge_type === 'blue_v' ? '企业级俱乐部' : '个人级俱乐部'}}
+      </view>
+      <view class="club-founder" wx:if="{{item.founder}}">
+        <image class="founder-avatar" src="{{item.founder.avatar || '/assets/images/default-avatar.png'}}" mode="aspectFill"></image>
+        <text class="founder-name">{{item.founder.nickname}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{!loading && clubs.length === 0}}">
+    <text class="empty-text">暂无俱乐部</text>
+    <button class="empty-btn" wx:if="{{clubJoinOpen}}" bindtap="onJoinClub">创建俱乐部</button>
+  </view>
+
+  <view class="loading-more" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+  <view class="no-more" wx:if="{{noMore && clubs.length > 0}}">
+    <text>没有更多了</text>
+  </view>
+</view>

@@ -12,7 +12,10 @@
     "pages/realname/realname",
     "pages/guardian/guardian",
     "pages/agreement/agreement",
-    "pages/up-master/apply/apply"
+    "pages/up-master/apply/apply",
+    "pages/club/join/join",
+    "pages/club/list/list",
+    "pages/club/detail/detail"
   ],
   "subPackages": [
     {

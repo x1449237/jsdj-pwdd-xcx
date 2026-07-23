@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "俱乐部入驻",
+  "usingComponents": {
+    "v-badge": "/components/v-badge/v-badge"
+  }
+}

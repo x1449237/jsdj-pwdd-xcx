@@ -156,6 +156,13 @@ Route::group('api/v1', function () {
         Route::get('up_master/my_clubs',        'api.UpMaster/myClubs');
         Route::get('up_master/tier_configs',    'api.UpMaster/tierConfigs');
 
+        // --- 俱乐部入驻 ---
+        Route::get('club/check_switch',         'api.Club/checkSwitch');
+        Route::post('club/submit',              'api.Club/submit');
+        Route::get('club/my_status',            'api.Club/myStatus');
+        Route::get('club/list',                 'api.Club/list');
+        Route::get('club/detail',               'api.Club/detail');
+
     })->middleware(['auth']);
 
     // ========== 打手端接口组（需要JWT user认证 + 打手身份校验） ==========
@@ -272,6 +279,7 @@ Route::group('api/v1', function () {
         Route::get('audit/distributor_list',    'admin/Audit/distributorList');
         Route::get('audit/dispatcher_list',     'admin/Audit/dispatcherList');
         Route::get('audit/admin_list',          'admin/Audit/adminList');
+        Route::get('audit/club_list',           'admin/Audit/clubList');
         Route::put('audit/approve',             'admin/Audit/approve');
         Route::put('audit/reject',              'admin/Audit/reject');
         Route::put('audit/force_offline',       'admin/Audit/forceOffline');
