@@ -149,6 +149,12 @@ Route::group('api/v1', function () {
         Route::post('subscribe/report',         'api.Subscribe/report');
         Route::get('subscribe/status',          'api.Subscribe/status');
 
+        // --- UP主认证 ---
+        Route::post('up_master/submit',         'api.UpMaster/submit');
+        Route::get('up_master/my_status',       'api.UpMaster/myStatus');
+        Route::get('up_master/my_badge',        'api.UpMaster/myBadge');
+        Route::get('up_master/tier_configs',    'api.UpMaster/tierConfigs');
+
     })->middleware(['auth']);
 
     // ========== 打手端接口组（需要JWT user认证 + 打手身份校验） ==========
@@ -360,6 +366,12 @@ Route::group('api/v1', function () {
         Route::delete('subscribe/template/delete/:id','admin.SubscribeMessage/templateDelete');
         Route::put('subscribe/template/toggle/:id', 'admin.SubscribeMessage/templateToggle');
         Route::get('subscribe/log/list',            'admin.SubscribeMessage/logList');
+
+        // --- UP主认证管理 ---
+        Route::get('up_master/list',            'admin.UpMaster/list');
+        Route::post('up_master/approve',        'admin.UpMaster/approve');
+        Route::post('up_master/reject',         'admin.UpMaster/reject');
+        Route::post('up_master/revoke',         'admin.UpMaster/revoke');
 
     })->middleware(['auth_admin']);
 

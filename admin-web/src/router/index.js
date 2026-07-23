@@ -146,6 +146,12 @@ const routes = [
         meta: { title: '订阅消息模板', icon: 'Message', group: 'platform' }
       },
       {
+        path: 'platform/up-master',
+        name: 'PlatformUpMaster',
+        component: () => import('@/views/platform/up-master.vue'),
+        meta: { title: 'UP主认证', icon: 'Medal', group: 'platform' }
+      },
+      {
         path: 'after-sale/keywords',
         name: 'AfterSaleKeywords',
         component: () => import('@/views/after-sale/keywords.vue'),

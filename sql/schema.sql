@@ -1683,4 +1683,71 @@ INSERT INTO `system_config` (`config_key`, `config_value`, `config_type`, `descr
 -- 5. 软删除使用 delete_time 字段
 -- 6. 所有表使用 InnoDB 引擎支持事务
 -- 7. 新增12张表支持三大会话体系+平台介入+V标身份
+-- 8. 新增2张表支持六档UP主认证体系
 -- ============================================================
+
+-- ============================================================
+-- 71. UP主认证等级表
+-- 六档认证体系：青铜→进阶→高阶→精英→巨匠→至尊
+-- ============================================================
+DROP TABLE IF EXISTS `up_master_certification`;
+CREATE TABLE `up_master_certification` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+  `tier` TINYINT NOT NULL COMMENT '等级 1青铜 2进阶 3高阶 4精英 5巨匠 6至尊',
+  `tier_name` VARCHAR(32) NOT NULL COMMENT '等级名称',
+  `fan_count` INT UNSIGNED DEFAULT 0 COMMENT '粉丝数',
+  `fan_count_verified` INT UNSIGNED DEFAULT 0 COMMENT '核验粉丝数',
+  `platform` VARCHAR(64) DEFAULT '' COMMENT '主平台 抖音/快手/B站/小红书/微信视频号',
+  `platform_account_id` VARCHAR(128) DEFAULT '' COMMENT '平台账号ID',
+  `platform_account_url` VARCHAR(255) DEFAULT '' COMMENT '平台主页链接',
+  `screenshot_urls` JSON DEFAULT NULL COMMENT '粉丝数截图凭证',
+  `audit_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0待审核 1通过 2驳回',
+  `audit_remark` VARCHAR(255) DEFAULT '' COMMENT '审核备注',
+  `audit_time` DATETIME DEFAULT NULL COMMENT '审核时间',
+  `auditor_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '审核人ID',
+  `is_active` TINYINT(1) DEFAULT 1 COMMENT '是否点亮',
+  `badge_text` VARCHAR(8) DEFAULT 'UP' COMMENT '徽标文字',
+  `badge_color` VARCHAR(32) DEFAULT '' COMMENT '徽标底色 #值',
+  `badge_size` VARCHAR(8) DEFAULT 'small' COMMENT 'small/large',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_tier` (`tier`),
+  KEY `idx_audit_status` (`audit_status`),
+  KEY `idx_is_active` (`is_active`),
+  UNIQUE KEY `uk_user_active` (`user_id`, `is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='UP主认证等级表';
+
+-- ============================================================
+-- 72. UP主认证等级配置表
+-- 六档配置常量，含色值、粉丝门槛、徽标尺寸
+-- ============================================================
+DROP TABLE IF EXISTS `up_master_tier_config`;
+CREATE TABLE `up_master_tier_config` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `tier` TINYINT NOT NULL COMMENT '等级 1-6',
+  `tier_name` VARCHAR(32) NOT NULL COMMENT '等级名称',
+  `fan_threshold` INT UNSIGNED NOT NULL COMMENT '粉丝门槛',
+  `bg_color` VARCHAR(16) NOT NULL COMMENT '底色 #值',
+  `highlight_color` VARCHAR(16) DEFAULT '' COMMENT '高光/反光色 #值',
+  `text_color` VARCHAR(16) DEFAULT '#FFFFFF' COMMENT '文字色',
+  `badge_size` VARCHAR(8) NOT NULL DEFAULT 'small' COMMENT 'small/large',
+  `visual_desc` VARCHAR(255) DEFAULT '' COMMENT '视觉描述',
+  `effect_type` VARCHAR(32) DEFAULT '' COMMENT '特效类型 edge_reflect/matte/gradient/glow/pearl/flow',
+  `sort` INT UNSIGNED DEFAULT 0 COMMENT '排序',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_tier` (`tier`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='UP主认证等级配置表';
+
+-- 六档预置数据
+INSERT INTO `up_master_tier_config` (`tier`, `tier_name`, `fan_threshold`, `bg_color`, `highlight_color`, `text_color`, `badge_size`, `visual_desc`, `effect_type`, `sort`) VALUES
+(1, '青铜UP主',  100,      '#1A1A1A', '#8C8C8C', '#FFFFFF', 'small', '圆形徽标，内含"UP"，纯黑底色，边缘带反光灰细描边', 'edge_reflect', 1),
+(2, '进阶UP主',  5000,    '#B8B8B8', '#808080', '#404040', 'small', '圆形徽标，内含"UP"，银灰底色，整体磨砂反光质感', 'matte', 2),
+(3, '高阶UP主',  10000,   '#7B2FBE', '#A855F7', '#FFFFFF', 'small', '圆形徽标，内含"UP"，亮紫底色，带高光渐变反光', 'gradient', 3),
+(4, '精英UP主',  100000,  '#E87A2A', '#F5A623', '#FFFFFF', 'large', '圆形徽标，内含"UP"，活力橙底色，强高光反光，边缘带淡淡光晕', 'glow', 4),
+(5, '巨匠UP主',  1000000, '#C44A6C', '#D4789B', '#FFFFFF', 'large', '圆形徽标，内含"UP"，玫瑰红底色，带细密珠光质感', 'pearl', 5),
+(6, '至尊UP主',  10000000,'#8B1A2B', '#FF4040', '#FFFFFF', 'large', '圆形徽标，内含"UP"，暗夜红底色，带动态流光特效', 'flow', 6);

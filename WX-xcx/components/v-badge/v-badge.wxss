@@ -58,3 +58,124 @@
   font-size: 18rpx;
   color: #ffffff;
 }
+
+/* ========================================
+   UP主认证徽标（圆形，文字"UP"）
+   ======================================== */
+
+.up-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.up-badge-text {
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.5rpx;
+}
+
+/* 小尺寸：青铜、进阶、高阶 */
+.up-badge.badge-up-bronze,
+.up-badge.badge-up-advanced,
+.up-badge.badge-up-high {
+  width: 34rpx;
+  height: 34rpx;
+}
+
+.up-badge.badge-up-bronze .up-badge-text,
+.up-badge.badge-up-advanced .up-badge-text,
+.up-badge.badge-up-high .up-badge-text {
+  font-size: 16rpx;
+}
+
+/* 大尺寸：精英、巨匠、至尊 */
+.up-badge.badge-up-elite,
+.up-badge.badge-up-master,
+.up-badge.badge-up-supreme {
+  width: 44rpx;
+  height: 44rpx;
+}
+
+.up-badge.badge-up-elite .up-badge-text,
+.up-badge.badge-up-master .up-badge-text,
+.up-badge.badge-up-supreme .up-badge-text {
+  font-size: 20rpx;
+}
+
+/* ---- 青铜UP主：黑曜石 + 反光灰 ---- */
+.up-badge.badge-up-bronze {
+  background: #1A1A1A;
+  border: 1.5rpx solid #8C8C8C;
+}
+.up-badge.badge-up-bronze .up-badge-text {
+  color: #FFFFFF;
+}
+
+/* ---- 进阶UP主：银灰磨砂 ---- */
+.up-badge.badge-up-advanced {
+  background: linear-gradient(135deg, #B8B8B8, #9E9E9E);
+  border: 1rpx solid #808080;
+}
+.up-badge.badge-up-advanced .up-badge-text {
+  color: #404040;
+}
+
+/* ---- 高阶UP主：紫色高光渐变 ---- */
+.up-badge.badge-up-high {
+  background: linear-gradient(135deg, #A855F7, #7B2FBE);
+  box-shadow: 0 2rpx 6rpx rgba(123, 47, 190, 0.4);
+}
+.up-badge.badge-up-high .up-badge-text {
+  color: #FFFFFF;
+}
+
+/* ---- 精英UP主：活力橙 + 光晕 ---- */
+.up-badge.badge-up-elite {
+  background: linear-gradient(135deg, #F5A623, #E87A2A);
+  box-shadow: 0 0 12rpx rgba(232, 122, 42, 0.5), 0 2rpx 8rpx rgba(232, 122, 42, 0.3);
+}
+.up-badge.badge-up-elite .up-badge-text {
+  color: #FFFFFF;
+}
+
+/* ---- 巨匠UP主：玫瑰红珠光 ---- */
+.up-badge.badge-up-master {
+  background: linear-gradient(135deg, #D4789B, #C44A6C);
+  box-shadow: 0 0 10rpx rgba(196, 74, 108, 0.4), inset 0 1rpx 2rpx rgba(255,255,255,0.2);
+  border: 1.5rpx solid #D4789B;
+}
+.up-badge.badge-up-master .up-badge-text {
+  color: #FFFFFF;
+}
+
+/* ---- 至尊UP主：暗夜红 + 动态流光 ---- */
+@keyframes upSupremeFlow {
+  0%   { box-shadow: 0 0 8rpx rgba(255, 64, 64, 0.4), 0 0 20rpx rgba(139, 26, 43, 0.2); }
+  50%  { box-shadow: 0 0 16rpx rgba(255, 64, 64, 0.7), 0 0 30rpx rgba(139, 26, 43, 0.4); }
+  100% { box-shadow: 0 0 8rpx rgba(255, 64, 64, 0.4), 0 0 20rpx rgba(139, 26, 43, 0.2); }
+}
+
+.up-badge.badge-up-supreme {
+  background: linear-gradient(135deg, #FF4040, #8B1A2B);
+  animation: upSupremeFlow 2s ease-in-out infinite;
+  position: relative;
+}
+.up-badge.badge-up-supreme::after {
+  content: '';
+  position: absolute;
+  top: -2rpx;
+  left: -2rpx;
+  right: -2rpx;
+  bottom: -2rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255,64,64,0.3), transparent, rgba(255,64,64,0.1));
+  z-index: -1;
+}
+.up-badge.badge-up-supreme .up-badge-text {
+  color: #FFFFFF;
+  text-shadow: 0 0 4rpx rgba(255, 255, 255, 0.6);
+}

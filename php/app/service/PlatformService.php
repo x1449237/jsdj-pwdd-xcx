@@ -9,6 +9,8 @@ use app\model\GroupChatBlacklist;
 use app\model\GroupChatMember;
 use app\model\PlatformAccount;
 use app\model\PunishmentLog;
+use app\model\UpMasterCertification;
+use app\model\UpMasterTierConfig;
 use app\model\UserVBadge;
 use think\facade\Db;
 use think\facade\Log;
@@ -114,6 +116,48 @@ class PlatformService
             'text' => $badge['v_badge_display'],
             'icon' => '',
         ];
+    }
+
+    /**
+     * 获取用户完整徽标信息（V标 + UP主徽标）
+     * @param int $userId
+     * @return array
+     */
+    public function getUserBadgeInfo(int $userId): array
+    {
+        $result = [
+            'v_badge'       => null,
+            'up_master_badge' => null,
+        ];
+
+        // V标
+        $vBadge = $this->getVBadgeDisplay($userId);
+        if ($vBadge) {
+            $result['v_badge'] = $vBadge;
+        }
+
+        // UP主认证徽标
+        $upCert = UpMasterCertification::where('user_id', $userId)
+            ->where('is_active', 1)
+            ->where('audit_status', UpMasterCertification::AUDIT_PASSED)
+            ->find();
+
+        if ($upCert) {
+            $tierConfig = UpMasterTierConfig::where('tier', $upCert->tier)->find();
+            $result['up_master_badge'] = [
+                'tier'            => $upCert->tier,
+                'tier_name'       => $upCert->tier_name,
+                'badge_type'      => 'up_' . ['bronze', 'advanced', 'high', 'elite', 'master', 'supreme'][$upCert->tier - 1],
+                'badge_text'      => 'UP',
+                'bg_color'        => $tierConfig ? $tierConfig->bg_color : '',
+                'highlight_color' => $tierConfig ? $tierConfig->highlight_color : '',
+                'text_color'      => $tierConfig ? $tierConfig->text_color : '#FFFFFF',
+                'badge_size'      => $tierConfig ? $tierConfig->badge_size : 'small',
+                'effect_type'     => $tierConfig ? $tierConfig->effect_type : '',
+            ];
+        }
+
+        return $result;
     }
 
     /**
