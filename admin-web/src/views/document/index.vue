@@ -348,9 +348,9 @@ export default {
     async handleDelete(row) {
       try {
         await ElMessageBox.confirm(
-          `确定删除文档"${row.title}"吗？此操作不可撤销，将同时删除服务器上的PDF文件。`,
+          `确定删除文档"${row.title}"吗？此操作为逻辑删除，不会删除服务器上的PDF文件。`,
           '确认删除',
-          { type: 'error', confirmButtonText: '确认删除' }
+          { type: 'warning', confirmButtonText: '确认删除' }
         )
         await request.delete('/v1/admin/document/delete', { data: { id: row.id } })
         ElMessage.success('已删除')

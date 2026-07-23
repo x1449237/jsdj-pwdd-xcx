@@ -141,12 +141,7 @@ class Document extends BaseController
         }
 
         try {
-            // 删除旧文件
-            $oldPath = public_path() . ltrim($doc->file_url, '/');
-            if (file_exists($oldPath)) {
-                @unlink($oldPath);
-            }
-
+            // 旧文件保留不删除，仅逻辑上替换到新文件
             $saveDir = public_path() . 'uploads/documents/';
             if (!is_dir($saveDir)) {
                 mkdir($saveDir, 0755, true);
@@ -172,7 +167,7 @@ class Document extends BaseController
     }
 
     /**
-     * 删除文档
+     * 删除文档（逻辑删除，不删除物理文件）
      */
     public function delete(Request $request)
     {
@@ -186,18 +181,12 @@ class Document extends BaseController
             return $this->error('文档不存在', 404);
         }
 
-        // 删除物理文件
-        $filePath = public_path() . ltrim($doc->file_url, '/');
-        if (file_exists($filePath)) {
-            @unlink($filePath);
-        }
-
         $title = $doc->title;
-        $doc->delete();
+        $doc->softDelete($this->adminId());
 
-        $this->operationLog('admin_document_delete', "删除文档: {$title} (ID: {$id})");
+        $this->operationLog('admin_document_delete', "逻辑删除文档: {$title} (ID: {$id})");
 
-        return $this->success(null, '文档已删除');
+        return $this->success(null, '文档已删除（逻辑删除，文件保留）');
     }
 
     /**

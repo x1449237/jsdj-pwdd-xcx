@@ -8,6 +8,7 @@ use think\Model;
 /**
  * 平台文档模型（协议/政策/合同）
  * 仅超级管理员可操作
+ * 删除操作仅软删除，不物理删除文件
  */
 class PlatformDocument extends Model
 {
@@ -32,5 +33,29 @@ class PlatformDocument extends Model
     public function admin()
     {
         return $this->belongsTo(Admin::class, 'admin_id', 'id');
+    }
+
+    /**
+     * 全局查询：自动排除已软删除的记录
+     */
+    public static function boot()
+    {
+        parent::boot();
+        static::addGlobalScope('notDeleted', function ($query) {
+            $query->where('is_deleted', 0);
+        });
+    }
+
+    /**
+     * 软删除
+     */
+    public function softDelete(int $adminId = 0): bool
+    {
+        $this->is_deleted = 1;
+        $this->deleted_at = date('Y-m-d H:i:s');
+        if ($adminId > 0) {
+            $this->deleted_by = $adminId;
+        }
+        return $this->save();
     }
 }
