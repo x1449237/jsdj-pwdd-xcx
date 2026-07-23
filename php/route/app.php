@@ -23,6 +23,7 @@ Route::group('api/v1', function () {
 
     // ---------- 公共配置 ----------
     Route::get('config/public',        'api/Common/config');
+    Route::get('config/documents',     'api/Common/documents');
     Route::get('config/service_types', 'api/Common/serviceTypes');
 
     // ---------- 验证码 ----------
@@ -305,6 +306,13 @@ Route::group('api/v1', function () {
         Route::get('config/list',               'admin/SystemConfig/list');
         Route::put('config/update',             'admin/SystemConfig/update');
         Route::get('config/get',                'admin/SystemConfig/getConfig');
+
+        // --- 平台文档管理（协议/政策/合同） ---
+        Route::get('document/list',              'admin/Document/list');
+        Route::post('document/upload',           'admin/Document/upload');
+        Route::put('document/replace',           'admin/Document/replace');
+        Route::delete('document/delete',         'admin/Document/delete');
+        Route::put('document/toggle',            'admin/Document/toggle');
 
         // --- 邀请码管理 ---
         Route::post('invite/generate',          'admin/Invite/generate');

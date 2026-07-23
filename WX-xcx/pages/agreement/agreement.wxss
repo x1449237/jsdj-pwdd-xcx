@@ -2,32 +2,27 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: var(--color-bg-white);
+  background-color: #f5f5f5;
 }
 
 .agreement-tabs {
   display: flex;
-  background-color: var(--color-bg-white);
-  border-bottom: 1rpx solid var(--color-border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  background-color: #ffffff;
+  border-bottom: 1rpx solid #f0f0f0;
 }
 
 .tab-item {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 88rpx;
-  font-size: var(--font-size-md);
-  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  color: #666666;
   position: relative;
 }
 
 .tab-item.active {
-  color: var(--color-primary);
-  font-weight: 500;
+  color: #1a1a2e;
+  font-weight: 600;
 }
 
 .tab-item.active::after {
@@ -36,48 +31,68 @@
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 60rpx;
+  width: 48rpx;
   height: 4rpx;
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, #1a1a2e, #0f3460);
   border-radius: 2rpx;
 }
 
 .agreement-content {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
-.agreement-scroll {
-  height: 100%;
-  padding: var(--spacing-md) var(--spacing-lg);
-  box-sizing: border-box;
+.doc-list {
+  padding: 16rpx 32rpx;
 }
 
-.content-wrapper {
-  padding-bottom: var(--spacing-xl);
+.doc-card {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 28rpx 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
 }
 
-.content-title {
+.doc-icon {
+  font-size: 44rpx;
+  margin-right: 20rpx;
+}
+
+.doc-info {
+  flex: 1;
+}
+
+.doc-title {
   display: block;
-  font-size: var(--font-size-xl);
-  font-weight: bold;
-  color: var(--color-text-primary);
-  text-align: center;
-  margin-bottom: var(--spacing-sm);
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 6rpx;
 }
 
-.content-update {
-  display: block;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-tip);
-  text-align: center;
-  margin-bottom: var(--spacing-lg);
+.doc-meta {
+  font-size: 24rpx;
+  color: #999999;
 }
 
-.content-body {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  line-height: 1.8;
-  white-space: pre-wrap;
-  word-break: break-all;
+.doc-arrow {
+  font-size: 36rpx;
+  color: #cccccc;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 100rpx 32rpx;
+  font-size: 28rpx;
+  color: #999999;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 100rpx;
+  font-size: 28rpx;
+  color: #999999;
 }

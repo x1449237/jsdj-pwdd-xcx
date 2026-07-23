@@ -131,7 +131,13 @@ const routes = [
         path: 'backup',
         name: 'Backup',
         component: () => import('@/views/backup/index.vue'),
-        meta: { title: '备份恢复', icon: 'FolderOpened' }
+        meta: { title: '备份恢复', icon: 'DataBoard' }
+      },
+      {
+        path: 'document',
+        name: 'DocumentManage',
+        component: () => import('@/views/document/index.vue'),
+        meta: { title: '平台文档管理', icon: 'Document' }
       },
       {
         path: 'gray-release',

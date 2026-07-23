@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace app\controller\api;
 
 use app\controller\BaseController;
+use app\model\PlatformDocument;
 use app\model\PlayerService;
 use app\model\RiskControlLog;
 use app\model\ServiceType;
@@ -223,6 +224,24 @@ class Common extends BaseController
         ];
 
         return $this->success($publicConfig);
+    }
+
+    /**
+     * 获取平台文档列表（协议/政策/合同）
+     */
+    public function documents(Request $request)
+    {
+        $docType = $request->param('doc_type', '');
+
+        $query = PlatformDocument::where('is_active', 1)->order('create_time', 'desc');
+
+        if (!empty($docType)) {
+            $query->where('doc_type', $docType);
+        }
+
+        $list = $query->select()->toArray();
+
+        return $this->success($list);
     }
 
     /**

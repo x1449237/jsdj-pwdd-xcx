@@ -1755,3 +1755,25 @@ INSERT INTO `up_master_tier_config` (`tier`, `tier_name`, `fan_threshold`, `bg_c
 (4, '精英UP主',  100000,  '#E87A2A', '#F5A623', '#FFFFFF', 'large', '圆形徽标，内含"UP"，活力橙底色，强高光反光，边缘带淡淡光晕', 'glow', 4),
 (5, '巨匠UP主',  1000000, '#C44A6C', '#D4789B', '#FFFFFF', 'large', '圆形徽标，内含"UP"，玫瑰红底色，带细密珠光质感', 'pearl', 5),
 (6, '至尊UP主',  10000000,'#8B1A2B', '#FF4040', '#FFFFFF', 'large', '圆形徽标，内含"UP"，暗夜红底色，带动态流光特效', 'flow', 6);
+
+-- ============================================================
+-- 38. 平台文档表（协议/政策/合同）
+-- 仅超级管理员可上传、替换、删除，限定PDF格式
+-- ============================================================
+DROP TABLE IF EXISTS `platform_documents`;
+CREATE TABLE `platform_documents` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `doc_type` VARCHAR(32) NOT NULL COMMENT '文档类型: agreement(协议)/policy(政策)/contract(合同)',
+  `title` VARCHAR(128) NOT NULL COMMENT '文档标题',
+  `file_url` VARCHAR(512) NOT NULL COMMENT 'PDF文件存储路径',
+  `file_name` VARCHAR(255) NOT NULL COMMENT '原始文件名',
+  `file_size` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '文件大小(字节)',
+  `version` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT '版本号(替换时自动递增)',
+  `admin_id` BIGINT UNSIGNED NOT NULL COMMENT '上传/更新管理员ID',
+  `is_active` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '是否启用',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_doc_type` (`doc_type`),
+  KEY `idx_admin_id` (`admin_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='平台文档表（协议/政策/合同）';

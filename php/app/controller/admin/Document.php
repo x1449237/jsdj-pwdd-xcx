@@ -1,0 +1,226 @@
+<?php
+declare(strict_types=1);
+
+namespace app\controller\admin;
+
+use app\controller\BaseController;
+use app\model\PlatformDocument;
+use think\Request;
+
+/**
+ * 平台文档管理（协议/政策/合同）
+ * 仅超级管理员（admin/admin2）可操作
+ */
+class Document extends BaseController
+{
+    /**
+     * 文档列表
+     */
+    public function list(Request $request)
+    {
+        $docType = $request->param('doc_type', '');
+
+        $query = PlatformDocument::with(['admin'])->order('create_time', 'desc');
+
+        if (!empty($docType)) {
+            $query->where('doc_type', $docType);
+        }
+
+        $list = $query->select()->toArray();
+
+        $this->operationLog('admin_document_list', '查看平台文档列表');
+
+        return $this->success($list);
+    }
+
+    /**
+     * 上传PDF文档
+     */
+    public function upload(Request $request)
+    {
+        $file = $request->file('file');
+        if (!$file) {
+            return $this->error('请选择文件');
+        }
+
+        $title   = $request->param('title', '');
+        $docType = $request->param('doc_type', '');
+
+        if (empty($title)) {
+            return $this->error('文档标题不能为空');
+        }
+        if (!in_array($docType, ['agreement', 'policy', 'contract'])) {
+            return $this->error('文档类型无效（仅支持: agreement/policy/contract）');
+        }
+
+        // 严格限定PDF后缀
+        $ext = strtolower($file->getOriginalExtension());
+        if ($ext !== 'pdf') {
+            return $this->error('仅支持上传PDF格式文件，当前文件后缀: ' . $ext);
+        }
+
+        // 验证MIME类型
+        $mime = $file->getMime();
+        $allowedMime = ['application/pdf', 'application/x-pdf'];
+        if (!in_array($mime, $allowedMime)) {
+            return $this->error('文件类型校验失败，请上传有效的PDF文件');
+        }
+
+        // 文件大小限制 20MB
+        $maxSize = 20 * 1024 * 1024;
+        if ($file->getSize() > $maxSize) {
+            return $this->error('文件大小不能超过20MB');
+        }
+
+        try {
+            $saveDir = public_path() . 'uploads/documents/';
+            if (!is_dir($saveDir)) {
+                mkdir($saveDir, 0755, true);
+            }
+
+            $fileName = $docType . '_' . date('YmdHis') . '_' . generate_sn('DOC') . '.pdf';
+            $file->move($saveDir, $fileName);
+
+            $fileUrl = '/uploads/documents/' . $fileName;
+
+            $doc = PlatformDocument::create([
+                'doc_type'  => $docType,
+                'title'     => $title,
+                'file_url'  => $fileUrl,
+                'file_name' => $file->getOriginalName(),
+                'file_size' => $file->getSize(),
+                'version'   => 1,
+                'admin_id'  => $this->adminId(),
+                'is_active' => 1,
+            ]);
+
+            $this->operationLog('admin_document_upload', "上传文档: {$title} (类型: {$docType})");
+
+            return $this->success($doc->toArray(), '上传成功');
+        } catch (\Throwable $e) {
+            return $this->error('文件上传失败: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * 替换文档（上传新PDF替换旧文件，版本号自动递增）
+     */
+    public function replace(Request $request)
+    {
+        $id = $request->paramInt('id', 0);
+        if ($id <= 0) {
+            return $this->error('文档ID无效');
+        }
+
+        $doc = PlatformDocument::find($id);
+        if (!$doc) {
+            return $this->error('文档不存在', 404);
+        }
+
+        $file = $request->file('file');
+        if (!$file) {
+            return $this->error('请选择要替换的PDF文件');
+        }
+
+        // 严格限定PDF后缀
+        $ext = strtolower($file->getOriginalExtension());
+        if ($ext !== 'pdf') {
+            return $this->error('仅支持上传PDF格式文件，当前文件后缀: ' . $ext);
+        }
+
+        // 验证MIME类型
+        $mime = $file->getMime();
+        $allowedMime = ['application/pdf', 'application/x-pdf'];
+        if (!in_array($mime, $allowedMime)) {
+            return $this->error('文件类型校验失败，请上传有效的PDF文件');
+        }
+
+        $maxSize = 20 * 1024 * 1024;
+        if ($file->getSize() > $maxSize) {
+            return $this->error('文件大小不能超过20MB');
+        }
+
+        try {
+            // 删除旧文件
+            $oldPath = public_path() . ltrim($doc->file_url, '/');
+            if (file_exists($oldPath)) {
+                @unlink($oldPath);
+            }
+
+            $saveDir = public_path() . 'uploads/documents/';
+            if (!is_dir($saveDir)) {
+                mkdir($saveDir, 0755, true);
+            }
+
+            $fileName = $doc->doc_type . '_' . date('YmdHis') . '_' . generate_sn('DOC') . '.pdf';
+            $file->move($saveDir, $fileName);
+
+            $doc->file_url  = '/uploads/documents/' . $fileName;
+            $doc->file_name = $file->getOriginalName();
+            $doc->file_size = $file->getSize();
+            $doc->version   = $doc->version + 1;
+            $doc->admin_id  = $this->adminId();
+            $doc->is_active = 1;
+            $doc->save();
+
+            $this->operationLog('admin_document_replace', "替换文档: {$doc->title} (版本: {$doc->version})");
+
+            return $this->success($doc->toArray(), '替换成功，版本已更新至 v' . $doc->version);
+        } catch (\Throwable $e) {
+            return $this->error('文件替换失败: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * 删除文档
+     */
+    public function delete(Request $request)
+    {
+        $id = $request->paramInt('id', 0);
+        if ($id <= 0) {
+            return $this->error('文档ID无效');
+        }
+
+        $doc = PlatformDocument::find($id);
+        if (!$doc) {
+            return $this->error('文档不存在', 404);
+        }
+
+        // 删除物理文件
+        $filePath = public_path() . ltrim($doc->file_url, '/');
+        if (file_exists($filePath)) {
+            @unlink($filePath);
+        }
+
+        $title = $doc->title;
+        $doc->delete();
+
+        $this->operationLog('admin_document_delete', "删除文档: {$title} (ID: {$id})");
+
+        return $this->success(null, '文档已删除');
+    }
+
+    /**
+     * 启用/禁用文档
+     */
+    public function toggle(Request $request)
+    {
+        $id = $request->paramInt('id', 0);
+        if ($id <= 0) {
+            return $this->error('文档ID无效');
+        }
+
+        $doc = PlatformDocument::find($id);
+        if (!$doc) {
+            return $this->error('文档不存在', 404);
+        }
+
+        $doc->is_active = $doc->is_active ? 0 : 1;
+        $doc->save();
+
+        $status = $doc->is_active ? '启用' : '禁用';
+        $this->operationLog('admin_document_toggle', "{$status}文档: {$doc->title}");
+
+        return $this->success($doc->toArray(), "文档已{$status}");
+    }
+}
