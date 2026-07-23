@@ -119,6 +119,18 @@
           </el-row>
           <el-row :gutter="20">
             <el-col :span="12">
+              <el-form-item label="个人俱乐部保证金(元)">
+                <el-input-number v-model="formData.switch.clubPersonalDeposit" :min="0" :step="100" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="企业俱乐部保证金(元)">
+                <el-input-number v-model="formData.switch.clubEnterpriseDeposit" :min="0" :step="100" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
               <el-form-item label="服务协议URL" prop="serviceAgreementUrl">
                 <el-input
                   v-model="formData.switch.serviceAgreementUrl"
@@ -211,6 +223,8 @@ export default {
           realNameAuth: true,
           aiRiskControl: true,
           clubJoinSwitch: true,
+          clubPersonalDeposit: 0,
+          clubEnterpriseDeposit: 0,
           serviceAgreementUrl: '',
           privacyPolicyUrl: ''
         },

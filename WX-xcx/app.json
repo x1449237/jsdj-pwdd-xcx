@@ -15,7 +15,8 @@
     "pages/up-master/apply/apply",
     "pages/club/join/join",
     "pages/club/list/list",
-    "pages/club/detail/detail"
+    "pages/club/detail/detail",
+    "pages/club/abbr-help/abbr-help"
   ],
   "subPackages": [
     {

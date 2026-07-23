@@ -1,0 +1,54 @@
+<view class="help-page">
+  <view class="section">
+    <view class="title">为什么俱乐部名称会提示缩写被占用？</view>
+    <view class="text">平台会根据俱乐部中文全称自动生成专属缩写。</view>
+    <view class="text">该缩写固定放置在订单号最前端，是每个俱乐部的唯一身份标识，用于订单归属区分、财务对账、佣金结算、数据统计、纠纷溯源。</view>
+    <view class="text rule">平台硬性规则：全平台俱乐部缩写永久唯一，禁止重复，历史用过的缩写永久封存不可复用。</view>
+  </view>
+
+  <view class="section">
+    <view class="title">俱乐部缩写 & 订单号生成规则</view>
+    <view class="text">1. 缩写生成逻辑：提取俱乐部中文全称每一个汉字拼音首字母，自动大写拼接。</view>
+    <view class="example">
+      <text>示例：星河电竞 → XHDJ</text>
+    </view>
+    <view class="text">2. 平台完整订单号结构：</view>
+    <view class="example">
+      <text>【俱乐部缩写】-【年月日时分】-【俱乐部累计订单序号】</text>
+      <text>示例：XHDJ-260723221058</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="title">为什么缩写必须全局唯一？</view>
+    <view class="text">1. 缩写是订单号首位核心标识，是区分不同俱乐部的第一依据。</view>
+    <view class="text">2. 平台所有流水、结算、赔付、风控数据均依靠缩写区分归属俱乐部。</view>
+    <view class="text">3. 一旦缩写重复，会直接导致订单归属错乱、财务串账、纠纷无法溯源。</view>
+    <view class="text">4. 为保障全平台资金与订单数据安全，平台强制缩写终身唯一。</view>
+  </view>
+
+  <view class="section">
+    <view class="title">无同名俱乐部，为何依旧提示占用？</view>
+    <view class="text">1. 你的俱乐部名称首字母组合，与平台现有 / 历史俱乐部缩写重合。</view>
+    <view class="text">2. 查重范围包含：正常运营、冻结、停业、注销的所有俱乐部。</view>
+    <view class="text">3. 所有历史缩写终身锁死，永不释放、永不二次复用。</view>
+  </view>
+
+  <view class="section">
+    <view class="title">取名规避重复官方小技巧</view>
+    <view class="text">1. 避免两字、四字大众化通用名称。</view>
+    <view class="text">2. 建议增加专属前缀、后缀、特色字眼。</view>
+    <view class="text">对比示例：</view>
+    <view class="example">
+      <text class="bad">高危重名：星河电竞</text>
+      <text class="good">优化不重名：星河巅峰电竞、星河专属陪玩工作室</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="title">平台硬性规则公示</view>
+    <view class="text">1. 缩写查重为系统底层强制机制，人工无法干预、无法绕过。</view>
+    <view class="text">2. 平台管理员无权解锁、无权释放已占用缩写。</view>
+    <view class="text">3. 全平台所有俱乐部统一规则，无特殊通道、无例外权限。</view>
+  </view>
+</view>

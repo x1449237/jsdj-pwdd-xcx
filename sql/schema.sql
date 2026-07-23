@@ -883,7 +883,9 @@ INSERT INTO `system_config` (`config_key`, `config_value`, `config_type`, `descr
 ('gray_ratio', '0', 'float', '灰度放量比例', 1),
 ('refund_daily_limit_rate', '0.50', 'float', '单日退款熔断比例', 1),
 ('rate_limit_batch_per_second', '100', 'int', '批量操作每秒限流', 1),
-('club_join_switch', '1', 'bool', '俱乐部入驻总开关（关闭后前端同步隐藏所有入驻入口，已入驻俱乐部不受影响）', 1);
+('club_join_switch', '1', 'bool', '俱乐部入驻总开关（关闭后前端同步隐藏所有入驻入口，已入驻俱乐部不受影响）', 1),
+('club_personal_deposit', '0', 'int', '个人俱乐部保证金金额（元，0=免保证金）', 1),
+('club_enterprise_deposit', '0', 'int', '企业俱乐部保证金金额（元，0=免保证金）', 1);
 
 -- ============================================================
 -- 35. 操作日志表
@@ -1322,22 +1324,77 @@ INSERT INTO `platform_official_account` (`account_no`, `nickname`, `v_badge`, `v
 DROP TABLE IF EXISTS `user_v_badge`;
 CREATE TABLE `user_v_badge` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID（俱乐部创始人）',
   `badge_type` VARCHAR(32) NOT NULL COMMENT 'blue_v企业级 / green_v个人级',
   `badge_display` VARCHAR(32) NOT NULL DEFAULT 'blue_v' COMMENT 'blue_v / green_v',
-  `club_name` VARCHAR(128) DEFAULT '' COMMENT '俱乐部名称',
-  `audit_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0待审核 1通过 2驳回',
+  `club_name` VARCHAR(128) NOT NULL DEFAULT '' COMMENT '俱乐部中文全称',
+  `abbreviation` VARCHAR(20) NOT NULL DEFAULT '' COMMENT '拼音首字母大写缩写（订单号前缀，全局唯一）',
+  `audit_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0待审核 1通过 2驳回 3补充资料',
+  `audit_remark` VARCHAR(255) DEFAULT '' COMMENT '审核备注',
   `audit_time` DATETIME DEFAULT NULL COMMENT '审核通过时间',
   `auditor_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '审核人ID',
-  `is_active` TINYINT(1) DEFAULT 1 COMMENT '是否点亮',
+  `is_active` TINYINT(1) DEFAULT 0 COMMENT '是否点亮V标',
+  `deposit_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT '应缴保证金',
+  `deposit_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0未缴 1已缴 2已退',
+  `deposit_pay_time` DATETIME DEFAULT NULL COMMENT '保证金缴纳时间',
+  `deposit_transaction_id` VARCHAR(64) DEFAULT '' COMMENT '保证金支付交易号',
+  -- 入驻人基础信息
+  `real_name` VARCHAR(64) DEFAULT '' COMMENT '真实姓名',
+  `id_card` VARCHAR(18) DEFAULT '' COMMENT '身份证号',
+  `phone` VARCHAR(11) DEFAULT '' COMMENT '实名手机号',
+  `address_province` VARCHAR(32) DEFAULT '',
+  `address_city` VARCHAR(32) DEFAULT '',
+  `address_district` VARCHAR(32) DEFAULT '',
+  `address_detail` VARCHAR(255) DEFAULT '' COMMENT '乡镇街道/小区/楼栋/单元/楼层/户号',
+  -- 实名认证
+  `id_card_front` VARCHAR(512) DEFAULT '' COMMENT '身份证正面照片',
+  `id_card_back` VARCHAR(512) DEFAULT '' COMMENT '身份证反面照片',
+  `liveness_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0未认证 1通过 2失败',
+  `liveness_time` DATETIME DEFAULT NULL COMMENT '活体认证时间',
+  -- 合同
+  `contract_file` VARCHAR(512) DEFAULT '' COMMENT '已签署合同PDF',
+  -- 企业专属字段
+  `is_enterprise` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0个人 1企业',
+  `business_license` VARCHAR(512) DEFAULT '' COMMENT '营业执照照片',
+  `corporate_bank` VARCHAR(255) DEFAULT '' COMMENT '开户银行',
+  `corporate_account` VARCHAR(64) DEFAULT '' COMMENT '对公账号',
+  `handle_type` VARCHAR(32) DEFAULT 'self' COMMENT 'self本人 / agent代办',
+  `agent_name` VARCHAR(64) DEFAULT '' COMMENT '代办人姓名',
+  `agent_id_card` VARCHAR(18) DEFAULT '' COMMENT '代办人身份证号',
+  `agent_id_card_front` VARCHAR(512) DEFAULT '' COMMENT '代办人身份证正面',
+  `agent_id_card_back` VARCHAR(512) DEFAULT '' COMMENT '代办人身份证反面',
+  `agent_authorization` VARCHAR(512) DEFAULT '' COMMENT '代办授权协议PDF',
+  `verification_amount` DECIMAL(10,2) DEFAULT 0.00 COMMENT '对公打款验证金额',
+  `verification_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0未验证 1待确认 2通过 3失败',
+  `verification_receipt` VARCHAR(512) DEFAULT '' COMMENT '打款凭证',
+  -- 状态
+  `club_status` VARCHAR(32) NOT NULL DEFAULT 'pending' COMMENT 'pending/active/frozen/closed/cancelled',
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_abbreviation` (`abbreviation`),
   KEY `idx_user_id` (`user_id`),
   KEY `idx_badge_type` (`badge_type`),
   KEY `idx_audit_status` (`audit_status`),
-  KEY `idx_is_active` (`is_active`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户V标身份表';
+  KEY `idx_is_active` (`is_active`),
+  KEY `idx_club_status` (`club_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='俱乐部入驻/V标身份表';
+
+-- ============================================================
+-- 57.1 俱乐部缩写全局封存表（所有历史缩写永久锁定，不可复用）
+-- ============================================================
+DROP TABLE IF EXISTS `club_abbreviations`;
+CREATE TABLE `club_abbreviations` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `abbreviation` VARCHAR(20) NOT NULL COMMENT '拼音首字母缩写',
+  `club_name` VARCHAR(128) NOT NULL COMMENT '俱乐部中文名称',
+  `club_id` BIGINT UNSIGNED NOT NULL COMMENT '关联俱乐部ID',
+  `club_status` VARCHAR(32) NOT NULL DEFAULT 'active' COMMENT 'active/frozen/closed/cancelled',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_abbreviation` (`abbreviation`),
+  KEY `idx_club_id` (`club_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='俱乐部缩写全局封存表（终身不可复用）';
 
 -- ============================================================
 -- 58. 俱乐部群聊表

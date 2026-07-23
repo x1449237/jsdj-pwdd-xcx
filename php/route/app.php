@@ -159,7 +159,11 @@ Route::group('api/v1', function () {
 
         // --- 俱乐部入驻 ---
         Route::get('club/check_switch',         'api.Club/checkSwitch');
+        Route::post('club/generate_abbr',       'api.Club/generateAbbreviation');
         Route::post('club/submit',              'api.Club/submit');
+        Route::post('club/resubmit',            'api.Club/resubmit');
+        Route::post('club/pay_deposit',         'api.Club/payDeposit');
+        Route::post('club/verify_transfer',     'api.Club/verifyCorporateTransfer');
         Route::get('club/my_status',            'api.Club/myStatus');
         Route::get('club/list',                 'api.Club/list');
         Route::get('club/detail',               'api.Club/detail');
