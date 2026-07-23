@@ -1,0 +1,95 @@
+.page {
+  min-height: 100vh;
+  background: #f5f6fa;
+}
+
+.search-bar {
+  padding: 20rpx;
+  background: #fff;
+}
+
+.search-input {
+  height: 72rpx;
+  background: #f0f2f5;
+  border-radius: 36rpx;
+  padding: 0 30rpx;
+  font-size: 28rpx;
+}
+
+.role-tabs {
+  display: flex;
+  white-space: nowrap;
+  padding: 20rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #eee;
+}
+
+.tab-item {
+  display: inline-block;
+  padding: 12rpx 30rpx;
+  margin-right: 20rpx;
+  font-size: 26rpx;
+  color: #606266;
+  border-radius: 30rpx;
+  background: #f0f2f5;
+}
+
+.tab-item.active {
+  background: #409EFF;
+  color: #fff;
+}
+
+.member-list {
+  padding: 20rpx;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  margin-right: 24rpx;
+}
+
+.member-info {
+  flex: 1;
+}
+
+.nickname {
+  font-size: 30rpx;
+  color: #303133;
+  font-weight: 500;
+}
+
+.meta {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #909399;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.role-tag {
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+}
+.role-tag.founder { background: #fef0f0; color: #f56c6c; }
+.role-tag.manager { background: #ecf5ff; color: #409eff; }
+.role-tag.member { background: #f0f9eb; color: #67c23a; }
+
+.load-more, .empty {
+  text-align: center;
+  padding: 40rpx;
+  color: #909399;
+  font-size: 26rpx;
+}

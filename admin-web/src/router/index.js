@@ -26,6 +26,12 @@ const routes = [
         meta: { title: '仪表盘', icon: 'Odometer' }
       },
       {
+        path: 'dashboard/bigscreen',
+        name: 'Bigscreen',
+        component: () => import('@/views/dashboard/bigscreen.vue'),
+        meta: { title: '数据大屏', icon: 'DataAnalysis', hidden: true }
+      },
+      {
         path: 'user/list',
         name: 'UserList',
         component: () => import('@/views/user/list.vue'),
@@ -92,6 +98,24 @@ const routes = [
         meta: { title: '订单详情', hidden: true }
       },
       {
+        path: 'order/package',
+        name: 'OrderPackage',
+        component: () => import('@/views/order/package.vue'),
+        meta: { title: '订单套餐', icon: 'Goods', group: 'order' }
+      },
+      {
+        path: 'order/refund-rule',
+        name: 'OrderRefundRule',
+        component: () => import('@/views/order/refund-rule.vue'),
+        meta: { title: '退单规则', icon: 'RefreshLeft', group: 'order' }
+      },
+      {
+        path: 'order/bid-list',
+        name: 'OrderBidList',
+        component: () => import('@/views/order/bid-list.vue'),
+        meta: { title: '竞价订单', icon: 'Money', group: 'order' }
+      },
+      {
         path: 'finance/withdraw',
         name: 'FinanceWithdraw',
         component: () => import('@/views/finance/withdraw.vue'),
@@ -101,7 +125,31 @@ const routes = [
         path: 'finance/config',
         name: 'FinanceConfig',
         component: () => import('@/views/finance/config.vue'),
-        meta: { title: '财务配置', icon: 'Setting' }
+        meta: { title: '财务配置', icon: 'Setting', group: 'finance' }
+      },
+      {
+        path: 'finance/profit-share-rule',
+        name: 'ProfitShareRule',
+        component: () => import('@/views/finance/profit-share-rule.vue'),
+        meta: { title: '分账规则配置', icon: 'Money', group: 'finance' }
+      },
+      {
+        path: 'finance/profit-share-record',
+        name: 'ProfitShareRecord',
+        component: () => import('@/views/finance/profit-share-record.vue'),
+        meta: { title: '分账记录', icon: 'Document', group: 'finance' }
+      },
+      {
+        path: 'finance/tax-config',
+        name: 'TaxConfig',
+        component: () => import('@/views/finance/tax-config.vue'),
+        meta: { title: '个税配置', icon: 'Wallet', group: 'finance' }
+      },
+      {
+        path: 'finance/withdraw-batch',
+        name: 'WithdrawBatch',
+        component: () => import('@/views/finance/withdraw-batch.vue'),
+        meta: { title: '批量提现', icon: 'Money', group: 'finance' }
       },
       {
         path: 'timeout-rule',
@@ -116,10 +164,34 @@ const routes = [
         meta: { title: '聊天审计', icon: 'ChatDotSquare', group: 'chat' }
       },
       {
+        path: 'anti-fraud',
+        name: 'AntiFraud',
+        component: () => import('@/views/chat-audit/anti-fraud.vue'),
+        meta: { title: '飞单风控', icon: 'Warning', group: 'chat' }
+      },
+      {
+        path: 'quick-card',
+        name: 'QuickCard',
+        component: () => import('@/views/chat-audit/quick-card.vue'),
+        meta: { title: '快捷卡片', icon: 'Postcard', group: 'chat' }
+      },
+      {
         path: 'system/config',
         name: 'SystemConfig',
         component: () => import('@/views/system/config.vue'),
-        meta: { title: '系统配置', icon: 'Tools' }
+        meta: { title: '系统配置', icon: 'Tools', group: 'system' }
+      },
+      {
+        path: 'system/operation-log',
+        name: 'OperationLog',
+        component: () => import('@/views/system/operation-log.vue'),
+        meta: { title: '操作日志', icon: 'Document', group: 'system' }
+      },
+      {
+        path: 'system/api-monitor',
+        name: 'ApiMonitor',
+        component: () => import('@/views/system/api-monitor.vue'),
+        meta: { title: '接口监控', icon: 'DataLine', group: 'system' }
       },
       {
         path: 'appeal/list',
@@ -188,6 +260,48 @@ const routes = [
         meta: { title: '处罚记录', icon: 'Lock', group: 'security' }
       },
       {
+        path: 'risk/alert-center',
+        name: 'RiskAlertCenter',
+        component: () => import('@/views/risk/alert-center.vue'),
+        meta: { title: '风险预警', icon: 'Warning', group: 'security' }
+      },
+      {
+        path: 'activity',
+        name: 'Activity',
+        component: () => import('@/views/activity/index.vue'),
+        meta: { title: '活动运营', icon: 'Present', group: 'activity' }
+      },
+      {
+        path: 'marketing/coupon',
+        name: 'MarketingCoupon',
+        component: () => import('@/views/marketing/coupon.vue'),
+        meta: { title: '优惠券管理', icon: 'Discount', group: 'marketing' }
+      },
+      {
+        path: 'marketing/recharge',
+        name: 'MarketingRecharge',
+        component: () => import('@/views/marketing/recharge.vue'),
+        meta: { title: '充值活动', icon: 'Wallet', group: 'marketing' }
+      },
+      {
+        path: 'marketing/lottery',
+        name: 'MarketingLottery',
+        component: () => import('@/views/marketing/lottery.vue'),
+        meta: { title: '抽奖活动', icon: 'Promotion', group: 'marketing' }
+      },
+      {
+        path: 'marketing/group-buy',
+        name: 'MarketingGroupBuy',
+        component: () => import('@/views/marketing/group-buy.vue'),
+        meta: { title: '拼团活动', icon: 'UserFilled', group: 'marketing' }
+      },
+      {
+        path: 'marketing/invite-reward',
+        name: 'MarketingInviteReward',
+        component: () => import('@/views/marketing/invite-reward.vue'),
+        meta: { title: '邀请奖励', icon: 'Share', group: 'marketing' }
+      },
+      {
         path: 'club/list',
         name: 'ClubList',
         component: () => import('@/views/club/list.vue'),
@@ -210,6 +324,78 @@ const routes = [
         name: 'ClubTransfer',
         component: () => import('@/views/club/transfer.vue'),
         meta: { title: '对公打款验证', icon: 'BankCard', group: 'club' }
+      },
+      {
+        path: 'arbitration/case-list',
+        name: 'ArbitrationCaseList',
+        component: () => import('@/views/arbitration/case-list.vue'),
+        meta: { title: '仲裁案件', icon: 'Document', group: 'arbitration' }
+      },
+      {
+        path: 'arbitration/rule-library',
+        name: 'ArbitrationRuleLibrary',
+        component: () => import('@/views/arbitration/rule-library.vue'),
+        meta: { title: '判责规则库', icon: 'Collection', group: 'arbitration' }
+      },
+      {
+        path: 'arbitration/evidence-tpl',
+        name: 'ArbitrationEvidenceTpl',
+        component: () => import('@/views/arbitration/evidence-tpl.vue'),
+        meta: { title: '举证模板', icon: 'Picture', group: 'arbitration' }
+      },
+      {
+        path: 'finance/service-deposit',
+        name: 'ServiceDeposit',
+        component: () => import('@/views/finance/service-deposit.vue'),
+        meta: { title: '服务保证金', icon: 'Money', group: 'finance' }
+      },
+      {
+        path: 'compliance/anti-boosting',
+        name: 'AntiBoosting',
+        component: () => import('@/views/compliance/anti-boosting.vue'),
+        meta: { title: '代练拦截', icon: 'Warning', group: 'compliance' }
+      },
+      {
+        path: 'compliance/agreement-version',
+        name: 'AgreementVersion',
+        component: () => import('@/views/compliance/agreement-version.vue'),
+        meta: { title: '协议版本', icon: 'Document', group: 'compliance' }
+      },
+      {
+        path: 'minor/curfew-config',
+        name: 'MinorCurfewConfig',
+        component: () => import('@/views/minor/curfew-config.vue'),
+        meta: { title: '宵禁配置', icon: 'Clock', group: 'minor' }
+      },
+      {
+        path: 'minor/warning-log',
+        name: 'MinorWarningLog',
+        component: () => import('@/views/minor/warning-log.vue'),
+        meta: { title: '消费预警日志', icon: 'Warning', group: 'minor' }
+      },
+      {
+        path: 'minor/guardian-list',
+        name: 'MinorGuardianList',
+        component: () => import('@/views/minor/guardian-list.vue'),
+        meta: { title: '监护绑定列表', icon: 'UserFilled', group: 'minor' }
+      },
+      {
+        path: 'club/deposit-tier',
+        name: 'ClubDepositTier',
+        component: () => import('@/views/club/deposit-tier.vue'),
+        meta: { title: '保证金阶梯', icon: 'TrendCharts', group: 'club' }
+      },
+      {
+        path: 'club/operation-data',
+        name: 'ClubOperationData',
+        component: () => import('@/views/club/operation-data.vue'),
+        meta: { title: '运营数据看板', icon: 'DataAnalysis', group: 'club' }
+      },
+      {
+        path: 'club/internal-order',
+        name: 'ClubInternalOrder',
+        component: () => import('@/views/club/internal-order.vue'),
+        meta: { title: '内部订单监控', icon: 'Tickets', group: 'club' }
       }
     ]
   },

@@ -11,8 +11,10 @@ use app\model\InviteCode;
 use app\model\JoinUsLog;
 use app\model\PhoneAppeal;
 use app\model\RealVerifyLog;
+use app\model\RealnameCache;
 use app\model\RiskControlLog;
 use app\model\User as UserModel;
+use app\service\MinorProtectService;
 use think\facade\Cache;
 use think\facade\Log;
 use think\Request;
@@ -160,6 +162,14 @@ class User extends BaseController
         ]);
 
         write_action_log('api_user_register', "用户注册绑定手机号 ID:{$userId}");
+
+        // 发放新人优惠券
+        try {
+            $couponService = new \app\service\CouponService();
+            $couponService->issueNewUserCoupons($userId);
+        } catch (\Throwable $e) {
+            Log::warning('新人优惠券发放失败: ' . $e->getMessage());
+        }
 
         return $this->success($user->hidden(['openid', 'unionid', 'id_card'])->toArray(), '注册成功');
     }
@@ -326,6 +336,43 @@ class User extends BaseController
             return $this->error('身份证号格式不正确');
         }
 
+        $minorProtectService = new MinorProtectService();
+
+        // 检查活体缓存：7天内已通过验证的直接返回成功
+        if ($minorProtectService->checkLivenessCache($userId, RealnameCache::KEY_REALNAME_AUTH)) {
+            $user->real_name   = $realName;
+            $user->id_card     = $idCard;
+            $user->is_real_name = 1;
+
+            $age = $this->calculateAgeFromIdCard($idCard);
+            $user->is_minor = $age < 18 ? 1 : 0;
+            $user->age      = $age;
+            $user->save();
+
+            $verifyLog = RealVerifyLog::create([
+                'user_id'       => $userId,
+                'real_name'     => $realName,
+                'id_card'       => $idCard,
+                'status'        => RealVerifyLog::STATUS_SUCCESS,
+                'verify_time'   => date('Y-m-d H:i:s'),
+                'verify_result' => json_encode(['from_cache' => true], JSON_UNESCAPED_UNICODE),
+            ]);
+
+            $this->writeRiskLog($userId, 'real_verify_cache', 'low', [
+                'real_name' => mask_sensitive($realName, 'name'),
+                'result'    => 'success_from_cache',
+            ]);
+
+            write_action_log('api_real_verify_cache', "用户 ID:{$userId} 实名认证（缓存命中）");
+
+            return $this->success([
+                'success'      => true,
+                'message'      => '实名认证成功',
+                'from_cache'   => true,
+                'verify_log_id' => $verifyLog->id,
+            ], '实名认证成功');
+        }
+
         // 调用第三方活体检测API
         $verifyResult = $this->faceVerifyApi($realName, $idCard);
 
@@ -343,7 +390,13 @@ class User extends BaseController
             $user->real_name   = $realName;
             $user->id_card     = $idCard;
             $user->is_real_name = 1;
+
+            $age = $this->calculateAgeFromIdCard($idCard);
+            $user->is_minor = $age < 18 ? 1 : 0;
+            $user->age      = $age;
             $user->save();
+
+            $minorProtectService->setLivenessCache($userId, RealnameCache::KEY_REALNAME_AUTH);
 
             $this->writeRiskLog($userId, 'real_verify', 'low', [
                 'real_name' => mask_sensitive($realName, 'name'),
@@ -873,5 +926,31 @@ class User extends BaseController
         }
 
         return $response;
+    }
+
+    /**
+     * 根据身份证号计算年龄
+     */
+    private function calculateAgeFromIdCard(string $idCard): int
+    {
+        if (strlen($idCard) < 14) {
+            return 0;
+        }
+
+        $birthday = substr($idCard, 6, 8);
+        $year  = (int) substr($birthday, 0, 4);
+        $month = (int) substr($birthday, 4, 2);
+        $day   = (int) substr($birthday, 6, 2);
+
+        $currentYear  = (int) date('Y');
+        $currentMonth = (int) date('m');
+        $currentDay   = (int) date('d');
+
+        $age = $currentYear - $year;
+        if ($currentMonth < $month || ($currentMonth == $month && $currentDay < $day)) {
+            $age--;
+        }
+
+        return max(0, $age);
     }
 }

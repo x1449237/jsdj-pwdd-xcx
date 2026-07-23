@@ -14,11 +14,21 @@ Page({
       { value: 'chat', label: '闲聊群' },
       { value: 'welfare', label: '福利群' },
       { value: 'after_sale', label: '售后群' }
-    ]
+    ],
+    isMinor: false
   },
 
   onLoad() {
     this.loadGroupList();
+    this.checkUserAge();
+  },
+
+  checkUserAge() {
+    request.get('/api/v1/user/profile').then((res) => {
+      if (res.is_minor) {
+        this.setData({ isMinor: true });
+      }
+    }).catch(() => {});
   },
 
   onShow() {
@@ -74,6 +84,20 @@ Page({
 
   onOpenGroup(e) {
     const group = e.currentTarget.dataset.group;
+
+    if (this.data.isMinor) {
+      const currentHour = new Date().getHours();
+      if (currentHour >= 22 || currentHour < 8) {
+        wx.showModal({
+          title: '未成年人宵禁提醒',
+          content: '宵禁时间（22:00-次日08:00）未成年人无法进入群聊，请在白天再进行操作。',
+          showCancel: false,
+          confirmText: '我知道了'
+        });
+        return;
+      }
+    }
+
     wx.navigateTo({
       url: '/chat/group-room/group-room?groupId=' + group.group_id + '&groupName=' + encodeURIComponent(group.group_name || '群聊')
     });

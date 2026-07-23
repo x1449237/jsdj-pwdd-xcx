@@ -461,3 +461,76 @@ if (!function_exists('get_redis')) {
         return \think\facade\Cache::store('redis')->handler();
     }
 }
+
+if (!function_exists('cache_get')) {
+    /**
+     * 读取缓存
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    function cache_get(string $key, $default = null)
+    {
+        try {
+            $cacheService = new \app\service\CacheService();
+            return $cacheService->getTemp($key, $default);
+        } catch (\Throwable $e) {
+            return $default;
+        }
+    }
+}
+
+if (!function_exists('cache_set')) {
+    /**
+     * 设置缓存
+     * @param string $key
+     * @param mixed $value
+     * @param int $ttl
+     * @return bool
+     */
+    function cache_set(string $key, $value, int $ttl = 3600): bool
+    {
+        try {
+            $cacheService = new \app\service\CacheService();
+            return $cacheService->setTemp($key, $value, $ttl);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+}
+
+if (!function_exists('cache_del')) {
+    /**
+     * 删除缓存
+     * @param string $key
+     * @return bool
+     */
+    function cache_del(string $key): bool
+    {
+        try {
+            $cacheService = new \app\service\CacheService();
+            return $cacheService->delTemp($key);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+}
+
+if (!function_exists('cache_remember')) {
+    /**
+     * 记忆缓存，不存在则回调生成
+     * @param string $key
+     * @param callable $callback
+     * @param int $ttl
+     * @return mixed
+     */
+    function cache_remember(string $key, callable $callback, int $ttl = 3600)
+    {
+        try {
+            $cacheService = new \app\service\CacheService();
+            return $cacheService->remember($key, $callback, $ttl);
+        } catch (\Throwable $e) {
+            return $callback();
+        }
+    }
+}

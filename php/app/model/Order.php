@@ -13,12 +13,16 @@ use think\Model;
  * @property int    $player_id        打手ID
  * @property int    $service_type_id
  * @property string $game_name
+ * @property string $order_type       订单类型: instant/appointment/team/teaching
  * @property string $order_amount    订单金额
  * @property string $paid_amount     实付金额
  * @property string $discount_amount 优惠金额
+ * @property int    $package_id       套餐ID
+ * @property int    $is_bid           是否竞价单
  * @property int    $status          订单状态
  * @property string $remark
  * @property string $paid_time
+ * @property string $start_time       服务开始时间
  * @property string $completed_time
  * @property string $canceled_time
  * @property string $cancel_reason
@@ -44,6 +48,14 @@ class Order extends Model
     const STATUS_REFUNDED     = 6;  // 已退款
     const STATUS_TIMEOUT      = 7;  // 已超时
     const STATUS_DISPATCHING  = 8;  // 派单中
+    const STATUS_APPOINTING   = 9;  // 待确认预约
+    const STATUS_BIDDING      = 10; // 竞价中
+
+    // 订单类型常量
+    const TYPE_INSTANT     = 'instant';     // 即时单
+    const TYPE_APPOINTMENT = 'appointment'; // 预约单
+    const TYPE_TEAM        = 'team';        // 车队单
+    const TYPE_TEACHING    = 'teaching';    // 教学单
 
     /**
      * 金额获取器 - 分转元
@@ -145,6 +157,62 @@ class Order extends Model
         return $this->hasMany(DispatchRecord::class, 'order_id', 'id');
     }
 
+    /**
+     * 关联服务计时
+     */
+    public function serviceTimer()
+    {
+        return $this->hasOne(OrderServiceTimer::class, 'order_id', 'id');
+    }
+
+    /**
+     * 关联履约凭证
+     */
+    public function evidences()
+    {
+        return $this->hasMany(OrderEvidence::class, 'order_id', 'id');
+    }
+
+    /**
+     * 关联竞价记录
+     */
+    public function bids()
+    {
+        return $this->hasMany(OrderBid::class, 'order_id', 'id');
+    }
+
+    /**
+     * 关联预约信息
+     */
+    public function appointment()
+    {
+        return $this->hasOne(OrderAppointment::class, 'order_id', 'id');
+    }
+
+    /**
+     * 关联套餐
+     */
+    public function package()
+    {
+        return $this->belongsTo(OrderPackage::class, 'package_id', 'id');
+    }
+
+    /**
+     * 关联分账记录
+     */
+    public function profitShareRecords()
+    {
+        return $this->hasMany(ProfitShareRecord::class, 'order_id', 'id');
+    }
+
+    /**
+     * 关联退款分账记录
+     */
+    public function profitShareRefunds()
+    {
+        return $this->hasMany(ProfitShareRefund::class, 'order_id', 'id');
+    }
+
     // ===================== Scope =====================
 
     /**
@@ -193,6 +261,14 @@ class Order extends Model
     public function scopeBetween($query, string $start, string $end)
     {
         $query->whereBetween('create_time', [$start, $end]);
+    }
+
+    /**
+     * 按订单类型查询
+     */
+    public function scopeByType($query, string $type)
+    {
+        $query->where('order_type', $type);
     }
 
     /**

@@ -19,10 +19,16 @@
     <text class="intervene-banner-text">{{interveneBannerText}}</text>
   </view>
 
-  <!-- 申请平台介入按钮 -->
+  <!-- 申请平台介入按钮 + 举证上传 -->
   <view class="intervene-toolbar" wx:if="{{interveneStatus !== 2}}">
     <view class="intervene-btn {{interveneStatus === 1 ? 'intervene-btn-disabled' : ''}}" bindtap="onRequestIntervene">
       <text class="intervene-btn-text">{{interveneStatus === 1 ? '平台已介入' : '申请平台介入'}}</text>
+    </view>
+    <view class="evidence-btn" bindtap="onUploadEvidence">
+      <text class="evidence-btn-text">📎 举证上传</text>
+    </view>
+    <view class="arbitration-btn" bindtap="onApplyArbitration">
+      <text class="arbitration-btn-text">申请仲裁</text>
     </view>
   </view>
 
@@ -100,12 +106,35 @@
           <!-- 语音消息 -->
           <view
             wx:if="{{item.type === 'voice'}}"
-            class="msg-bubble msg-voice {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
-            bindtap="onPlayVoice"
+            class="msg-bubble msg-voice-wrap {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
+            bindlongpress="onLongPressMessage"
             data-msg="{{item}}"
           >
-            <text class="voice-icon">{{item.playing ? '🔊' : '🔈'}}</text>
-            <text class="voice-duration">{{item.duration}}"</text>
+            <view class="msg-voice" bindtap="onPlayVoice" data-msg="{{item}}">
+              <text class="voice-icon">{{item.playing ? '🔊' : '🔈'}}</text>
+              <text class="voice-duration">{{item.duration}}"</text>
+            </view>
+            <view class="voice-asr" wx:if="{{item.asr_text}}" bindtap="onToggleAsr" data-msg="{{item}}">
+              <text class="asr-toggle">{{item.show_asr ? '收起' : '转文字'}}</text>
+            </view>
+            <view class="asr-content" wx:if="{{item.show_asr && item.asr_text}}">
+              <text>{{item.asr_text}}</text>
+            </view>
+          </view>
+
+          <!-- 文件消息 -->
+          <view
+            wx:if="{{item.type === 'file'}}"
+            class="msg-bubble msg-file {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
+            bindtap="onOpenFile"
+            bindlongpress="onLongPressMessage"
+            data-msg="{{item}}"
+          >
+            <view class="file-icon">📄</view>
+            <view class="file-info">
+              <text class="file-name">{{item.file_name}}</text>
+              <text class="file-size">{{item.file_size_text}}</text>
+            </view>
           </view>
 
           <!-- 撤回消息 -->
@@ -119,6 +148,11 @@
           <!-- 敏感词拦截提示 -->
           <view wx:if="{{item.sensitive_blocked}}" class="sensitive-tip">
             <text>⚠️ 消息含有敏感词，发送失败</text>
+          </view>
+
+          <!-- 飞单风险提示 -->
+          <view wx:if="{{item.anti_fraud_risky && item.from_self}}" class="anti-fraud-tip">
+            <text>⚠️ 检测到风险内容，已自动屏蔽</text>
           </view>
         </view>
 
@@ -195,6 +229,14 @@
       <view class="panel-icon">📸</view>
       <text class="panel-label">拍照</text>
     </view>
+    <view class="panel-item" bindtap="onChooseFile">
+      <view class="panel-icon">📄</view>
+      <text class="panel-label">文件</text>
+    </view>
+    <view class="panel-item" bindtap="onUploadEvidence">
+      <view class="panel-icon">📎</view>
+      <text class="panel-label">举证上传</text>
+    </view>
     <view class="panel-item" bindtap="onSwitchMode">
       <view class="panel-icon">🎤</view>
       <text class="panel-label">语音</text>
@@ -208,4 +250,55 @@
     auto="{{true}}"
     bind:subscribed="onSubscribeResult">
   </subscribe-msg>
+
+  <!-- 举证上传弹窗 -->
+  <view class="modal-mask" wx:if="{{showEvidenceModal}}" bindtap="onCloseEvidenceModal"></view>
+  <view class="evidence-modal" wx:if="{{showEvidenceModal}}">
+    <view class="modal-header">
+      <text class="modal-title">举证上传</text>
+      <view class="modal-close" bindtap="onCloseEvidenceModal">×</view>
+    </view>
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">举证说明</text>
+        <textarea class="form-textarea" placeholder="请输入举证说明（选填）" value="{{evidenceDescription}}" bindinput="onEvidenceDescInput" maxlength="200" auto-height></textarea>
+      </view>
+      <view class="form-item">
+        <text class="form-label">上传凭证文件</text>
+        <view class="upload-tip">支持图片、文档，单文件不超过10M</view>
+        <view class="upload-btn" bindtap="onChooseEvidenceFile">
+          <text class="upload-icon">+</text>
+          <text class="upload-text">选择文件</text>
+        </view>
+        <view class="evidence-file-list">
+          <view class="evidence-file-item" wx:for="{{evidenceFileList}}" wx:key="index">
+            <text class="file-name">{{item.name}}</text>
+            <text class="file-size">{{item.size_text}}</text>
+            <text class="file-delete" bindtap="onRemoveEvidenceFile" data-index="{{index}}">×</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <view class="btn-cancel" bindtap="onCloseEvidenceModal">
+        <text>取消</text>
+      </view>
+      <view class="btn-confirm" bindtap="onSubmitEvidence">
+        <text>提交举证</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 飞单风控警告弹窗 -->
+  <view class="modal-mask" wx:if="{{showAntiFraudModal}}" bindtap="onCloseAntiFraudModal"></view>
+  <view class="anti-fraud-modal" wx:if="{{showAntiFraudModal}}">
+    <view class="modal-icon">⚠️</view>
+    <view class="modal-title">风险提示</view>
+    <view class="modal-content">
+      <text>{{antiFraudModalContent}}</text>
+    </view>
+    <view class="modal-btn" bindtap="onCloseAntiFraudModal">
+      <text>我知道了</text>
+    </view>
+  </view>
 </view>

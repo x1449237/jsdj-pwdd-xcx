@@ -1,0 +1,62 @@
+<view class="coupon-list-page">
+  <!-- 未登录提示 -->
+  <view class="empty-tip" wx:if="{{!isLogin}}">
+    <text class="empty-text">请先登录查看优惠券</text>
+    <button class="login-btn" bindtap="onLogin">去登录</button>
+  </view>
+
+  <block wx:else>
+    <!-- 顶部导航 -->
+    <view class="tab-bar">
+      <view
+        class="tab-item {{tabIndex === index ? 'active' : ''}}"
+        wx:for="{{tabs}}"
+        wx:key="index"
+        data-index="{{index}}"
+        bindtap="onTabTap"
+      >
+        <text>{{item}}</text>
+        <view class="tab-line" wx:if="{{tabIndex === index}}"></view>
+      </view>
+    </view>
+
+    <!-- 优惠券列表 -->
+    <view class="coupon-list">
+      <view
+        class="coupon-item {{item.status !== 'unused' ? 'disabled' : ''}}"
+        wx:for="{{couponList}}"
+        wx:key="id"
+        data-item="{{item}}"
+        bindtap="onUseCoupon"
+      >
+        <view class="coupon-left">
+          <text class="coupon-symbol">¥</text>
+          <text class="coupon-value">{{item.value}}</text>
+          <text class="coupon-condition">满{{item.min_amount}}可用</text>
+        </view>
+        <view class="coupon-right">
+          <text class="coupon-name">{{item.name}}</text>
+          <text class="coupon-time">{{item.expire_time || '长期有效'}}</text>
+          <view class="coupon-btn">
+            <text wx:if="{{item.status === 'unused'}}">立即使用</text>
+            <text wx:elif="{{item.status === 'used'}}">已使用</text>
+            <text wx:else>已过期</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-tip" wx:if="{{!loading && couponList.length === 0}}">
+        <text class="empty-text">暂无优惠券</text>
+      </view>
+
+      <!-- 加载更多 -->
+      <view class="load-more" wx:if="{{loading && couponList.length > 0}}">
+        <text>加载中...</text>
+      </view>
+      <view class="load-more" wx:if="{{!hasMore && couponList.length > 0}}">
+        <text>没有更多了</text>
+      </view>
+    </view>
+  </block>
+</view>

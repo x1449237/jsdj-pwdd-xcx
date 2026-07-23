@@ -7,7 +7,9 @@ use app\controller\BaseController;
 use app\model\GroupChat;
 use app\model\GroupChatMember;
 use app\model\GroupChatMessage;
+use app\model\User as UserModel;
 use app\service\GroupChatService;
+use app\service\MinorProtectService;
 use think\facade\Log;
 use think\Request;
 
@@ -429,6 +431,22 @@ class GroupChat extends BaseController
             return $this->error($error);
         }
 
+        $targetUser = UserModel::find($targetUid);
+        if (!$targetUser) {
+            return $this->error('目标用户不存在', 404);
+        }
+
+        if (!$targetUser->getData('is_real_verified')) {
+            return $this->error('目标用户未完成实名认证，无法加入群聊');
+        }
+
+        $minorProtectService = new MinorProtectService();
+
+        $curfewCheck = $minorProtectService->checkCurfew($targetUid, 'join_group');
+        if (!$curfewCheck['pass']) {
+            return $this->error($curfewCheck['message'], 403);
+        }
+
         try {
             $service = new GroupChatService();
             $service->addMember($groupId, $targetUid, $userId);
@@ -441,6 +459,119 @@ class GroupChat extends BaseController
         } catch (\Throwable $e) {
             Log::error('添加成员异常: ' . $e->getMessage());
             return $this->error('添加失败');
+        }
+    }
+
+    /**
+     * 撤回群消息
+     */
+    public function recallMessage(Request $request)
+    {
+        $userId    = request()->userId();
+        $messageId = $request->paramInt('message_id', 0);
+
+        if ($messageId <= 0) {
+            return $this->error('消息ID无效');
+        }
+
+        try {
+            $service = new GroupChatService();
+            $service->recallGroupMessage($messageId, $userId);
+            return $this->success(null, '消息已撤回');
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('撤回群消息异常: ' . $e->getMessage());
+            return $this->error('撤回失败');
+        }
+    }
+
+    /**
+     * 创建定时公告
+     */
+    public function createScheduleAnnouncement(Request $request)
+    {
+        $userId       = request()->userId();
+        $groupId      = $request->paramInt('group_id', 0);
+        $title        = $request->param('title', '');
+        $content      = $request->param('content', '');
+        $scheduleTime = $request->param('schedule_time', '');
+
+        $error = $this->validateRequired([
+            'group_id'      => $groupId,
+            'title'         => $title,
+            'content'       => $content,
+            'schedule_time' => $scheduleTime,
+        ], ['group_id', 'title', 'content', 'schedule_time']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        try {
+            $service = new GroupChatService();
+            $schedule = $service->createScheduleAnnouncement($groupId, $userId, $title, $content, $scheduleTime);
+
+            $this->operationLog('api_group_schedule_create', "创建定时公告: 群ID: {$groupId}, 标题: {$title}");
+
+            return $this->success($schedule, '创建成功');
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('创建定时公告异常: ' . $e->getMessage());
+            return $this->error('创建失败');
+        }
+    }
+
+    /**
+     * 定时公告列表
+     */
+    public function scheduleAnnouncementList(Request $request)
+    {
+        $userId  = request()->userId();
+        $groupId = $request->paramInt('group_id', 0);
+        [$page, $limit] = $this->pageParams();
+
+        if ($groupId <= 0) {
+            return $this->error('群聊ID无效');
+        }
+
+        $member = GroupChatMember::where('group_id', $groupId)
+            ->where('user_id', $userId)
+            ->find();
+        if (!$member) {
+            return $this->error('无权查看', 403);
+        }
+
+        $service = new GroupChatService();
+        $result = $service->getScheduleAnnouncements($groupId, $page, $limit);
+
+        return $this->page($result['list'], $result['total'], $page, $limit);
+    }
+
+    /**
+     * 取消定时公告
+     */
+    public function cancelScheduleAnnouncement(Request $request)
+    {
+        $userId     = request()->userId();
+        $scheduleId = $request->paramInt('schedule_id', 0);
+
+        if ($scheduleId <= 0) {
+            return $this->error('定时公告ID无效');
+        }
+
+        try {
+            $service = new GroupChatService();
+            $service->cancelScheduleAnnouncement($scheduleId, $userId);
+
+            $this->operationLog('api_group_schedule_cancel', "取消定时公告: schedule_id: {$scheduleId}");
+
+            return $this->success(null, '已取消');
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('取消定时公告异常: ' . $e->getMessage());
+            return $this->error('操作失败');
         }
     }
 }

@@ -11,13 +11,23 @@ Page({
     customAmount: '',
     isCustomAmount: false,
     message: '',
-    paying: false
+    paying: false,
+    isMinor: false
   },
 
   onLoad(options) {
     const { orderId } = options;
     this.setData({ orderId });
     this.loadPlayerInfo();
+    this.checkUserAge();
+  },
+
+  checkUserAge() {
+    request.get('/api/v1/user/profile').then((res) => {
+      if (res.is_minor) {
+        this.setData({ isMinor: true });
+      }
+    }).catch(() => {});
   },
 
   loadPlayerInfo() {
@@ -63,7 +73,21 @@ Page({
   },
 
   onReward() {
-    const { selectedAmount, customAmount, isCustomAmount, message, orderId } = this.data;
+    const { selectedAmount, customAmount, isCustomAmount, message, orderId, isMinor } = this.data;
+
+    if (isMinor) {
+      const currentHour = new Date().getHours();
+      if (currentHour >= 22 || currentHour < 8) {
+        wx.showModal({
+          title: '未成年人宵禁提醒',
+          content: '宵禁时间（22:00-次日08:00）未成年人无法打赏，请在白天再进行操作。',
+          showCancel: false,
+          confirmText: '我知道了'
+        });
+        return;
+      }
+    }
+
     let amount = selectedAmount;
 
     if (isCustomAmount) {

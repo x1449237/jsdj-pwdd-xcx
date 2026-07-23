@@ -273,10 +273,50 @@ class User extends Model
     }
 
     /**
+     * 关联家长监护绑定（作为孩子）
+     */
+    public function guardianBinds()
+    {
+        return $this->hasMany(ParentGuardianBind::class, 'child_user_id', 'id');
+    }
+
+    /**
      * 检查用户是否可用
      */
     public function isEnabled(): bool
     {
         return $this->getData('status') == self::STATUS_ENABLED;
+    }
+
+    /**
+     * 是否未成年人
+     */
+    public function isMinor(): bool
+    {
+        return $this->getData('is_minor') == 1;
+    }
+
+    /**
+     * 是否已实名认证
+     */
+    public function isRealVerified(): bool
+    {
+        return $this->getData('is_real_verified') == 1;
+    }
+
+    /**
+     * 查询未成年用户
+     */
+    public function scopeMinor($query)
+    {
+        $query->where('is_minor', 1);
+    }
+
+    /**
+     * 查询已实名认证用户
+     */
+    public function scopeRealVerified($query)
+    {
+        $query->where('is_real_verified', 1);
     }
 }

@@ -1,0 +1,108 @@
+<view class="container">
+  <view class="header">
+    <view class="back-btn" bindtap="onBack">
+      <text class="back-icon">←</text>
+    </view>
+    <view class="title">申请仲裁</view>
+    <view class="placeholder"></view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">选择纠纷类型</view>
+    <view class="dispute-types">
+      <view
+        wx:for="{{disputeTypes}}"
+        wx:key="value"
+        class="dispute-item {{selectedDisputeType === item.value ? 'active' : ''}}"
+        bindtap="onSelectDisputeType"
+        data-value="{{item.value}}"
+      >
+        {{item.label}}
+      </view>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{evidenceTpl}}">
+    <view class="section-title">举证指引</view>
+    <view class="guide-box">
+      <view class="guide-title">{{evidenceTpl.title}}</view>
+      <view class="guide-desc">{{evidenceTpl.description}}</view>
+      <view class="required-items" wx:if="{{evidenceTpl.required_items_json}}">
+        <view
+          wx:for="{{evidenceTpl.required_items_json}}"
+          wx:key="key"
+          class="required-item"
+        >
+          <text class="required-tag {{item.required ? 'required' : 'optional'}}">
+            {{item.required ? '必填' : '选填'}}
+          </text>
+          <text class="item-label">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">纠纷描述</view>
+    <view class="textarea-box">
+      <textarea
+        class="desc-textarea"
+        placeholder="请详细描述纠纷情况..."
+        value="{{description}}"
+        bindinput="onDescriptionInput"
+        maxlength="500"
+        auto-height
+      />
+      <view class="word-count">{{description.length}}/500</view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">举证材料</view>
+    <view class="evidence-grid">
+      <view
+        wx:for="{{evidenceList}}"
+        wx:key="id"
+        class="evidence-item"
+      >
+        <image
+          wx:if="{{item.type === 'image'}}"
+          class="evidence-image"
+          src="{{item.file_url}}"
+          mode="aspectFill"
+        />
+        <view wx:else class="evidence-video">
+          <text class="video-icon">▶</text>
+        </view>
+        <view class="evidence-desc-input">
+          <input
+            class="desc-input"
+            placeholder="添加说明"
+            value="{{item.description}}"
+            bindinput="onEvidenceDescInput"
+            data-index="{{index}}"
+          />
+        </view>
+        <view class="delete-btn" bindtap="onDeleteEvidence" data-index="{{index}}">×</view>
+      </view>
+      <view class="add-evidence" bindtap="onUploadImage">
+        <text class="add-icon">+</text>
+        <text class="add-text">图片</text>
+      </view>
+      <view class="add-evidence" bindtap="onUploadVideo">
+        <text class="add-icon">+</text>
+        <text class="add-text">视频</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-bar">
+    <button
+      class="submit-btn {{submitting ? 'disabled' : ''}}"
+      bindtap="onSubmit"
+      disabled="{{submitting}}"
+    >
+      {{submitting ? '提交中...' : '提交仲裁申请'}}
+    </button>
+  </view>
+</view>

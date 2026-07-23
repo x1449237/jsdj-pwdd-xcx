@@ -308,23 +308,13 @@ class Chat extends BaseController
             return $this->error('消息ID无效');
         }
 
-        $message = ChatMessage::where('user_id', $userId)->where('id', $messageId)->find();
-        if (!$message) {
-            return $this->error('消息不存在或无权撤回', 404);
+        try {
+            $chatService = new \app\service\ChatService();
+            $chatService->recallMessage($messageId, $userId);
+            return $this->success(null, '消息已撤回');
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage());
         }
-
-        // 2分钟内可撤回
-        $messageTime = strtotime($message->getData('create_time'));
-        if (time() - $messageTime > 120) {
-            return $this->error('消息发送超过2分钟，无法撤回');
-        }
-
-        $message->status = ChatMessage::STATUS_HIDDEN;
-        $message->save();
-
-        write_action_log('api_chat_recall', "用户 ID:{$userId} 撤回消息 ID:{$messageId}");
-
-        return $this->success(null, '消息已撤回');
     }
 
     /**
@@ -454,5 +444,183 @@ class Chat extends BaseController
         } catch (\Throwable $e) {
             Log::error('风控日志写入失败: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * 发送文件消息
+     */
+    public function sendFile(Request $request)
+    {
+        $userId    = request()->userId();
+        $sessionId = $request->paramInt('session_id', 0);
+        $fileUrl   = $request->param('file_url', '');
+        $fileName  = $request->param('file_name', '');
+        $fileSize  = $request->paramInt('file_size', 0);
+        $fileType  = $request->param('file_type', 'document');
+
+        $error = $this->validateRequired([
+            'session_id' => $sessionId,
+            'file_url'   => $fileUrl,
+            'file_name'  => $fileName,
+        ], ['session_id', 'file_url', 'file_name']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        $session = ChatSession::where('id', $sessionId)
+            ->where(function ($q) use ($userId) {
+                $q->where('user_id', $userId)->whereOr('player_id', $userId);
+            })->find();
+        if (!$session) {
+            return $this->error('会话不存在', 404);
+        }
+
+        if ($session->getData('status') == ChatSession::STATUS_CLOSED) {
+            return $this->error('会话已关闭');
+        }
+
+        $chatService = new \app\service\ChatService();
+        if ($chatService->isUserMuted($userId)) {
+            return $this->error('您已被禁言，无法发送消息');
+        }
+
+        $toUserId = ($session->getData('user_id') == $userId)
+            ? $session->getData('player_id')
+            : $session->getData('user_id');
+
+        $message = ChatMessage::create([
+            'session_id'  => $sessionId,
+            'user_id'     => $userId,
+            'to_user_id'  => $toUserId,
+            'msg_type'    => ChatMessage::TYPE_FILE,
+            'content'     => $fileUrl,
+            'extra'       => [
+                'file_name' => $fileName,
+                'file_size' => $fileSize,
+                'file_type' => $fileType,
+            ],
+            'is_read'     => 0,
+            'status'      => ChatMessage::STATUS_NORMAL,
+        ]);
+
+        try {
+            $fileService = new \app\service\ChatFileService();
+            $fileService->uploadFile(
+                $sessionId,
+                \app\model\ChatFileMessage::SESSION_TYPE_PRIVATE,
+                $userId,
+                $message->id,
+                $fileUrl,
+                $fileName,
+                $fileSize,
+                $fileType
+            );
+        } catch (\Throwable $e) {
+            Log::error('文件消息记录失败: ' . $e->getMessage());
+        }
+
+        $session->last_message = '[文件] ' . $fileName;
+        $session->last_time    = date('Y-m-d H:i:s');
+        if ($toUserId == $session->getData('player_id')) {
+            $session->unread_player = $session->getData('unread_player') + 1;
+        } else {
+            $session->unread_user = $session->getData('unread_user') + 1;
+        }
+        $session->save();
+
+        write_action_log('api_chat_send_file', "用户 ID:{$userId} 发送文件消息，会话:{$sessionId}");
+
+        return $this->success($message->toArray(), '发送成功');
+    }
+
+    /**
+     * 获取快捷卡片列表
+     */
+    public function quickCardList(Request $request)
+    {
+        $type = $request->param('type', '');
+
+        $chatService = new \app\service\ChatService();
+        $list = $chatService->getQuickCards($type ?: null);
+
+        return $this->success($list);
+    }
+
+    /**
+     * 发送快捷卡片消息
+     */
+    public function sendQuickCard(Request $request)
+    {
+        $userId    = request()->userId();
+        $sessionId = $request->paramInt('session_id', 0);
+        $cardId    = $request->paramInt('card_id', 0);
+
+        $error = $this->validateRequired([
+            'session_id' => $sessionId,
+            'card_id'    => $cardId,
+        ], ['session_id', 'card_id']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        $card = \app\model\ChatQuickCard::where('id', $cardId)
+            ->where('status', \app\model\ChatQuickCard::STATUS_ENABLED)
+            ->find();
+        if (!$card) {
+            return $this->error('快捷卡片不存在');
+        }
+
+        $session = ChatSession::where('id', $sessionId)
+            ->where(function ($q) use ($userId) {
+                $q->where('user_id', $userId)->whereOr('player_id', $userId);
+            })->find();
+        if (!$session) {
+            return $this->error('会话不存在', 404);
+        }
+
+        if ($session->getData('status') == ChatSession::STATUS_CLOSED) {
+            return $this->error('会话已关闭');
+        }
+
+        $chatService = new \app\service\ChatService();
+        if ($chatService->isUserMuted($userId)) {
+            return $this->error('您已被禁言，无法发送消息');
+        }
+
+        $toUserId = ($session->getData('user_id') == $userId)
+            ? $session->getData('player_id')
+            : $session->getData('user_id');
+
+        $message = ChatMessage::create([
+            'session_id'  => $sessionId,
+            'user_id'     => $userId,
+            'to_user_id'  => $toUserId,
+            'msg_type'    => ChatMessage::TYPE_CARD,
+            'content'     => $card->title,
+            'extra'       => [
+                'card_id'     => $card->id,
+                'card_type'   => $card->type,
+                'card_title'  => $card->title,
+                'card_content' => $card->content,
+                'card_action' => $card->action,
+                'card_params' => $card->params_json,
+                'card_icon'   => $card->icon,
+            ],
+            'is_read'     => 0,
+            'status'      => ChatMessage::STATUS_NORMAL,
+        ]);
+
+        $session->last_message = '[卡片] ' . $card->title;
+        $session->last_time    = date('Y-m-d H:i:s');
+        if ($toUserId == $session->getData('player_id')) {
+            $session->unread_player = $session->getData('unread_player') + 1;
+        } else {
+            $session->unread_user = $session->getData('unread_user') + 1;
+        }
+        $session->save();
+
+        write_action_log('api_chat_send_quick_card', "用户 ID:{$userId} 发送快捷卡片，会话:{$sessionId}, card_id:{$cardId}");
+
+        return $this->success($message->toArray(), '发送成功');
     }
 }

@@ -64,9 +64,34 @@ const menuGroupConfig = [
     icon: 'Medal'
   },
   {
+    key: 'finance',
+    title: '财务管理',
+    icon: 'Money'
+  },
+  {
+    key: 'marketing',
+    title: '营销管理',
+    icon: 'Present'
+  },
+  {
+    key: 'activity',
+    title: '活动运营',
+    icon: 'DataBoard'
+  },
+  {
     key: 'chat',
     title: '聊天管理',
     icon: 'ChatDotRound'
+  },
+  {
+    key: 'arbitration',
+    title: '纠纷仲裁',
+    icon: 'Document'
+  },
+  {
+    key: 'compliance',
+    title: '合规管理',
+    icon: 'Warning'
   },
   {
     key: 'security',

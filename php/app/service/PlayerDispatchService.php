@@ -8,6 +8,7 @@ use app\model\Order;
 use app\model\PlayerProbeLog;
 use app\model\User;
 use app\model\WsConnection;
+use app\model\PlayerTag;
 use think\facade\Log;
 use think\facade\Db;
 
@@ -412,6 +413,181 @@ class PlayerDispatchService
             return round($score, 4);
         } catch (\Throwable $e) {
             return 0.5;
+        }
+    }
+
+    private const TAG_WEIGHTS = [
+        'game'     => 0.30,
+        'rank'     => 0.25,
+        'position' => 0.20,
+        'voice'    => 0.15,
+        'skill'    => 0.10,
+    ];
+
+    public function getMatchedPlayers(array $tagRequirements, int $limit = 10): array
+    {
+        try {
+            $wsService = new WebSocketService();
+            $gameFilter = $tagRequirements['game'] ?? [];
+            $gameType = is_array($gameFilter) ? ($gameFilter[0] ?? '') : (string)$gameFilter;
+            $onlinePlayers = $wsService->getOnlinePlayers($gameType);
+
+            if (empty($onlinePlayers)) {
+                Log::info("无在线打手: gameType={$gameType}");
+                return [];
+            }
+
+            $playerIds = array_column($onlinePlayers, 'id');
+            $scoredPlayers = [];
+
+            foreach ($playerIds as $playerId) {
+                $tagMatchScore = $this->calculateTagMatchScore($playerId, $tagRequirements);
+
+                $redis = get_redis();
+                $cachedWeight = $redis->get('player:weight:' . $playerId);
+                $baseWeight = $cachedWeight !== false ? (float)$cachedWeight : $this->calculateWeight($playerId);
+
+                $finalScore = $tagMatchScore * 0.6 + $baseWeight * 0.4;
+
+                $scoredPlayers[] = [
+                    'player_id'      => $playerId,
+                    'match_score'    => round($tagMatchScore, 4),
+                    'base_weight'    => round($baseWeight, 4),
+                    'final_score'    => round($finalScore, 4),
+                ];
+            }
+
+            usort($scoredPlayers, function ($a, $b) {
+                return $b['final_score'] <=> $a['final_score'];
+            });
+
+            $topPlayers = array_slice($scoredPlayers, 0, $limit);
+
+            $result = [];
+            foreach ($topPlayers as $sp) {
+                foreach ($onlinePlayers as $player) {
+                    if ($player['id'] == $sp['player_id']) {
+                        $player['match_score'] = $sp['match_score'];
+                        $player['final_score'] = $sp['final_score'];
+                        $result[] = $player;
+                        break;
+                    }
+                }
+            }
+
+            Log::info("标签匹配派单: 条件=" . json_encode($tagRequirements) . ", 匹配数=" . count($result));
+            return $result;
+        } catch (\Throwable $e) {
+            Log::error("标签匹配打手失败: {$e->getMessage()}");
+            return [];
+        }
+    }
+
+    public function calculateTagMatchScore(int $playerId, array $tagRequirements): float
+    {
+        try {
+            $playerTags = $this->getPlayerTagsGrouped($playerId);
+            $totalScore = 0.0;
+            $totalWeight = 0.0;
+
+            foreach (self::TAG_WEIGHTS as $tagType => $weight) {
+                if (isset($tagRequirements[$tagType]) && !empty($tagRequirements[$tagType])) {
+                    $required = (array)$tagRequirements[$tagType];
+                    $playerTypeTags = $playerTags[$tagType] ?? [];
+
+                    if (empty($playerTypeTags)) {
+                        $matchRate = 0;
+                    } else {
+                        $intersect = array_intersect($required, $playerTypeTags);
+                        $matchRate = count($intersect) / count($required);
+                    }
+
+                    $totalScore += $matchRate * $weight;
+                    $totalWeight += $weight;
+                }
+            }
+
+            if ($totalWeight > 0) {
+                return round($totalScore / $totalWeight, 4);
+            }
+            return 1.0;
+        } catch (\Throwable $e) {
+            Log::error("计算标签匹配度失败: player_id={$playerId}, error={$e->getMessage()}");
+            return 0.0;
+        }
+    }
+
+    private function getPlayerTagsGrouped(int $playerId): array
+    {
+        try {
+            $tags = PlayerTag::byPlayer($playerId)->select()->toArray();
+            $grouped = [];
+            foreach ($tags as $tag) {
+                $type = $tag['tag_type'];
+                if (!isset($grouped[$type])) {
+                    $grouped[$type] = [];
+                }
+                $grouped[$type][] = $tag['tag_value'];
+            }
+            return $grouped;
+        } catch (\Throwable $e) {
+            Log::error("获取打手标签失败: player_id={$playerId}, error={$e->getMessage()}");
+            return [];
+        }
+    }
+
+    public function dispatchOrderWithTags(int $orderId, array $tagRequirements): array
+    {
+        try {
+            $order = Order::find($orderId);
+            if (!$order) {
+                throw new \RuntimeException("订单不存在: {$orderId}");
+            }
+
+            if ($order->status !== Order::STATUS_PENDING && $order->status !== Order::STATUS_DISPATCHING) {
+                throw new \RuntimeException("订单状态不允许派单: {$order->status}");
+            }
+
+            $topPlayers = $this->getMatchedPlayers($tagRequirements, 10);
+
+            if (empty($topPlayers)) {
+                Log::warning("无匹配打手，回退普通派单: order_id={$orderId}");
+                return $this->dispatchOrder($orderId);
+            }
+
+            $dispatchRecords = [];
+            $wsService = new WebSocketService();
+
+            foreach ($topPlayers as $player) {
+                $record = DispatchRecord::create([
+                    'order_id'      => $orderId,
+                    'player_id'     => $player['id'],
+                    'dispatch_type' => DispatchRecord::TYPE_AUTO,
+                    'status'        => DispatchRecord::STATUS_PENDING,
+                    'dispatch_time' => date('Y-m-d H:i:s'),
+                    'match_score'   => $player['match_score'] ?? 0,
+                ]);
+
+                $dispatchRecords[] = $record->toArray();
+
+                $wsService->pushToUser($player['id'], [
+                    'event'      => 'order_dispatch',
+                    'order_id'   => $orderId,
+                    'order_sn'   => $order->order_sn,
+                    'amount'     => $order->order_amount,
+                    'game_name'  => $order->game_name,
+                    'match_score'=> $player['match_score'] ?? 0,
+                ]);
+            }
+
+            $order->status = Order::STATUS_DISPATCHING;
+            $order->save();
+
+            Log::info("标签派单完成: order_id={$orderId}, 派给 " . count($topPlayers) . " 名打手");
+            return $dispatchRecords;
+        } catch (\Throwable $e) {
+            Log::error("标签派单失败: order_id={$orderId}, error={$e->getMessage()}");
+            throw $e;
         }
     }
 }

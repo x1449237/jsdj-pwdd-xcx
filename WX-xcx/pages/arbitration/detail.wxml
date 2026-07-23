@@ -1,0 +1,97 @@
+<view class="container" wx:if="{{caseDetail}}">
+  <view class="header">
+    <view class="back-btn" bindtap="onBack">
+      <text class="back-icon">←</text>
+    </view>
+    <view class="title">仲裁详情</view>
+    <view class="placeholder"></view>
+  </view>
+
+  <view class="status-card">
+    <view class="status-left">
+      <view class="case-id">案件编号：{{caseDetail.id}}</view>
+      <view class="status-text status-{{statusTag}}">{{statusLabel}}</view>
+    </view>
+    <view class="dispute-type">{{disputeTypeLabel}}</view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">案件信息</view>
+    <view class="info-list">
+      <view class="info-item">
+        <text class="info-label">订单ID</text>
+        <text class="info-value">{{caseDetail.order_id}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">申请人ID</text>
+        <text class="info-value">{{caseDetail.applicant_id}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">被申请人ID</text>
+        <text class="info-value">{{caseDetail.respondent_id}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">申请时间</text>
+        <text class="info-value">{{caseDetail.create_time}}</text>
+      </view>
+      <view class="info-item" wx:if="{{caseDetail.handler_id}}">
+        <text class="info-label">处理人</text>
+        <text class="info-value">{{caseDetail.handler_id}}</text>
+      </view>
+      <view class="info-item" wx:if="{{caseDetail.finish_time}}">
+        <text class="info-label">结案时间</text>
+        <text class="info-value">{{caseDetail.finish_time}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">纠纷描述</view>
+    <view class="description-box">
+      {{caseDetail.description}}
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{caseDetail.evidence_list && caseDetail.evidence_list.length > 0}}">
+    <view class="section-title">举证材料</view>
+    <view class="evidence-list">
+      <view
+        wx:for="{{caseDetail.evidence_list}}"
+        wx:key="id"
+        class="evidence-item"
+      >
+        <image
+          wx:if="{{item.type === 'image'}}"
+          class="evidence-image"
+          src="{{item.file_url}}"
+          mode="aspectFill"
+          bindtap="onPreviewImage"
+          data-url="{{item.file_url}}"
+        />
+        <view wx:elif="{{item.type === 'video'}}" class="evidence-video">
+          <text class="video-icon">▶</text>
+          <text class="video-label">视频</text>
+        </view>
+        <view wx:elif="{{item.type === 'audio'}}" class="evidence-audio">
+          <text class="audio-icon">♪</text>
+          <text class="audio-label">音频</text>
+        </view>
+        <view class="evidence-info">
+          <view class="evidence-desc">{{item.description || '无描述'}}</view>
+          <view class="evidence-uploader">上传者：{{item.uploader_id}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section" wx:if="{{caseDetail.result}}">
+    <view class="section-title">处理结果</view>
+    <view class="result-box">
+      {{caseDetail.result}}
+    </view>
+  </view>
+</view>
+
+<view class="loading" wx:if="{{loading}}">
+  <view class="loading-text">加载中...</view>
+</view>

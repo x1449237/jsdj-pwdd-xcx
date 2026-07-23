@@ -1,0 +1,101 @@
+<view class="home-page">
+  <view class="header-card">
+    <view class="header-title">家长监护中心</view>
+    <view class="header-subtitle">守护孩子健康上网</view>
+  </view>
+
+  <view wx:if="{{bindList.length === 0 && !loading}}" class="empty-card">
+    <view class="empty-icon">👨‍👩‍👧</view>
+    <view class="empty-text">暂无绑定的孩子账号</view>
+    <button class="bind-btn" bindtap="onGoBind">立即绑定</button>
+  </view>
+
+  <view wx:if="{{bindList.length > 0}}" class="content">
+    <view class="selector-card">
+      <picker bindchange="onBindChange" value="{{bindListIndex}}" range="{{bindList}}" range-key="child.nickname">
+        <view class="selector-row">
+          <view class="selector-label">当前监护：</view>
+          <view class="selector-value">
+            {{currentChild.nickname || '请选择'}}
+            <text class="selector-arrow">›</text>
+          </view>
+        </view>
+      </picker>
+    </view>
+
+    <view class="consume-card">
+      <view class="consume-header">
+        <view class="consume-title">本月消费</view>
+        <view class="consume-more" bindtap="onGoConsumeReport">查看明细 ›</view>
+      </view>
+      <view class="consume-amount">
+        ¥{{(monthConsume / 100).toFixed(2)}}
+        <text class="consume-limit"> / ¥{{(monthlyLimit / 100).toFixed(2)}}</text>
+      </view>
+      <view class="consume-progress">
+        <view class="progress-bar" style="width: {{monthlyLimit > 0 ? Math.min(monthConsume / monthlyLimit * 100, 100) : 0}}%"></view>
+      </view>
+      <view class="consume-limit-row" bindtap="onEditLimit">
+        <text>月消费限额：¥{{(monthlyLimit / 100).toFixed(2)}}</text>
+        <text class="edit-text">修改</text>
+      </view>
+    </view>
+
+    <view class="setting-card">
+      <view class="card-title">功能管控</view>
+
+      <view class="setting-item">
+        <view class="setting-info">
+          <view class="setting-name">允许下单</view>
+          <view class="setting-desc">关闭后孩子将无法下单</view>
+        </view>
+        <switch
+          checked="{{setting.allow_order == 1}}"
+          bindchange="onToggleOrder"
+          color="#409eff"
+        />
+      </view>
+
+      <view class="setting-item">
+        <view class="setting-info">
+          <view class="setting-name">允许打赏</view>
+          <view class="setting-desc">关闭后孩子将无法打赏</view>
+        </view>
+        <switch
+          checked="{{setting.allow_reward == 1}}"
+          bindchange="onToggleReward"
+          color="#409eff"
+        />
+      </view>
+
+      <view class="setting-item">
+        <view class="setting-info">
+          <view class="setting-name freeze-name">一键冻结账号</view>
+          <view class="setting-desc">冻结后孩子将无法进行任何操作</view>
+        </view>
+        <switch
+          checked="{{setting.is_frozen == 1}}"
+          bindchange="onToggleFreeze"
+          color="#f56c6c"
+        />
+      </view>
+    </view>
+
+    <view class="menu-card">
+      <view class="menu-item" bindtap="onGoConsumeReport">
+        <view class="menu-icon">📊</view>
+        <view class="menu-text">月度消费报告</view>
+        <view class="menu-arrow">›</view>
+      </view>
+      <view class="menu-item" bindtap="onGoChatSummary">
+        <view class="menu-icon">💬</view>
+        <view class="menu-text">聊天记录摘要</view>
+        <view class="menu-arrow">›</view>
+      </view>
+    </view>
+
+    <view class="unbind-row">
+      <button class="unbind-btn" bindtap="onUnbind">解除监护绑定</button>
+    </view>
+  </view>
+</view>

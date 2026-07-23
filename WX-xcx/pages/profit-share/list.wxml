@@ -1,0 +1,127 @@
+<view class="page-profit-share">
+  <view class="header-card bg-dark">
+    <view class="header-title-row flex-between">
+      <text class="header-title text-white text-lg font-bold">我的收益</text>
+      <view class="tax-tip" bindtap="showTaxRule">
+        <text class="text-tip text-xs">个税说明</text>
+        <text class="text-tip text-xs ml-sm">></text>
+      </view>
+    </view>
+
+    <view class="total-income-row">
+      <text class="total-label text-tip">累计收益（元）</text>
+      <view class="total-amount-row flex align-center">
+        <text class="total-symbol text-white">¥</text>
+        <text class="total-amount text-white text-xxl font-bold">{{totalIncome}}</text>
+      </view>
+    </view>
+
+    <view class="stats-row flex mt-lg">
+      <view class="stats-item flex-1">
+        <text class="stats-label text-tip">已结算</text>
+        <text class="stats-value text-white text-md font-bold">¥{{totalSettled}}</text>
+      </view>
+      <view class="stats-divider"></view>
+      <view class="stats-item flex-1">
+        <text class="stats-label text-tip">待结算</text>
+        <text class="stats-value text-warning text-md font-bold">¥{{totalPending}}</text>
+      </view>
+      <view class="stats-divider"></view>
+      <view class="stats-item flex-1">
+        <text class="stats-label text-tip">已扣个税</text>
+        <text class="stats-value text-danger text-md font-bold">¥{{totalTax}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="filter-bar bg-white flex align-center">
+    <picker mode="selector" range="{{monthFilter}}" bindchange="onMonthChange" value="{{monthIndex}}" class="filter-picker">
+      <view class="filter-item flex align-center">
+        <text class="text-secondary">{{selectedMonth || '全部月份'}}</text>
+        <text class="text-tip ml-sm">▼</text>
+      </view>
+    </picker>
+    <view class="filter-divider"></view>
+    <picker mode="selector" range="{{roleFilter}}" range-key="label" bindchange="onRoleChange" value="{{roleIndex}}" class="filter-picker">
+      <view class="filter-item flex align-center">
+        <text class="text-secondary">{{roleFilter[roleIndex].label}}</text>
+        <text class="text-tip ml-sm">▼</text>
+      </view>
+    </picker>
+  </view>
+
+  <view class="profit-list-section">
+    <view class="profit-list" wx:if="{{profitList.length > 0}}">
+      <block wx:for="{{profitList}}" wx:key="month">
+        <view class="month-divider">
+          <text class="month-text">{{item.month}}</text>
+          <text class="month-total text-primary">¥{{item.monthTotal}}</text>
+        </view>
+
+        <view class="profit-item card" wx:for="{{item.items}}" wx:for-item="profit" wx:key="id" data-orderno="{{profit.orderNo}}" bindtap="goToOrder">
+          <view class="profit-header flex-between">
+            <view class="flex align-center">
+              <view class="profit-role-badge {{profit.roleClass}}">
+                <text class="role-text">{{profit.roleText}}</text>
+              </view>
+              <view class="ml-sm">
+                <text class="profit-type text-md">分账收入</text>
+                <text class="profit-ratio text-xs text-tip" wx:if="{{profit.ratioText}}">{{profit.ratioText}}</text>
+              </view>
+            </view>
+            <text class="profit-amount text-lg font-bold text-success">+¥{{profit.amountText}}</text>
+          </view>
+          <view class="profit-order-row mt-sm">
+            <text class="profit-order text-xs text-tip">订单号: {{profit.orderNo || '-'}}</text>
+          </view>
+          <view class="profit-footer flex-between mt-sm">
+            <text class="profit-time text-xs text-tip">{{profit.timeText}}</text>
+            <view class="flex align-center">
+              <text class="profit-tax text-xs text-tip mr-md" wx:if="{{profit.taxText !== '0.00'}}">扣税 ¥{{profit.taxText}}</text>
+              <text class="profit-status text-xs {{profit.statusClass}}">{{profit.statusText}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <view class="empty-state" wx:if="{{!loading && profitList.length === 0}}">
+      <view class="empty-icon">📋</view>
+      <text class="empty-state-text">暂无分账记录</text>
+    </view>
+
+    <view class="loading-more" wx:if="{{loadingMore}}">
+      <text>加载中...</text>
+    </view>
+    <view class="no-more" wx:if="{{!hasMore && profitList.length > 0}}">
+      <text>—— 没有更多了 ——</text>
+    </view>
+  </view>
+</view>
+
+<view class="modal-mask" wx:if="{{showTaxModal}}" bindtap="closeTaxModal">
+  <view class="modal-dialog" catchtap="noop">
+    <view class="modal-title text-lg font-bold">个税代扣说明</view>
+    <view class="modal-body">
+      <view class="rule-item">
+        <text class="rule-label">1. 代扣依据</text>
+        <text class="rule-desc">根据《中华人民共和国个人所得税法》，劳务报酬所得需依法缴纳个人所得税，由支付方代扣代缴。</text>
+      </view>
+      <view class="rule-item">
+        <text class="rule-label">2. 计税方式</text>
+        <text class="rule-desc">应纳税所得额 = 收入金额 - 起征点；应纳税额 = 应纳税所得额 × 税率 - 速算扣除数。</text>
+      </view>
+      <view class="rule-item">
+        <text class="rule-label">3. 扣除时机</text>
+        <text class="rule-desc">个税在提现时自动扣除，扣税后金额为实际到账金额。</text>
+      </view>
+      <view class="rule-item">
+        <text class="rule-label">4. 完税凭证</text>
+        <text class="rule-desc">平台将按月汇总申报个税，您可在个人中心查看完税凭证。</text>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn btn-sm btn-primary btn-block" bindtap="closeTaxModal">我知道了</button>
+    </view>
+  </view>
+</view>

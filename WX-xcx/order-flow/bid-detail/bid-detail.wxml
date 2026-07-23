@@ -1,0 +1,107 @@
+<view class="bid-detail-page">
+  <view class="order-header">
+    <view class="header-bg"></view>
+    <view class="order-basic">
+      <view class="order-status">
+        <text class="status-text">竞价进行中</text>
+        <view class="countdown" wx:if="{{countdown}}">
+          <text class="countdown-label">剩余</text>
+          <text class="countdown-time">{{countdown}}</text>
+        </view>
+      </view>
+      <view class="order-info">
+        <text class="order-game">{{orderInfo.game_name}}</text>
+        <text class="order-title">{{orderInfo.service_name}}</text>
+      </view>
+      <view class="price-row">
+        <view class="price-item">
+          <text class="price-label">起始价</text>
+          <text class="price-value">¥{{orderInfo.amount_text}}</text>
+        </view>
+        <view class="price-item current">
+          <text class="price-label">当前最高价</text>
+          <view class="current-price">
+            <text class="price-symbol">¥</text>
+            <text class="price-value">{{currentPrice}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section bid-section">
+    <view class="section-header">
+      <text class="section-title">出价记录 ({{bidList.length}})</text>
+    </view>
+
+    <view wx:if="{{bidList.length === 0}}" class="empty-bids">
+      <text class="empty-text">暂无出价，快来成为第一个出价的人吧~</text>
+    </view>
+
+    <view class="bid-list">
+      <view 
+        wx:for="{{bidList}}" 
+        wx:key="id"
+        class="bid-item {{item.is_winner ? 'winner' : ''}}"
+      >
+        <view class="bidder-info">
+          <image class="bidder-avatar" src="{{item.player_avatar}}" mode="aspectFill"></image>
+          <view class="bidder-name">
+            <text class="name">{{item.player_nickname}}</text>
+            <text class="time">{{item.bid_time_text}}</text>
+          </view>
+          <view wx:if="{{item.is_winner}}" class="winner-badge">
+            🏆 已中标
+          </view>
+        </view>
+        <view class="bid-price-row">
+          <text class="bid-price">¥{{item.bid_price_text}}</text>
+          <button 
+            wx:if="{{orderInfo.status == 10 && !item.is_winner && !orderInfo.is_player}}" 
+            class="select-btn"
+            catchtap="onSelectWinner"
+            data-bid-id="{{item.id}}"
+          >
+            选择中标
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-action" wx:if="{{isPlayer && orderInfo.status == 10}}">
+    <view wx:if="{{myBid && myBid.status == 0}}" class="my-bid-info">
+      <text class="my-bid-label">我的出价：</text>
+      <text class="my-bid-price">¥{{myBid.bid_price_text}}</text>
+      <button class="cancel-bid-btn" bindtap="onCancelBid">取消竞价</button>
+    </view>
+
+    <view class="bid-input-section">
+      <view class="quick-btns">
+        <view class="quick-btn" bindtap="onQuickBid" data-amount="5">+5元</view>
+        <view class="quick-btn" bindtap="onQuickBid" data-amount="10">+10元</view>
+        <view class="quick-btn" bindtap="onQuickBid" data-amount="20">+20元</view>
+        <view class="quick-btn" bindtap="onQuickBid" data-amount="50">+50元</view>
+      </view>
+      <view class="bid-input-row">
+        <input 
+          class="bid-input"
+          type="digit"
+          placeholder="请输入出价金额"
+          value="{{bidPrice}}"
+          bindinput="onBidPriceInput"
+        />
+        <button 
+          class="bid-btn {{submitting ? 'disabled' : ''}}"
+          bindtap="onPlaceBid"
+          disabled="{{submitting}}"
+        >
+          {{submitting ? '出价中...' : '立即出价'}}
+        </button>
+      </view>
+      <view class="bid-tip">
+        <text class="tip-text">出价需高于当前最高价 ¥{{minBidPrice}}</text>
+      </view>
+    </view>
+  </view>
+</view>

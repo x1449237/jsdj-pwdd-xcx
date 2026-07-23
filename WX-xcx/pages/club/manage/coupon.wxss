@@ -1,0 +1,130 @@
+.page {
+  min-height: 100vh;
+  background: #f5f6fa;
+}
+
+.type-tabs {
+  display: flex;
+  white-space: nowrap;
+  padding: 20rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #eee;
+}
+
+.tab-item {
+  display: inline-block;
+  padding: 12rpx 30rpx;
+  margin-right: 20rpx;
+  font-size: 26rpx;
+  color: #606266;
+  border-radius: 30rpx;
+  background: #f0f2f5;
+}
+
+.tab-item.active {
+  background: #f56c6c;
+  color: #fff;
+}
+
+.coupon-list {
+  padding: 20rpx;
+}
+
+.coupon-card {
+  display: flex;
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.coupon-left {
+  width: 220rpx;
+  background: linear-gradient(135deg, #ff6b6b, #feca57);
+  color: #fff;
+  padding: 30rpx 20rpx;
+  text-align: center;
+  position: relative;
+}
+
+.coupon-left::before,
+.coupon-left::after {
+  content: '';
+  position: absolute;
+  width: 20rpx;
+  height: 20rpx;
+  background: #f5f6fa;
+  border-radius: 50%;
+  right: -10rpx;
+}
+.coupon-left::before { top: -10rpx; }
+.coupon-left::after  { bottom: -10rpx; }
+
+.coupon-value {
+  font-size: 48rpx;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.coupon-condition {
+  font-size: 22rpx;
+  margin-top: 8rpx;
+  opacity: 0.9;
+}
+
+.coupon-right {
+  flex: 1;
+  padding: 20rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.coupon-name {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #303133;
+}
+
+.coupon-type {
+  display: inline-block;
+  font-size: 22rpx;
+  color: #e6a23c;
+  background: #fdf6ec;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  align-self: flex-start;
+  margin: 8rpx 0;
+}
+
+.coupon-time {
+  font-size: 22rpx;
+  color: #909399;
+}
+
+.coupon-count {
+  font-size: 22rpx;
+  color: #909399;
+  margin: 8rpx 0;
+}
+
+.btn-receive {
+  background: #f56c6c !important;
+  color: #fff !important;
+  border-radius: 30rpx !important;
+  font-size: 24rpx !important;
+  align-self: flex-end;
+}
+
+.coupon-end {
+  font-size: 24rpx;
+  color: #c0c4cc;
+  text-align: right;
+}
+
+.load-more, .empty {
+  text-align: center;
+  padding: 40rpx;
+  color: #909399;
+  font-size: 26rpx;
+}

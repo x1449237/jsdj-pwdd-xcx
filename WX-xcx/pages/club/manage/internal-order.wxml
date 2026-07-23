@@ -1,0 +1,37 @@
+<view class="page">
+  <scroll-view class="status-tabs" scroll-x>
+    <view class="tab-item {{status === '' ? 'active' : ''}}" bindtap="onStatusChange" data-status="">全部</view>
+    <view class="tab-item {{status === '1' ? 'active' : ''}}" bindtap="onStatusChange" data-status="1">待接单</view>
+    <view class="tab-item {{status === '2' ? 'active' : ''}}" bindtap="onStatusChange" data-status="2">已接单</view>
+    <view class="tab-item {{status === '3' ? 'active' : ''}}" bindtap="onStatusChange" data-status="3">进行中</view>
+    <view class="tab-item {{status === '4' ? 'active' : ''}}" bindtap="onStatusChange" data-status="4">已完成</view>
+    <view class="tab-item {{status === '5' ? 'active' : ''}}" bindtap="onStatusChange" data-status="5">已取消</view>
+  </scroll-view>
+
+  <view class="order-list">
+    <view class="order-card" wx:for="{{list}}" wx:key="id">
+      <view class="order-header">
+        <text class="order-no">{{item.order_no}}</text>
+        <text class="status-tag status-{{item.status}}">{{statusMap[item.status]}}</text>
+      </view>
+      <view class="order-title">{{item.title}}</view>
+      <view class="order-footer">
+        <text class="reward">¥{{item.reward_yuan}}</text>
+        <button wx:if="{{item.status === 1}}" class="btn-accept" size="mini" bindtap="handleAccept" data-id="{{item.id}}">接单</button>
+      </view>
+      <view class="order-meta" wx:if="{{item.player_nickname}}">
+        接单人：{{item.player_nickname}}
+      </view>
+      <view class="order-time">{{item.create_time}}</view>
+    </view>
+  </view>
+
+  <view class="load-more" wx:if="{{list.length > 0}}">
+    <text wx:if="{{noMore}}">没有更多了</text>
+    <text wx:elif="{{loading}}">加载中...</text>
+  </view>
+
+  <view class="empty" wx:if="{{list.length === 0 && !loading}}">
+    <text>暂无订单</text>
+  </view>
+</view>

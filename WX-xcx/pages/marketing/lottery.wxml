@@ -1,0 +1,70 @@
+<view class="lottery-page">
+  <!-- 顶部活动信息 -->
+  <view class="lottery-header">
+    <view class="header-title">幸运大转盘</view>
+    <view class="header-subtitle" wx:if="{{activity}}">{{activity.name}}</view>
+  </view>
+
+  <!-- 转盘区域 -->
+  <view class="wheel-container">
+    <view class="wheel-outer">
+      <view
+        class="wheel-inner"
+        style="transform: rotate({{rotateDegree}}deg); transition: transform 3s cubic-bezier(0.2, 0.8, 0.3, 1)"
+      >
+        <view
+          class="prize-item"
+          wx:for="{{prizes}}"
+          wx:key="id"
+          style="transform: rotate({{index * (360 / prizes.length)}}deg)"
+        >
+          <view class="prize-content" style="transform: rotate({{180 / prizes.length}}deg) translateY(-120rpx)">
+            <text class="prize-name">{{item.name}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="wheel-center" bindtap="onDraw">
+        <text class="draw-btn">抽奖</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 活动规则 -->
+  <view class="rules-section" wx:if="{{activity}}">
+    <view class="section-title">活动规则</view>
+    <view class="rules-content">
+      <text class="rule-item">1. 消耗{{activity.cost_type === 'free' ? '免费' : activity.cost_value + '元'}}可参与一次抽奖</text>
+      <text class="rule-item" wx:if="{{activity.daily_limit > 0}}">2. 每日最多参与{{activity.daily_limit}}次</text>
+      <text class="rule-item">3. 奖品实时发放，请在我的奖品中查看</text>
+      <text class="rule-item">4. 活动最终解释权归平台所有</text>
+    </view>
+  </view>
+
+  <!-- 中奖记录 -->
+  <view class="records-section">
+    <view class="section-title">中奖记录</view>
+    <view class="records-list" wx:if="{{records.length > 0}}">
+      <view class="record-item" wx:for="{{records}}" wx:key="id">
+        <text class="record-name">{{item.prize_name}}</text>
+        <text class="record-time">{{item.draw_time}}</text>
+      </view>
+    </view>
+    <view class="empty-records" wx:else>
+      <text>暂无中奖记录</text>
+    </view>
+  </view>
+
+  <!-- 结果弹窗 -->
+  <view class="result-modal" wx:if="{{showResult}}" catchtap="closeResult">
+    <view class="result-content" catchtap="">
+      <view class="result-icon" wx:if="{{result && result.is_win}}">🎉</view>
+      <view class="result-icon" wx:else>😔</view>
+      <view class="result-title">
+        <text wx:if="{{result && result.is_win}}">恭喜获得</text>
+        <text wx:else>很遗憾</text>
+      </view>
+      <view class="result-prize">{{result ? result.prize_name : ''}}</view>
+      <button class="result-btn" bindtap="closeResult">确定</button>
+    </view>
+  </view>
+</view>

@@ -27,6 +27,7 @@ Page({
     pageSize: 20,
     voiceStartY: 0,
     currentPlayingId: null,
+    recallTimeLimit: 120000,
     // 群信息
     memberList: [],
     announcement: '',
@@ -35,7 +36,17 @@ Page({
     showAnnouncementModal: false,
     editAnnouncementText: '',
     showMuteAction: false,
-    selectedMember: null
+    selectedMember: null,
+    // 定时公告
+    showSchedulePanel: false,
+    scheduleList: [],
+    scheduleTitle: '',
+    scheduleContent: '',
+    scheduleDate: '',
+    scheduleTime: '',
+    // 飞单风控警告弹窗
+    showAntiFraudModal: false,
+    antiFraudModalContent: ''
   },
 
   onLoad(options) {
@@ -156,8 +167,17 @@ Page({
       ...item,
       from_self: item.user_id === this.data.myUserId,
       playing: false,
-      sensitive_blocked: item.sensitive_blocked || false
+      sensitive_blocked: item.sensitive_blocked || false,
+      anti_fraud_risky: item.anti_fraud_risky || false,
+      file_size_text: item.file_size ? this.formatFileSize(item.file_size) : '',
+      show_asr: false
     };
+  },
+
+  formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + 'B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
   },
 
   getMessageTypeLabel(type) {
@@ -237,10 +257,16 @@ Page({
       group_id: this.data.groupId,
       content: text
     }).then((res) => {
+      if (res.anti_fraud_risky) {
+        this.showAntiFraudWarning(res.anti_fraud_level || 'warning');
+      }
       this.updateMessageStatus(tempMsgId, res);
     }).catch((err) => {
       if (err.code === 4001) {
         this.setMessageSensitiveBlocked(tempMsgId);
+      } else if (err.code === 4002) {
+        this.setMessageAntiFraudBlocked(tempMsgId);
+        this.showAntiFraudWarning(err.level || 'warning');
       } else {
         this.removeMessage(tempMsgId);
         wx.showToast({ title: '发送失败', icon: 'none' });
@@ -627,6 +653,237 @@ Page({
       return item;
     });
     this.setData({ messageList: list });
+  },
+
+  setMessageAntiFraudBlocked(msgId) {
+    const list = this.data.messageList.map(item => {
+      if (item.msg_id === msgId) {
+        return { ...item, anti_fraud_risky: true };
+      }
+      return item;
+    });
+    this.setData({ messageList: list });
+  },
+
+  onChooseFile() {
+    this.setData({ showMorePanel: false });
+    wx.chooseMessageFile({
+      count: 1,
+      type: 'file',
+      maxDuration: 5 * 1024 * 1024,
+      success: (res) => {
+        const file = res.tempFiles[0];
+        if (file.size > 5 * 1024 * 1024) {
+          wx.showToast({ title: '群文件不能超过5M', icon: 'none' });
+          return;
+        }
+        this.sendFile(file.path, file.name, file.size);
+      }
+    });
+  },
+
+  sendFile(filePath, fileName, fileSize) {
+    const tempMsgId = util.generateId();
+    const tempMsg = {
+      msg_id: tempMsgId,
+      type: 'file',
+      file_name: fileName,
+      file_size: fileSize,
+      file_size_text: this.formatFileSize(fileSize),
+      file_url: filePath,
+      from_self: true,
+      sending: true,
+      user_id: this.data.myUserId
+    };
+
+    this.setData({
+      messageList: [...this.data.messageList, tempMsg]
+    });
+    this.scrollToBottom();
+
+    const token = wx.getStorageSync('token') || '';
+    wx.uploadFile({
+      url: 'https://api.example.com/api/v1/group/upload_file',
+      filePath: filePath,
+      name: 'file',
+      formData: {
+        group_id: this.data.groupId,
+        file_name: fileName
+      },
+      header: {
+        'Authorization': 'Bearer ' + token
+      },
+      success: (res) => {
+        try {
+          const data = JSON.parse(res.data);
+          if (data.code === 0) {
+            request.post('/api/v1/group/send_file', {
+              group_id: this.data.groupId,
+              file_url: data.data.url,
+              file_name: fileName,
+              file_size: fileSize,
+              file_type: data.data.file_type || 'document'
+            }).then((res) => {
+              if (res.anti_fraud_risky) {
+                this.showAntiFraudWarning(res.anti_fraud_level || 'warning');
+              }
+              this.updateMessageStatus(tempMsgId, res);
+            }).catch(() => {
+              this.removeMessage(tempMsgId);
+              wx.showToast({ title: '发送失败', icon: 'none' });
+            });
+          } else {
+            this.removeMessage(tempMsgId);
+            wx.showToast({ title: data.msg || '上传失败', icon: 'none' });
+          }
+        } catch (e) {
+          this.removeMessage(tempMsgId);
+        }
+      },
+      fail: () => {
+        this.removeMessage(tempMsgId);
+        wx.showToast({ title: '网络异常', icon: 'none' });
+      }
+    });
+  },
+
+  onOpenFile(e) {
+    const msg = e.currentTarget.dataset.msg;
+    if (!msg.file_url) return;
+
+    wx.showLoading({ title: '加载中...' });
+    wx.downloadFile({
+      url: msg.file_url,
+      success: (res) => {
+        wx.hideLoading();
+        if (res.statusCode === 200) {
+          wx.openDocument({
+            filePath: res.tempFilePath,
+            showMenu: true,
+            fail: () => {
+              wx.showToast({ title: '打开失败', icon: 'none' });
+            }
+          });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '下载失败', icon: 'none' });
+      }
+    });
+  },
+
+  onManageAnnouncement() {
+    this.setData({ showMorePanel: false });
+    this.loadScheduleList();
+    this.setData({ showSchedulePanel: true });
+  },
+
+  onCloseSchedulePanel() {
+    this.setData({ showSchedulePanel: false });
+  },
+
+  loadScheduleList() {
+    request.get('/api/v1/group/announcement_schedule', {
+      group_id: this.data.groupId
+    }).then((res) => {
+      this.setData({ scheduleList: res.list || [] });
+    }).catch(() => {});
+  },
+
+  onScheduleTitleInput(e) {
+    this.setData({ scheduleTitle: e.detail.value });
+  },
+
+  onScheduleContentInput(e) {
+    this.setData({ scheduleContent: e.detail.value });
+  },
+
+  onScheduleDateChange(e) {
+    this.setData({ scheduleDate: e.detail.value });
+  },
+
+  onScheduleTimeChange(e) {
+    this.setData({ scheduleTime: e.detail.value });
+  },
+
+  onCreateSchedule() {
+    const title = this.data.scheduleTitle.trim();
+    const content = this.data.scheduleContent.trim();
+    const date = this.data.scheduleDate;
+    const time = this.data.scheduleTime;
+
+    if (!title) {
+      wx.showToast({ title: '请输入公告标题', icon: 'none' });
+      return;
+    }
+    if (!content) {
+      wx.showToast({ title: '请输入公告内容', icon: 'none' });
+      return;
+    }
+    if (!date || !time) {
+      wx.showToast({ title: '请选择发送时间', icon: 'none' });
+      return;
+    }
+
+    const scheduleTime = date + ' ' + time + ':00';
+
+    request.post('/api/v1/group/announcement_schedule', {
+      group_id: this.data.groupId,
+      title: title,
+      content: content,
+      schedule_time: scheduleTime
+    }).then(() => {
+      wx.showToast({ title: '创建成功', icon: 'success' });
+      this.setData({
+        scheduleTitle: '',
+        scheduleContent: '',
+        scheduleDate: '',
+        scheduleTime: ''
+      });
+      this.loadScheduleList();
+    }).catch(() => {
+      wx.showToast({ title: '创建失败', icon: 'none' });
+    });
+  },
+
+  onDeleteSchedule(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除这条定时公告吗？',
+      success: (res) => {
+        if (res.confirm) {
+          request.post('/api/v1/group/announcement_schedule/delete', {
+            id: id,
+            group_id: this.data.groupId
+          }).then(() => {
+            wx.showToast({ title: '已删除', icon: 'success' });
+            this.loadScheduleList();
+          }).catch(() => {
+            wx.showToast({ title: '删除失败', icon: 'none' });
+          });
+        }
+      }
+    });
+  },
+
+  showAntiFraudWarning(level) {
+    let content = '检测到您发送的内容可能存在风险，为保障您的权益，请在平台内完成交易。';
+    if (level === 'mute') {
+      content = '警告：您发送的内容违反平台规则，已被禁言，请遵守平台规定。';
+    } else if (level === 'ban') {
+      content = '严重警告：您多次发送违规内容，账号已被封禁，请联系客服处理。';
+    }
+
+    this.setData({
+      showAntiFraudModal: true,
+      antiFraudModalContent: content
+    });
+  },
+
+  onCloseAntiFraudModal() {
+    this.setData({ showAntiFraudModal: false });
   },
 
   removeMessage(msgId) {

@@ -15,6 +15,7 @@ use app\model\PlayerService;
 use app\model\Reward;
 use app\model\RiskControlLog;
 use app\model\User as UserModel;
+use app\service\MinorProtectService;
 use think\facade\Cache;
 use think\facade\Db;
 use think\facade\Log;
@@ -36,6 +37,8 @@ class Order extends BaseController
         $orderAmount   = $request->param('order_amount', '');
         $remark        = $request->param('remark', '');
         $paymentMethod = $request->param('payment_method', 'wechat');
+        $userCouponId  = $request->paramInt('user_coupon_id', 0);
+        $groupBuyId    = $request->paramInt('group_buy_id', 0);
 
         $error = $this->validateRequired([
             'player_service_id' => $playerServiceId,
@@ -57,6 +60,31 @@ class Order extends BaseController
 
         if ($user->getData('status') == UserModel::STATUS_DISABLED) {
             return $this->error('账号已被禁用', 403);
+        }
+
+        $complianceService = new \app\service\ComplianceService();
+        $checkContent = $gameName . ' ' . $remark;
+        $antiBoostingResult = $complianceService->checkContent($checkContent, 'order', 0, $userId);
+        if ($antiBoostingResult['blocked']) {
+            $matchedKeywords = array_column($antiBoostingResult['matched'], 'keyword');
+            return $this->error('订单内容包含违禁词：' . implode('、', $matchedKeywords) . '，请修改后重新提交', 4003);
+        }
+
+        $minorProtectService = new MinorProtectService();
+
+        $curfewCheck = $minorProtectService->checkCurfew($userId, 'order');
+        if (!$curfewCheck['pass']) {
+            return $this->error($curfewCheck['message'], 403);
+        }
+
+        $parentPermCheck = $minorProtectService->checkParentPermission($userId, 'order');
+        if (!$parentPermCheck['pass']) {
+            return $this->error($parentPermCheck['message'], 403);
+        }
+
+        $consumeCheck = $minorProtectService->checkConsumeLimit($userId, $orderAmount, 'order');
+        if (!$consumeCheck['pass']) {
+            return $this->error($consumeCheck['message'], 403);
         }
 
         // 检查打手服务是否存在且在线
@@ -93,6 +121,37 @@ class Order extends BaseController
             }
         }
 
+        // 优惠券抵扣计算
+        $discountAmount = '0';
+        $couponService = new \app\service\CouponService();
+        if ($userCouponId > 0) {
+            $discountAmount = $couponService->calculateDiscount($userCouponId, $orderAmount);
+            if (bc_comp($discountAmount, '0', 2) > 0 && bc_comp($discountAmount, $orderAmount, 2) > 0) {
+                $discountAmount = $orderAmount;
+            }
+        }
+
+        // 拼团价计算
+        $groupBuyDiscount = '0';
+        if ($groupBuyId > 0) {
+            $groupOrder = \app\model\GroupBuyOrder::find($groupBuyId);
+            if ($groupOrder && $groupOrder->getData('status') == \app\model\GroupBuyOrder::STATUS_PENDING) {
+                $activity = \app\model\GroupBuyActivity::find($groupOrder->getData('activity_id'));
+                if ($activity) {
+                    $groupPrice = (string)$activity->getData('group_price');
+                    if (bc_comp($groupPrice, $orderAmount, 2) < 0) {
+                        $groupBuyDiscount = bc_sub($orderAmount, $groupPrice, 2);
+                    }
+                }
+            }
+        }
+
+        $totalDiscount = bc_add($discountAmount, $groupBuyDiscount, 2);
+        $paidAmount = bc_sub($orderAmount, $totalDiscount, 2);
+        if (bccomp($paidAmount, '0', 2) < 0) {
+            $paidAmount = '0';
+        }
+
         // 使用事务创建订单
         $orderSn = generate_sn('OD');
         $orderId = 0;
@@ -106,10 +165,12 @@ class Order extends BaseController
                 'service_type_id' => $playerService->getData('service_type_id'),
                 'game_name'       => $gameName,
                 'order_amount'    => $orderAmount,
-                'paid_amount'     => $orderAmount,
-                'discount_amount' => '0',
+                'paid_amount'     => $paidAmount,
+                'discount_amount' => $totalDiscount,
                 'status'          => OrderModel::STATUS_PENDING,
                 'remark'          => $remark,
+                'user_coupon_id'  => $userCouponId,
+                'group_buy_id'    => $groupBuyId,
             ]);
 
             $orderId = $order->id;
@@ -316,6 +377,21 @@ class Order extends BaseController
             'create_time'  => date('Y-m-d H:i:s'),
         ]);
 
+        // 检查是否是首单并发放邀请奖励
+        try {
+            $orderCount = OrderModel::where('user_id', $userId)
+                ->where('status', OrderModel::STATUS_COMPLETED)
+                ->count();
+            if ($orderCount <= 1) {
+                $marketingService = new \app\service\MarketingService();
+                $marketingService->checkAndIssueInviteReward($userId, 'first_order', [
+                    'order_amount' => $order->getData('order_amount'),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('订单完成发放邀请奖励失败: ' . $e->getMessage());
+        }
+
         write_action_log('api_order_confirm', "用户 ID:{$userId} 确认完成订单 ID:{$id}");
 
         return $this->success(null, '订单已完成');
@@ -419,6 +495,23 @@ class Order extends BaseController
             return $this->error('只能对已完成或进行中的订单打赏');
         }
 
+        $minorProtectService = new MinorProtectService();
+
+        $curfewCheck = $minorProtectService->checkCurfew($userId, 'reward');
+        if (!$curfewCheck['pass']) {
+            return $this->error($curfewCheck['message'], 403);
+        }
+
+        $parentPermCheck = $minorProtectService->checkParentPermission($userId, 'reward');
+        if (!$parentPermCheck['pass']) {
+            return $this->error($parentPermCheck['message'], 403);
+        }
+
+        $consumeCheck = $minorProtectService->checkConsumeLimit($userId, $amount, 'reward');
+        if (!$consumeCheck['pass']) {
+            return $this->error($consumeCheck['message'], 403);
+        }
+
         // 检查是否已打赏
         $existReward = Reward::where('order_id', $orderId)->where('status', Reward::STATUS_SUCCESS)->find();
         if ($existReward) {
@@ -481,6 +574,359 @@ class Order extends BaseController
             ]);
         } catch (\Throwable $e) {
             Log::error('风控日志写入失败: ' . $e->getMessage());
+        }
+    }
+
+    public function orderTypes(Request $request)
+    {
+        try {
+            $orderTypeService = new \app\service\OrderTypeService();
+            $types = $orderTypeService->getEnabledTypes();
+            return $this->success($types);
+        } catch (\Throwable $e) {
+            Log::error('获取订单类型失败: ' . $e->getMessage());
+            return $this->error('获取失败', 500);
+        }
+    }
+
+    public function packageList(Request $request)
+    {
+        try {
+            $gameId = $request->paramInt('game_id', 0);
+            $type   = $request->param('type', '');
+            $orderTypeService = new \app\service\OrderTypeService();
+            $packages = $orderTypeService->getPackageList($gameId, $type);
+            return $this->success($packages);
+        } catch (\Throwable $e) {
+            Log::error('获取套餐列表失败: ' . $e->getMessage());
+            return $this->error('获取失败', 500);
+        }
+    }
+
+    public function gameList(Request $request)
+    {
+        try {
+            $orderTypeService = new \app\service\OrderTypeService();
+            $games = $orderTypeService->getGameList();
+            return $this->success($games);
+        } catch (\Throwable $e) {
+            Log::error('获取游戏列表失败: ' . $e->getMessage());
+            return $this->error('获取失败', 500);
+        }
+    }
+
+    public function createAppointment(Request $request)
+    {
+        $userId = request()->userId();
+        $playerId = $request->paramInt('player_id', 0);
+        $gameName = $request->param('game_name', '');
+        $orderAmount = $request->param('order_amount', '');
+        $appointTime = $request->param('appoint_time', '');
+        $remark = $request->param('remark', '');
+
+        $error = $this->validateRequired([
+            'order_amount'  => $orderAmount,
+            'appoint_time'  => $appointTime,
+        ], ['order_amount', 'appoint_time']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        try {
+            $orderService = new \app\service\OrderService();
+            $result = $orderService->createAppointmentOrder($userId, [
+                'player_id'      => $playerId,
+                'game_name'      => $gameName,
+                'order_amount'   => $orderAmount,
+                'appoint_time'   => $appointTime,
+                'service_type_id'=> $request->paramInt('service_type_id', 0),
+                'remark'         => $remark,
+            ]);
+
+            write_action_log('api_order_appointment_create', "用户 ID:{$userId} 创建预约单: {$result['order_sn']}");
+
+            return $this->success($result, '预约单创建成功');
+        } catch (\Throwable $e) {
+            Log::error('创建预约单失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function createPackageOrder(Request $request)
+    {
+        $userId = request()->userId();
+        $packageId = $request->paramInt('package_id', 0);
+        $playerId = $request->paramInt('player_id', 0);
+        $remark = $request->param('remark', '');
+
+        if ($packageId <= 0) {
+            return $this->error('套餐ID无效');
+        }
+
+        try {
+            $orderService = new \app\service\OrderService();
+            $result = $orderService->createPackageOrder($userId, $packageId, [
+                'player_id' => $playerId,
+                'remark'    => $remark,
+            ]);
+
+            write_action_log('api_order_package_create', "用户 ID:{$userId} 创建套餐订单: {$result['order_sn']}");
+
+            return $this->success($result, '套餐订单创建成功');
+        } catch (\Throwable $e) {
+            Log::error('创建套餐订单失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function createDesignatedOrder(Request $request)
+    {
+        $userId = request()->userId();
+        $playerId = $request->paramInt('player_id', 0);
+        $gameName = $request->param('game_name', '');
+        $orderAmount = $request->param('order_amount', '');
+        $orderType = $request->param('order_type', OrderModel::TYPE_INSTANT);
+        $remark = $request->param('remark', '');
+
+        $error = $this->validateRequired([
+            'player_id'    => $playerId,
+            'order_amount' => $orderAmount,
+        ], ['player_id', 'order_amount']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        try {
+            $orderService = new \app\service\OrderService();
+            $result = $orderService->createOrderByType($userId, [
+                'player_id'      => $playerId,
+                'game_name'      => $gameName,
+                'order_amount'   => $orderAmount,
+                'order_type'     => $orderType,
+                'service_type_id'=> $request->paramInt('service_type_id', 0),
+                'remark'         => $remark,
+            ]);
+
+            write_action_log('api_order_designated_create', "用户 ID:{$userId} 指定打手下单: player_id={$playerId}");
+
+            return $this->success($result, '指定打手下单成功');
+        } catch (\Throwable $e) {
+            Log::error('指定打手下单失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function serviceTimer(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+
+        if ($orderId <= 0) {
+            return $this->error('订单ID无效');
+        }
+
+        try {
+            $order = OrderModel::where('id', $orderId)
+                ->where(function ($q) use ($userId) {
+                    $q->where('user_id', $userId)->whereOr('player_id', $userId);
+                })
+                ->find();
+
+            if (!$order) {
+                return $this->error('订单不存在', 404);
+            }
+
+            $orderService = new \app\service\OrderService();
+            $duration = $orderService->getServiceDuration($orderId);
+
+            $timer = \app\model\OrderServiceTimer::byOrder($orderId)->find();
+
+            return $this->success([
+                'order_id'      => $orderId,
+                'total_seconds' => $duration,
+                'status'        => $timer ? $timer->status : 0,
+                'start_time'    => $timer ? $timer->start_time : null,
+                'pause_time'    => $timer ? $timer->pause_time : null,
+                'formatted'     => $this->formatDuration($duration),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('获取服务计时失败: ' . $e->getMessage());
+            return $this->error('获取失败', 500);
+        }
+    }
+
+    private function formatDuration(int $seconds): string
+    {
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        $secs = $seconds % 60;
+        return sprintf('%02d:%02d:%02d', $hours, $minutes, $secs);
+    }
+
+    public function refundCalculate(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+
+        if ($orderId <= 0) {
+            return $this->error('订单ID无效');
+        }
+
+        try {
+            $order = OrderModel::where('user_id', $userId)->where('id', $orderId)->find();
+            if (!$order) {
+                return $this->error('订单不存在', 404);
+            }
+
+            $orderService = new \app\service\OrderService();
+            $result = $orderService->calculateRefundAmount($orderId);
+
+            return $this->success($result);
+        } catch (\Throwable $e) {
+            Log::error('计算退款失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function evidenceUpload(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+        $type = $request->param('type', '');
+        $fileUrl = $request->param('file_url', '');
+        $description = $request->param('description', '');
+
+        $error = $this->validateRequired([
+            'order_id' => $orderId,
+            'type'     => $type,
+            'file_url' => $fileUrl,
+        ], ['order_id', 'type', 'file_url']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        $validTypes = ['gameplay_video', 'rank_screenshot', 'other'];
+        if (!in_array($type, $validTypes)) {
+            return $this->error('无效的凭证类型');
+        }
+
+        try {
+            $order = OrderModel::where('id', $orderId)
+                ->where(function ($q) use ($userId) {
+                    $q->where('user_id', $userId)->whereOr('player_id', $userId);
+                })
+                ->find();
+
+            if (!$order) {
+                return $this->error('订单不存在', 404);
+            }
+
+            if (!in_array($order->getData('status'), [OrderModel::STATUS_PLAYING, OrderModel::STATUS_COMPLETED])) {
+                return $this->error('当前订单状态不可上传凭证');
+            }
+
+            $orderService = new \app\service\OrderService();
+            $evidenceId = $orderService->uploadEvidence($orderId, $userId, $type, $fileUrl, $description);
+
+            write_action_log('api_evidence_upload', "用户 ID:{$userId} 上传凭证: order_id={$orderId}, type={$type}");
+
+            return $this->success(['evidence_id' => $evidenceId], '上传成功');
+        } catch (\Throwable $e) {
+            Log::error('上传凭证失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function evidenceList(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+
+        if ($orderId <= 0) {
+            return $this->error('订单ID无效');
+        }
+
+        try {
+            $order = OrderModel::where('id', $orderId)
+                ->where(function ($q) use ($userId) {
+                    $q->where('user_id', $userId)->whereOr('player_id', $userId);
+                })
+                ->find();
+
+            if (!$order) {
+                return $this->error('订单不存在', 404);
+            }
+
+            $orderService = new \app\service\OrderService();
+            $list = $orderService->getEvidenceList($orderId);
+
+            return $this->success($list);
+        } catch (\Throwable $e) {
+            Log::error('获取凭证列表失败: ' . $e->getMessage());
+            return $this->error('获取失败', 500);
+        }
+    }
+
+    public function bidList(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+
+        if ($orderId <= 0) {
+            return $this->error('订单ID无效');
+        }
+
+        try {
+            $order = OrderModel::where('user_id', $userId)->where('id', $orderId)->find();
+            if (!$order) {
+                return $this->error('订单不存在', 404);
+            }
+
+            $bidService = new \app\service\OrderBidService();
+            $bids = $bidService->getBidList($orderId);
+            $highest = $bidService->getHighestBid($orderId);
+
+            return $this->success([
+                'list'           => $bids,
+                'highest_price'  => fen_to_yuan($highest),
+                'highest_price_fen' => $highest,
+                'bidder_count'   => count($bids),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('获取竞价列表失败: ' . $e->getMessage());
+            return $this->error('获取失败', 500);
+        }
+    }
+
+    public function bidSelectWinner(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+        $playerId = $request->paramInt('player_id', 0);
+
+        $error = $this->validateRequired([
+            'order_id'  => $orderId,
+            'player_id' => $playerId,
+        ], ['order_id', 'player_id']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        try {
+            $order = OrderModel::where('user_id', $userId)->where('id', $orderId)->find();
+            if (!$order) {
+                return $this->error('订单不存在', 404);
+            }
+
+            $bidService = new \app\service\OrderBidService();
+            $bidService->selectWinner($orderId, $playerId);
+
+            write_action_log('api_bid_select_winner', "用户 ID:{$userId} 选定中标者: order_id={$orderId}, player_id={$playerId}");
+
+            return $this->success(null, '选定成功');
+        } catch (\Throwable $e) {
+            Log::error('选定中标者失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
         }
     }
 }

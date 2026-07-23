@@ -11,7 +11,7 @@ Page({
     orderSn: '',
     myAvatar: '',
     myUserId: '',
-    myRole: '', // player 或 cs
+    myRole: '',
     messageList: [],
     inputText: '',
     inputMode: 'text',
@@ -25,12 +25,20 @@ Page({
     pageSize: 20,
     voiceStartY: 0,
     currentPlayingId: null,
+    recallTimeLimit: 300000,
     // 介入相关
-    interveneStatus: 0, // 0未介入, 1介入中, 2已解除
-    showInterveneBanner: false, // 客服端红色警示横幅
-    interveneBannerText: '', // 横幅文案
-    autoIntervene: false, // 是否关键词自动介入
-    subscribeTmplIds: 'TEMPLATE_ID_PLACEHOLDER_04'
+    interveneStatus: 0,
+    showInterveneBanner: false,
+    interveneBannerText: '',
+    autoIntervene: false,
+    subscribeTmplIds: 'TEMPLATE_ID_PLACEHOLDER_04',
+    // 举证上传
+    showEvidenceModal: false,
+    evidenceDescription: '',
+    evidenceFileList: [],
+    // 飞单风控警告弹窗
+    showAntiFraudModal: false,
+    antiFraudModalContent: ''
   },
 
   onLoad(options) {
@@ -176,8 +184,18 @@ Page({
       ...item,
       from_self: item.user_id === this.data.myUserId,
       playing: false,
-      sensitive_blocked: item.sensitive_blocked || false
+      sensitive_blocked: item.sensitive_blocked || false,
+      anti_fraud_risky: item.anti_fraud_risky || false,
+      file_size_text: item.file_size ? this.formatFileSize(item.file_size) : '',
+      asr_text: item.asr_text || '',
+      show_asr: false
     };
+  },
+
+  formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + 'B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
   },
 
   scrollToBottom() {
@@ -251,10 +269,16 @@ Page({
       session_id: this.data.sessionId,
       content: text
     }).then((res) => {
+      if (res.anti_fraud_risky) {
+        this.showAntiFraudWarning(res.anti_fraud_level || 'warning');
+      }
       this.updateMessageStatus(tempMsgId, res);
     }).catch((err) => {
       if (err.code === 4001) {
         this.setMessageSensitiveBlocked(tempMsgId);
+      } else if (err.code === 4002) {
+        this.setMessageAntiFraudBlocked(tempMsgId);
+        this.showAntiFraudWarning(err.level || 'warning');
       } else {
         this.removeMessage(tempMsgId);
         wx.showToast({ title: '发送失败', icon: 'none' });
@@ -565,6 +589,20 @@ Page({
     });
   },
 
+  onApplyArbitration() {
+    wx.showModal({
+      title: '申请仲裁',
+      content: '进入仲裁流程后，将由平台仲裁员根据举证材料和规则进行判责，确定要申请仲裁吗？',
+      success: (res) => {
+        if (res.confirm) {
+          wx.navigateTo({
+            url: '/pages/arbitration/apply?order_id=' + this.data.orderSn + '&session_id=' + this.data.sessionId
+          });
+        }
+      }
+    });
+  },
+
   setMessageRecalled(msgId) {
     const list = this.data.messageList.map(item => {
       if (item.msg_id === msgId) {
@@ -583,6 +621,247 @@ Page({
       return item;
     });
     this.setData({ messageList: list });
+  },
+
+  setMessageAntiFraudBlocked(msgId) {
+    const list = this.data.messageList.map(item => {
+      if (item.msg_id === msgId) {
+        return { ...item, anti_fraud_risky: true };
+      }
+      return item;
+    });
+    this.setData({ messageList: list });
+  },
+
+  onToggleAsr(e) {
+    const msg = e.currentTarget.dataset.msg;
+    const list = this.data.messageList.map(item => {
+      if (item.msg_id === msg.msg_id) {
+        return { ...item, show_asr: !item.show_asr };
+      }
+      return item;
+    });
+    this.setData({ messageList: list });
+  },
+
+  onChooseFile() {
+    this.setData({ showMorePanel: false });
+    wx.chooseMessageFile({
+      count: 1,
+      type: 'file',
+      maxDuration: 10 * 1024 * 1024,
+      success: (res) => {
+        const file = res.tempFiles[0];
+        if (file.size > 10 * 1024 * 1024) {
+          wx.showToast({ title: '文件不能超过10M', icon: 'none' });
+          return;
+        }
+        this.sendFile(file.path, file.name, file.size);
+      }
+    });
+  },
+
+  sendFile(filePath, fileName, fileSize) {
+    const tempMsgId = util.generateId();
+    const tempMsg = {
+      msg_id: tempMsgId,
+      type: 'file',
+      file_name: fileName,
+      file_size: fileSize,
+      file_size_text: this.formatFileSize(fileSize),
+      file_url: filePath,
+      from_self: true,
+      sending: true,
+      user_id: this.data.myUserId
+    };
+
+    this.setData({
+      messageList: [...this.data.messageList, tempMsg]
+    });
+    this.scrollToBottom();
+
+    const token = wx.getStorageSync('token') || '';
+    wx.uploadFile({
+      url: 'https://api.example.com/api/v1/after_sale/upload_file',
+      filePath: filePath,
+      name: 'file',
+      formData: {
+        session_id: this.data.sessionId,
+        file_name: fileName
+      },
+      header: {
+        'Authorization': 'Bearer ' + token
+      },
+      success: (res) => {
+        try {
+          const data = JSON.parse(res.data);
+          if (data.code === 0) {
+            request.post('/api/v1/after_sale/send_file', {
+              session_id: this.data.sessionId,
+              file_url: data.data.url,
+              file_name: fileName,
+              file_size: fileSize,
+              file_type: data.data.file_type || 'document'
+            }).then((res) => {
+              if (res.anti_fraud_risky) {
+                this.showAntiFraudWarning(res.anti_fraud_level || 'warning');
+              }
+              this.updateMessageStatus(tempMsgId, res);
+            }).catch(() => {
+              this.removeMessage(tempMsgId);
+              wx.showToast({ title: '发送失败', icon: 'none' });
+            });
+          } else {
+            this.removeMessage(tempMsgId);
+            wx.showToast({ title: data.msg || '上传失败', icon: 'none' });
+          }
+        } catch (e) {
+          this.removeMessage(tempMsgId);
+        }
+      },
+      fail: () => {
+        this.removeMessage(tempMsgId);
+        wx.showToast({ title: '网络异常', icon: 'none' });
+      }
+    });
+  },
+
+  onOpenFile(e) {
+    const msg = e.currentTarget.dataset.msg;
+    if (!msg.file_url) return;
+
+    wx.showLoading({ title: '加载中...' });
+    wx.downloadFile({
+      url: msg.file_url,
+      success: (res) => {
+        wx.hideLoading();
+        if (res.statusCode === 200) {
+          wx.openDocument({
+            filePath: res.tempFilePath,
+            showMenu: true,
+            fail: () => {
+              wx.showToast({ title: '打开失败', icon: 'none' });
+            }
+          });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '下载失败', icon: 'none' });
+      }
+    });
+  },
+
+  onUploadEvidence() {
+    this.setData({
+      showMorePanel: false,
+      showEvidenceModal: true,
+      evidenceDescription: '',
+      evidenceFileList: []
+    });
+  },
+
+  onCloseEvidenceModal() {
+    this.setData({ showEvidenceModal: false });
+  },
+
+  onEvidenceDescInput(e) {
+    this.setData({ evidenceDescription: e.detail.value });
+  },
+
+  onChooseEvidenceFile() {
+    wx.chooseMessageFile({
+      count: 5 - this.data.evidenceFileList.length,
+      type: 'all',
+      success: (res) => {
+        const newFiles = res.tempFiles.map(f => ({
+          name: f.name,
+          path: f.path,
+          size: f.size,
+          size_text: this.formatFileSize(f.size)
+        }));
+        this.setData({
+          evidenceFileList: [...this.data.evidenceFileList, ...newFiles].slice(0, 5)
+        });
+      }
+    });
+  },
+
+  onRemoveEvidenceFile(e) {
+    const index = e.currentTarget.dataset.index;
+    const list = [...this.data.evidenceFileList];
+    list.splice(index, 1);
+    this.setData({ evidenceFileList: list });
+  },
+
+  onSubmitEvidence() {
+    const fileList = this.data.evidenceFileList;
+    if (fileList.length === 0) {
+      wx.showToast({ title: '请至少上传一个凭证文件', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '提交中...' });
+
+    const uploadPromises = fileList.map(file => {
+      return new Promise((resolve, reject) => {
+        const token = wx.getStorageSync('token') || '';
+        wx.uploadFile({
+          url: 'https://api.example.com/api/v1/after_sale/upload_evidence',
+          filePath: file.path,
+          name: 'file',
+          formData: {
+            session_id: this.data.sessionId,
+            description: this.data.evidenceDescription
+          },
+          header: {
+            'Authorization': 'Bearer ' + token
+          },
+          success: (res) => {
+            try {
+              const data = JSON.parse(res.data);
+              if (data.code === 0) {
+                resolve(data.data);
+              } else {
+                reject(data.msg);
+              }
+            } catch (e) {
+              reject(e);
+            }
+          },
+          fail: (err) => {
+            reject(err);
+          }
+        });
+      });
+    });
+
+    Promise.all(uploadPromises).then(() => {
+      wx.hideLoading();
+      wx.showToast({ title: '举证提交成功', icon: 'success' });
+      this.setData({ showEvidenceModal: false });
+    }).catch(() => {
+      wx.hideLoading();
+      wx.showToast({ title: '提交失败，请重试', icon: 'none' });
+    });
+  },
+
+  showAntiFraudWarning(level) {
+    let content = '检测到您发送的内容可能存在风险，为保障您的权益，请在平台内完成交易。';
+    if (level === 'mute') {
+      content = '警告：您发送的内容违反平台规则，已被禁言，请遵守平台规定。';
+    } else if (level === 'ban') {
+      content = '严重警告：您多次发送违规内容，账号已被封禁，请联系客服处理。';
+    }
+
+    this.setData({
+      showAntiFraudModal: true,
+      antiFraudModalContent: content
+    });
+  },
+
+  onCloseAntiFraudModal() {
+    this.setData({ showAntiFraudModal: false });
   },
 
   removeMessage(msgId) {

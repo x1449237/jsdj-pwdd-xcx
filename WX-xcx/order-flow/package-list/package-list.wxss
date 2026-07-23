@@ -1,0 +1,169 @@
+.package-list-page {
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+
+.game-tabs {
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tabs-scroll {
+  white-space: nowrap;
+}
+
+.tabs-inner {
+  display: inline-flex;
+  padding: 0 24rpx;
+}
+
+.tab-item {
+  padding: 24rpx 32rpx;
+  font-size: 28rpx;
+  color: #666;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.tab-item.active {
+  color: #ff6b35;
+  font-weight: 600;
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48rpx;
+  height: 6rpx;
+  background: #ff6b35;
+  border-radius: 3rpx;
+}
+
+.package-content {
+  padding: 24rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 16rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.package-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24rpx;
+}
+
+.package-card {
+  width: calc(50% - 12rpx);
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+.package-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12rpx;
+}
+
+.package-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.discount-tag {
+  background: linear-gradient(135deg, #ff6b35, #ff8f5e);
+  color: #fff;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+  margin-left: 8rpx;
+  flex-shrink: 0;
+}
+
+.package-type {
+  margin-bottom: 12rpx;
+}
+
+.type-tag {
+  display: inline-block;
+  font-size: 22rpx;
+  color: #409eff;
+  background: #ecf5ff;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.type-games {
+  color: #67c23a;
+  background: #f0f9eb;
+}
+
+.package-desc {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 16rpx;
+}
+
+.package-price {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 20rpx;
+}
+
+.price-symbol {
+  font-size: 24rpx;
+  color: #ff6b35;
+  font-weight: 600;
+}
+
+.price-value {
+  font-size: 40rpx;
+  color: #ff6b35;
+  font-weight: 700;
+  margin: 0 4rpx;
+}
+
+.original-price {
+  font-size: 22rpx;
+  color: #ccc;
+  text-decoration: line-through;
+}
+
+.package-btn {
+  width: 100%;
+  height: 56rpx;
+  line-height: 56rpx;
+  text-align: center;
+  background: linear-gradient(135deg, #ff6b35, #ff8f5e);
+  color: #fff;
+  font-size: 26rpx;
+  border-radius: 28rpx;
+}

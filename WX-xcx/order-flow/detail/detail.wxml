@@ -6,6 +6,19 @@
       <text class="status-desc">{{orderInfo.statusDesc}}</text>
     </view>
 
+    <!-- 服务计时 -->
+    <view class="service-timer" wx:if="{{serviceTimer && orderInfo.status === 2}}">
+      <view class="timer-icon">⏱️</view>
+      <view class="timer-info">
+        <text class="timer-label">服务进行中</text>
+        <text class="timer-duration">{{serviceDurationText}}</text>
+      </view>
+      <view class="timer-status">
+        <text class="status-dot"></text>
+        <text class="status-text">计时中</text>
+      </view>
+    </view>
+
     <view class="timeline">
       <view
         wx:for="{{timelineList}}"
@@ -56,6 +69,44 @@
       <view class="info-row" wx:if="{{orderInfo.remark}}">
         <text class="row-label">备注</text>
         <text class="row-value">{{orderInfo.remark}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 履约凭证 -->
+  <view class="section">
+    <view class="section-title">
+      <text>履约凭证</text>
+      <text class="upload-btn" wx:if="{{isPlayer && orderInfo.status === 2}}" bindtap="onUploadEvidence">+ 上传</text>
+    </view>
+    <view class="evidence-card">
+      <view wx:if="{{evidenceList.length === 0}}" class="empty-evidence">
+        <text class="empty-icon">📷</text>
+        <text class="empty-text">暂无凭证</text>
+      </view>
+      <view class="evidence-list" wx:else>
+        <view 
+          wx:for="{{evidenceList}}" 
+          wx:key="id"
+          class="evidence-item"
+          bindtap="onPreviewImage"
+          data-url="{{item.file_url}}"
+        >
+          <image 
+            wx:if="{{item.type !== 'gameplay_video'}}" 
+            class="evidence-image" 
+            src="{{item.file_url}}" 
+            mode="aspectFill"
+          ></image>
+          <view wx:else class="evidence-video">
+            <text class="video-icon">🎬</text>
+            <text class="video-name">录屏视频</text>
+          </view>
+          <view class="evidence-info">
+            <text class="evidence-type">{{item.type_text}}</text>
+            <text class="evidence-time">{{item.create_time_text}}</text>
+          </view>
+        </view>
       </view>
     </view>
   </view>

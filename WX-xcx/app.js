@@ -1,5 +1,6 @@
 const auth = require('./utils/auth');
 const websocket = require('./utils/websocket');
+const request = require('./utils/request');
 
 App({
   globalData: {
@@ -21,6 +22,7 @@ App({
       this.globalData.token = token;
       this.globalData.isLogin = true;
       websocket.connect();
+      this.checkAgreementVersions();
     }
   },
 
@@ -32,6 +34,51 @@ App({
 
   onHide() {
     websocket.close();
+  },
+
+  checkAgreementVersions() {
+    const userInfo = wx.getStorageSync('user_info');
+    if (!userInfo || !userInfo.role) return;
+
+    const role = userInfo.role;
+    const agreementTypes = ['user_service', 'privacy'];
+    if (role === 'player') {
+      agreementTypes.push('player_entry');
+    } else if (role === 'club') {
+      agreementTypes.push('club_entry');
+    }
+
+    let pendingAgreements = [];
+    let checkedCount = 0;
+
+    agreementTypes.forEach(type => {
+      const signedKey = 'agreement_' + role + '_' + type + '_version';
+      const signedVersion = wx.getStorageSync(signedKey);
+
+      request.get('/api/v1/compliance/agreement/latest', {
+        role: role,
+        agreement_type: type
+      }).then(res => {
+        if (res.version && res.version !== signedVersion) {
+          pendingAgreements.push({
+            type: type,
+            version: res.version
+          });
+        }
+        checkedCount++;
+        if (checkedCount === agreementTypes.length && pendingAgreements.length > 0) {
+          this.showAgreementSignPage(role, pendingAgreements[0].type);
+        }
+      }).catch(() => {
+        checkedCount++;
+      });
+    });
+  },
+
+  showAgreementSignPage(role, type) {
+    wx.navigateTo({
+      url: '/pages/agreement/sign?role=' + role + '&type=' + type + '&force=1'
+    });
   },
 
   getSystemInfo() {

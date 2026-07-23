@@ -1,0 +1,213 @@
+.recharge-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 160rpx;
+}
+
+.balance-card {
+  background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+  margin: 20rpx 30rpx;
+  padding: 50rpx 40rpx;
+  border-radius: 20rpx;
+  color: #fff;
+  position: relative;
+}
+
+.balance-label {
+  font-size: 28rpx;
+  opacity: 0.9;
+}
+
+.balance-value {
+  margin-top: 16rpx;
+  display: flex;
+  align-items: baseline;
+}
+
+.balance-value .symbol {
+  font-size: 32rpx;
+  margin-right: 8rpx;
+}
+
+.balance-value .amount {
+  font-size: 64rpx;
+  font-weight: bold;
+}
+
+.balance-link {
+  position: absolute;
+  right: 40rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 26rpx;
+  display: flex;
+  align-items: center;
+  opacity: 0.9;
+}
+
+.balance-link .arrow {
+  margin-left: 8rpx;
+  font-size: 32rpx;
+}
+
+.recharge-section,
+.tips-section {
+  background: #fff;
+  margin: 20rpx 30rpx;
+  padding: 30rpx;
+  border-radius: 16rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 30rpx;
+}
+
+.activity-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.activity-item {
+  width: calc((100% - 40rpx) / 3);
+  background: #f8f8f8;
+  border-radius: 12rpx;
+  padding: 30rpx 10rpx;
+  text-align: center;
+  position: relative;
+  border: 2rpx solid transparent;
+  box-sizing: border-box;
+}
+
+.activity-item.active {
+  border-color: #e94560;
+  background: #fff5f7;
+}
+
+.activity-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.activity-amount .symbol {
+  font-size: 24rpx;
+  color: #e94560;
+  margin-right: 4rpx;
+}
+
+.activity-amount .num {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #e94560;
+}
+
+.activity-bonus {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #ff6b6b;
+  background: #ffe8ed;
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+}
+
+.activity-name {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.check-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40rpx;
+  height: 40rpx;
+  background: #e94560;
+  color: #fff;
+  font-size: 24rpx;
+  line-height: 40rpx;
+  text-align: center;
+  border-radius: 0 12rpx 0 12rpx;
+}
+
+.tips-content {
+  padding: 0 10rpx;
+}
+
+.tip-item {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  line-height: 2;
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  padding: 20rpx 30rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.06);
+}
+
+.pay-info {
+  display: flex;
+  align-items: baseline;
+}
+
+.pay-label {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.pay-amount {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #e94560;
+}
+
+.recharge-btn {
+  width: 240rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+  color: #fff;
+  border-radius: 40rpx;
+  font-size: 30rpx;
+  padding: 0;
+}
+
+.recharge-btn::after {
+  border: none;
+}
+
+.empty-tip {
+  padding: 200rpx 0;
+  text-align: center;
+}
+
+.empty-text {
+  color: #999;
+  font-size: 28rpx;
+}
+
+.login-btn {
+  margin-top: 30rpx;
+  width: 200rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  background: #e94560;
+  color: #fff;
+  border-radius: 36rpx;
+  font-size: 28rpx;
+}

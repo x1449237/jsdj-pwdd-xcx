@@ -5,6 +5,7 @@
       <v-badge badge-type="{{club.badge_type}}"></v-badge>
     </view>
     <text class="club-type-label">{{club.badge_type === 'blue_v' ? '企业级俱乐部' : '个人级俱乐部'}}</text>
+    <text class="club-abbr">缩写：{{club.abbreviation}}</text>
   </view>
 
   <view class="stats-section">
@@ -16,6 +17,10 @@
       <text class="stat-value">{{club.up_master_count || 0}}</text>
       <text class="stat-label">UP主</text>
     </view>
+    <view class="stat-item">
+      <text class="stat-value">{{club.member_count || 0}}</text>
+      <text class="stat-label">成员</text>
+    </view>
   </view>
 
   <view class="founder-section" wx:if="{{club.founder}}">
@@ -25,6 +30,100 @@
       <view class="founder-info">
         <text class="founder-name">{{club.founder.nickname}}</text>
         <text class="founder-id">ID: {{club.founder.id}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="action-bar" wx:if="{{club.my_role}}">
+    <button class="btn-manage" bindtap="goManage">进入管理端</button>
+  </view>
+  <view class="action-bar" wx:else>
+    <button class="btn-join" bindtap="goJoinApply">申请加入</button>
+  </view>
+
+  <view class="tab-section">
+    <scroll-view class="tab-bar" scroll-x>
+      <view
+        class="tab-item {{activeTab === item.key ? 'active' : ''}}"
+        wx:for="{{tabs}}"
+        wx:key="key"
+        bindtap="onTabChange"
+        data-key="{{item.key}}"
+      >
+        {{item.label}}
+      </view>
+    </scroll-view>
+
+    <view class="tab-content">
+      <view class="tab-pane" wx:if="{{activeTab === 'announcement'}}">
+        <view class="announcement-list" wx:if="{{club.announcements && club.announcements.length > 0}}">
+          <view class="announcement-item" wx:for="{{club.announcements}}" wx:key="id">
+            <view class="announcement-tag" wx:if="{{item.is_top}}">置顶</view>
+            <view class="announcement-title">{{item.title}}</view>
+            <view class="announcement-content" wx:if="{{item.content}}">{{item.content}}</view>
+            <view class="announcement-time">{{item.create_time}}</view>
+          </view>
+        </view>
+        <view class="empty-tab" wx:else>暂无公告</view>
+      </view>
+
+      <view class="tab-pane" wx:if="{{activeTab === 'coupon'}}">
+        <view class="coupon-list" wx:if="{{club.coupons && club.coupons.length > 0}}">
+          <view class="coupon-mini" wx:for="{{club.coupons}}" wx:key="id">
+            <view class="coupon-mini-left">
+              <text class="coupon-mini-value">¥{{item.value_yuan}}</text>
+              <text class="coupon-mini-condition" wx:if="{{item.min_amount > 0}}">满{{item.min_amount_yuan}}用</text>
+              <text class="coupon-mini-condition" wx:else>无门槛</text>
+            </view>
+            <view class="coupon-mini-right">
+              <text class="coupon-mini-name">{{item.name}}</text>
+              <text class="coupon-mini-time">{{item.start_time}}至{{item.end_time}}</text>
+              <button
+                wx:if="{{item.status === 1 && item.used_count < item.total_count}}"
+                class="btn-receive-mini"
+                size="mini"
+                bindtap="receiveCoupon"
+                data-id="{{item.id}}"
+              >领取</button>
+            </view>
+          </view>
+        </view>
+        <view class="empty-tab" wx:else>暂无优惠券</view>
+      </view>
+
+      <view class="tab-pane" wx:if="{{activeTab === 'dynamic'}}">
+        <view class="dynamic-mini-list" wx:if="{{club.dynamics && club.dynamics.length > 0}}">
+          <view class="dynamic-mini-item" wx:for="{{club.dynamics}}" wx:key="id">
+            <view class="dynamic-mini-header">
+              <image class="dynamic-mini-avatar" src="{{item.avatar || '/images/default-avatar.png'}}" mode="aspectFill" />
+              <view class="dynamic-mini-info">
+                <text class="dynamic-mini-nick">{{item.nickname || '用户' + item.player_user_id}}</text>
+                <text class="dynamic-mini-time">{{item.create_time}}</text>
+              </view>
+            </view>
+            <view class="dynamic-mini-title" wx:if="{{item.title}}">{{item.title}}</view>
+            <view class="dynamic-mini-content" wx:if="{{item.content}}">{{item.content}}</view>
+            <view class="dynamic-mini-footer">
+              <text>👍 {{item.like_count || 0}}</text>
+              <text>👁 {{item.view_count || 0}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="empty-tab" wx:else>暂无动态</view>
+        <view class="more-btn" wx:if="{{club.dynamics && club.dynamics.length > 0}}">
+          <navigator url="/pages/club/dynamic/list?id={{club.id}}">查看更多动态 ></navigator>
+        </view>
+      </view>
+
+      <view class="tab-pane" wx:if="{{activeTab === 'branch'}}">
+        <view class="branch-list" wx:if="{{club.branches && club.branches.length > 0}}">
+          <view class="branch-item" wx:for="{{club.branches}}" wx:key="id">
+            <view class="branch-name">{{item.name}}</view>
+            <view class="branch-game">游戏ID：{{item.game_id}}</view>
+            <view class="branch-manager">店长：{{item.manager_nickname || '未设置'}}</view>
+          </view>
+        </view>
+        <view class="empty-tab" wx:else>暂无分店</view>
       </view>
     </view>
   </view>

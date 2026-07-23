@@ -52,6 +52,41 @@ class UserVBadge extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
+    public function members()
+    {
+        return $this->hasMany(ClubMember::class, 'club_id', 'id');
+    }
+
+    public function announcements()
+    {
+        return $this->hasMany(ClubAnnouncement::class, 'club_id', 'id')->order('is_top', 'desc')->order('create_time', 'desc');
+    }
+
+    public function dailyStats()
+    {
+        return $this->hasMany(ClubDailyStat::class, 'club_id', 'id');
+    }
+
+    public function coupons()
+    {
+        return $this->hasMany(ClubCoupon::class, 'club_id', 'id');
+    }
+
+    public function dynamics()
+    {
+        return $this->hasMany(ClubDynamic::class, 'club_id', 'id');
+    }
+
+    public function branches()
+    {
+        return $this->hasMany(ClubBranch::class, 'club_id', 'id');
+    }
+
+    public function internalOrders()
+    {
+        return $this->hasMany(ClubInternalOrder::class, 'club_id', 'id');
+    }
+
     public function scopeActive($query)
     {
         $query->where('is_active', 1)

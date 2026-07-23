@@ -68,4 +68,48 @@ return [
 
     // 默认缓存标签
     'default_tag' => 'default',
+
+    // 分层缓存配置
+    'layers' => [
+        'permanent' => [
+            'store' => 'redis',
+            'expire' => 0,
+            'key_prefix' => 'perm:',
+        ],
+        'temp' => [
+            'store' => 'redis',
+            'expire' => 3600,
+            'key_prefix' => 'temp:',
+        ],
+    ],
+
+    // 缓存保护配置
+    'protection' => [
+        'breakdown' => [
+            'enable' => true,
+            'mutex_ttl' => 10,
+            'null_value_ttl' => 60,
+        ],
+        'avalanche' => [
+            'enable' => true,
+            'random_offset' => 300,
+            'stagger_levels' => 3,
+        ],
+        'penetration' => [
+            'enable' => true,
+            'bloom_filter' => [
+                'enable' => false,
+                'size' => 100000,
+                'hash_count' => 4,
+            ],
+            'param_validate' => true,
+        ],
+    ],
+
+    // 缓存命中率统计
+    'hit_stats' => [
+        'enable' => true,
+        'key_prefix' => 'hit_stat:',
+        'sample_rate' => 100,
+    ],
 ];

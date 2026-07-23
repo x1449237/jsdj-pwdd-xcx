@@ -140,10 +140,26 @@
             wx:if="{{item.type === 'voice'}}"
             class="msg-bubble msg-voice {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
             bindtap="onPlayVoice"
+            bindlongpress="onLongPressMessage"
             data-msg="{{item}}"
           >
             <text class="voice-icon">{{item.playing ? '🔊' : '🔈'}}</text>
             <text class="voice-duration">{{item.duration}}"</text>
+          </view>
+
+          <!-- 文件消息 -->
+          <view
+            wx:if="{{item.type === 'file'}}"
+            class="msg-bubble msg-file {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
+            bindtap="onOpenFile"
+            bindlongpress="onLongPressMessage"
+            data-msg="{{item}}"
+          >
+            <view class="file-icon">📄</view>
+            <view class="file-info">
+              <text class="file-name">{{item.file_name}}</text>
+              <text class="file-size">{{item.file_size_text}}</text>
+            </view>
           </view>
 
           <!-- 撤回消息 -->
@@ -157,6 +173,11 @@
           <!-- 敏感词拦截提示 -->
           <view wx:if="{{item.sensitive_blocked}}" class="sensitive-tip">
             <text>⚠️ 消息含有敏感词，发送失败</text>
+          </view>
+
+          <!-- 飞单风险提示 -->
+          <view wx:if="{{item.anti_fraud_risky && item.from_self}}" class="anti-fraud-tip">
+            <text>⚠️ 检测到风险内容，已自动屏蔽</text>
           </view>
         </view>
 
@@ -233,9 +254,17 @@
       <view class="panel-icon">📸</view>
       <text class="panel-label">拍照</text>
     </view>
+    <view class="panel-item" bindtap="onChooseFile">
+      <view class="panel-icon">📄</view>
+      <text class="panel-label">文件</text>
+    </view>
     <view class="panel-item" bindtap="onSwitchMode">
       <view class="panel-icon">🎤</view>
       <text class="panel-label">语音</text>
+    </view>
+    <view class="panel-item" wx:if="{{isAdmin || isCreator}}" bindtap="onManageAnnouncement">
+      <view class="panel-icon">📢</view>
+      <text class="panel-label">定时公告</text>
     </view>
   </view>
 
@@ -266,6 +295,73 @@
       <view class="btn-confirm" bindtap="onSaveAnnouncement">
         <text>保存</text>
       </view>
+    </view>
+  </view>
+
+  <!-- 定时公告管理面板 -->
+  <view class="modal-mask" wx:if="{{showSchedulePanel}}" bindtap="onCloseSchedulePanel"></view>
+  <view class="schedule-panel" wx:if="{{showSchedulePanel}}">
+    <view class="panel-header">
+      <text class="panel-title">定时公告管理</text>
+      <view class="panel-close" bindtap="onCloseSchedulePanel">×</view>
+    </view>
+
+    <view class="schedule-form">
+      <view class="form-item">
+        <text class="form-label">公告标题</text>
+        <input class="form-input" placeholder="请输入公告标题" value="{{scheduleTitle}}" bindinput="onScheduleTitleInput" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">公告内容</text>
+        <textarea class="form-textarea" placeholder="请输入公告内容" value="{{scheduleContent}}" bindinput="onScheduleContentInput" auto-height maxlength="500"></textarea>
+      </view>
+      <view class="form-item">
+        <text class="form-label">发送时间</text>
+        <picker mode="date" value="{{scheduleDate}}" bindchange="onScheduleDateChange">
+          <view class="picker-view">{{scheduleDate || '选择日期'}}</view>
+        </picker>
+        <picker mode="time" value="{{scheduleTime}}" bindchange="onScheduleTimeChange">
+          <view class="picker-view">{{scheduleTime || '选择时间'}}</view>
+        </picker>
+      </view>
+      <view class="schedule-btn" bindtap="onCreateSchedule">
+        <text>创建定时公告</text>
+      </view>
+    </view>
+
+    <view class="schedule-list-title">
+      <text>待发送公告</text>
+    </view>
+    <scroll-view class="schedule-list" scroll-y>
+      <view class="schedule-item" wx:for="{{scheduleList}}" wx:key="id">
+        <view class="schedule-item-header">
+          <text class="schedule-item-title">{{item.title}}</text>
+          <text class="schedule-item-status {{item.is_sent ? 'sent' : 'pending'}}">{{item.is_sent ? '已发送' : '待发送'}}</text>
+        </view>
+        <view class="schedule-item-content">{{item.content}}</view>
+        <view class="schedule-item-time">
+          <text>发送时间：{{item.schedule_time}}</text>
+        </view>
+        <view class="schedule-item-actions" wx:if="{{!item.is_sent}}">
+          <text class="action-text delete" bindtap="onDeleteSchedule" data-id="{{item.id}}">删除</text>
+        </view>
+      </view>
+      <view class="schedule-empty" wx:if="{{scheduleList.length === 0}}">
+        <text>暂无定时公告</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 飞单风控警告弹窗 -->
+  <view class="modal-mask" wx:if="{{showAntiFraudModal}}" bindtap="onCloseAntiFraudModal"></view>
+  <view class="anti-fraud-modal" wx:if="{{showAntiFraudModal}}">
+    <view class="modal-icon">⚠️</view>
+    <view class="modal-title">风险提示</view>
+    <view class="modal-content">
+      <text>{{antiFraudModalContent}}</text>
+    </view>
+    <view class="modal-btn" bindtap="onCloseAntiFraudModal">
+      <text>我知道了</text>
     </view>
   </view>
 </view>

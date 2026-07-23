@@ -9,6 +9,8 @@ use app\model\ChatAuditLog;
 use app\model\SensitiveWord;
 use app\model\RiskUser;
 use app\model\OfflineMessage;
+use app\model\ChatMessageRevoke;
+use app\model\ChatAntiFraudLog;
 use think\facade\Log;
 use think\facade\Db;
 
@@ -50,6 +52,15 @@ class ChatService
             $isBlocked = $filterResult['is_blocked'];
             $filteredContent = $filterResult['content'];
             $matchedWords = $filterResult['matched_words'];
+
+            // 代练违禁词检测
+            $antiBoostingResult = $this->checkAntiBoosting($content, $sessionId, $senderId);
+            if ($antiBoostingResult['blocked']) {
+                $isBlocked = true;
+                foreach ($antiBoostingResult['matched'] as $item) {
+                    $matchedWords[] = $item['keyword'];
+                }
+            }
 
             // 语义分析
             if ($type === ChatMessage::TYPE_TEXT) {
@@ -514,6 +525,148 @@ class ChatService
         } catch (\Throwable $e) {
             Log::error("下载文件失败: url={$url}, error={$e->getMessage()}");
             return '';
+        }
+    }
+
+    /**
+     * 撤回消息（私聊5分钟内可撤）
+     * @param int $messageId
+     * @param int $userId
+     * @return bool
+     * @throws \RuntimeException
+     */
+    public function recallMessage(int $messageId, int $userId): bool
+    {
+        $message = ChatMessage::where('id', $messageId)
+            ->where('user_id', $userId)
+            ->find();
+
+        if (!$message) {
+            throw new \RuntimeException('消息不存在或无权撤回');
+        }
+
+        if ($message->status == ChatMessage::STATUS_HIDDEN) {
+            throw new \RuntimeException('消息已撤回');
+        }
+
+        $messageTime = strtotime($message->create_time);
+        if (time() - $messageTime > 300) {
+            throw new \RuntimeException('消息发送超过5分钟，无法撤回');
+        }
+
+        Db::startTrans();
+        try {
+            ChatMessageRevoke::create([
+                'session_id'       => $message->session_id,
+                'session_type'     => ChatMessageRevoke::SESSION_TYPE_PRIVATE,
+                'message_id'       => $message->id,
+                'user_id'          => $userId,
+                'msg_type'         => $message->msg_type,
+                'original_content' => $message->content,
+                'revoke_time'      => date('Y-m-d H:i:s'),
+            ]);
+
+            $message->status = ChatMessage::STATUS_HIDDEN;
+            $message->save();
+
+            Db::commit();
+
+            write_action_log('chat_message_recall', "撤回消息: message_id={$messageId}, user_id={$userId}");
+
+            return true;
+        } catch (\Throwable $e) {
+            Db::rollback();
+            Log::error("撤回消息失败: {$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    /**
+     * 飞单风控检测
+     * @param string $content
+     * @param int    $sessionId
+     * @param int    $senderId
+     * @param int    $messageId
+     * @return array
+     */
+    public function detectAntiFraud(string $content, int $sessionId, int $senderId, int $messageId): array
+    {
+        try {
+            $antiFraudService = new AntiFraudService();
+            return $antiFraudService->detectFraud(
+                $content,
+                $sessionId,
+                ChatAntiFraudLog::SESSION_TYPE_PRIVATE,
+                $senderId,
+                $messageId
+            );
+        } catch (\Throwable $e) {
+            Log::error("飞单风控检测失败: {$e->getMessage()}");
+            return [
+                'is_risky'         => false,
+                'level'            => '',
+                'matched_rules'    => [],
+                'matched_content'  => [],
+                'filtered_content' => $content,
+            ];
+        }
+    }
+
+    /**
+     * 检查用户是否被禁言
+     * @param int $userId
+     * @return bool
+     */
+    public function isUserMuted(int $userId): bool
+    {
+        try {
+            $antiFraudService = new AntiFraudService();
+            return $antiFraudService->isMuted($userId);
+        } catch (\Throwable $e) {
+            Log::error("检查用户禁言状态失败: {$e->getMessage()}");
+            return false;
+        }
+    }
+
+    /**
+     * 获取快捷卡片列表
+     * @param string|null $type
+     * @return array
+     */
+    public function getQuickCards(?string $type = null): array
+    {
+        try {
+            $query = \app\model\ChatQuickCard::enabled()->ordered();
+            if ($type) {
+                $query->where('type', $type);
+            }
+            return $query->select()->toArray();
+        } catch (\Throwable $e) {
+            Log::error("获取快捷卡片失败: {$e->getMessage()}");
+            return [];
+        }
+    }
+
+    /**
+     * 代练违禁词检测
+     * @param string $content
+     * @param int    $sessionId
+     * @param int    $senderId
+     * @return array
+     */
+    public function checkAntiBoosting(string $content, int $sessionId, int $senderId): array
+    {
+        try {
+            $complianceService = new \app\service\ComplianceService();
+            return $complianceService->checkContent($content, 'chat', $sessionId, $senderId);
+        } catch (\Throwable $e) {
+            Log::error("代练违禁词检测失败: {$e->getMessage()}");
+            return [
+                'matched'       => [],
+                'highest_level' => '',
+                'blocked'       => false,
+                'ban'           => false,
+            ];
         }
     }
 }

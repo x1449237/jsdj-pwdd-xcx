@@ -1,0 +1,36 @@
+<view class="page">
+  <view class="search-bar">
+    <input class="search-input" placeholder="搜索成员昵称" bindconfirm="onSearch" />
+  </view>
+
+  <scroll-view class="role-tabs" scroll-x>
+    <view class="tab-item {{role === '' ? 'active' : ''}}" bindtap="onRoleChange" data-role="">全部</view>
+    <view class="tab-item {{role === 'founder' ? 'active' : ''}}" bindtap="onRoleChange" data-role="founder">创始人</view>
+    <view class="tab-item {{role === 'manager' ? 'active' : ''}}" bindtap="onRoleChange" data-role="manager">管理员</view>
+    <view class="tab-item {{role === 'member' ? 'active' : ''}}" bindtap="onRoleChange" data-role="member">普通成员</view>
+  </scroll-view>
+
+  <view class="member-list">
+    <view class="member-item" wx:for="{{list}}" wx:key="id">
+      <image class="avatar" src="{{item.avatar || '/images/default-avatar.png'}}" mode="aspectFill" />
+      <view class="member-info">
+        <view class="nickname">{{item.nickname || '用户' + item.user_id}}</view>
+        <view class="meta">
+          <text class="role-tag {{item.role}}">
+            {{item.role === 'founder' ? '创始人' : item.role === 'manager' ? '管理员' : '成员'}}
+          </text>
+          <text class="join-time">加入：{{item.join_time}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="load-more" wx:if="{{list.length > 0}}">
+    <text wx:if="{{noMore}}">没有更多了</text>
+    <text wx:elif="{{loading}}">加载中...</text>
+  </view>
+
+  <view class="empty" wx:if="{{list.length === 0 && !loading}}">
+    <text>暂无成员</text>
+  </view>
+</view>

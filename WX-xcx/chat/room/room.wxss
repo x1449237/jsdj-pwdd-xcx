@@ -476,3 +476,244 @@
   font-size: 22rpx;
   color: #666666;
 }
+
+/* 文件消息 */
+.msg-file {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  min-width: 360rpx;
+  max-width: 480rpx;
+}
+
+.file-icon {
+  font-size: 48rpx;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+
+.file-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.file-name {
+  font-size: 28rpx;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-size: 22rpx;
+  opacity: 0.7;
+  margin-top: 4rpx;
+  display: block;
+}
+
+/* 卡片消息 */
+.msg-card {
+  padding: 20rpx 24rpx;
+  min-width: 360rpx;
+  max-width: 480rpx;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.card-icon {
+  font-size: 32rpx;
+  margin-right: 8rpx;
+}
+
+.card-title {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.card-content {
+  font-size: 24rpx;
+  line-height: 1.5;
+  margin-bottom: 12rpx;
+}
+
+.bubble-self .card-content {
+  opacity: 0.9;
+}
+
+.bubble-other .card-content {
+  color: #666666;
+}
+
+.card-action {
+  text-align: right;
+}
+
+.card-action-text {
+  font-size: 24rpx;
+  color: #e94560;
+}
+
+.bubble-self .card-action-text {
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+/* 快捷卡片面板 */
+.quick-card-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border-top: 1rpx solid #eeeeee;
+  z-index: 90;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.quick-card-panel .panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.quick-card-panel .panel-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333333;
+}
+
+.quick-card-panel .panel-close {
+  font-size: 36rpx;
+  color: #999999;
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-list {
+  white-space: nowrap;
+  padding: 24rpx 32rpx;
+}
+
+.card-item {
+  display: inline-block;
+  width: 240rpx;
+  padding: 24rpx;
+  background-color: #f8f8f8;
+  border-radius: 16rpx;
+  margin-right: 20rpx;
+  vertical-align: top;
+}
+
+.card-item-icon {
+  font-size: 40rpx;
+  margin-bottom: 12rpx;
+}
+
+.card-item-title {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 8rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-item-content {
+  font-size: 22rpx;
+  color: #999999;
+  line-height: 1.4;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 飞单风险提示 */
+.anti-fraud-tip {
+  margin-top: 8rpx;
+  padding: 6rpx 12rpx;
+  background-color: rgba(233, 69, 96, 0.1);
+  border-radius: 8rpx;
+}
+
+.anti-fraud-tip text {
+  font-size: 22rpx;
+  color: #e94560;
+}
+
+.risk-text {
+  color: #999999 !important;
+  text-decoration: line-through;
+}
+
+/* 模态框遮罩 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+}
+
+/* 飞单风控警告弹窗 */
+.anti-fraud-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 560rpx;
+  background-color: #ffffff;
+  border-radius: 24rpx;
+  z-index: 201;
+  padding: 48rpx 40rpx 40rpx;
+  text-align: center;
+}
+
+.anti-fraud-modal .modal-icon {
+  font-size: 80rpx;
+  margin-bottom: 24rpx;
+}
+
+.anti-fraud-modal .modal-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 20rpx;
+}
+
+.anti-fraud-modal .modal-content {
+  font-size: 26rpx;
+  color: #666666;
+  line-height: 1.6;
+  margin-bottom: 40rpx;
+}
+
+.anti-fraud-modal .modal-btn {
+  width: 100%;
+  height: 80rpx;
+  background-color: #e94560;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.anti-fraud-modal .modal-btn text {
+  font-size: 28rpx;
+  color: #ffffff;
+  font-weight: 500;
+}

@@ -1,0 +1,65 @@
+<view class="page" wx:if="{{!loading}}">
+  <view class="stat-cards" wx:if="{{dashboard}}">
+    <view class="stat-card primary">
+      <view class="stat-value">{{dashboard.member_count || 0}}</view>
+      <view class="stat-label">成员总数</view>
+    </view>
+    <view class="stat-card success">
+      <view class="stat-value">{{dashboard.order_count || 0}}</view>
+      <view class="stat-label">订单数</view>
+    </view>
+    <view class="stat-card warning">
+      <view class="stat-value">¥{{dashboard.total_revenue_yuan || '0.00'}}</view>
+      <view class="stat-label">总营收</view>
+    </view>
+    <view class="stat-card info">
+      <view class="stat-value">{{dashboard.dynamic_count || 0}}</view>
+      <view class="stat-label">动态数</view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">趋势数据</text>
+      <view class="days-tabs">
+        <text class="day-item {{days === 7 ? 'active' : ''}}" bindtap="onDaysChange" data-days="7">7天</text>
+        <text class="day-item {{days === 30 ? 'active' : ''}}" bindtap="onDaysChange" data-days="30">30天</text>
+      </view>
+    </view>
+
+    <view class="chart-wrap" wx:if="{{trendData.length > 0}}">
+      <view class="chart-bar" wx:for="{{trendData}}" wx:key="stat_date">
+        <view class="bar-value">{{item.order_count}}</view>
+        <view class="bar-bg">
+          <view class="bar-fill" style="height: {{item.order_count > 0 ? (item.order_count / 10 * 100) : 0}}%"></view>
+        </view>
+        <view class="bar-date">{{item.stat_date}}</view>
+      </view>
+    </view>
+    <view class="empty-chart" wx:else>暂无数据</view>
+  </view>
+
+  <view class="section" wx:if="{{dashboard}}">
+    <view class="section-header">
+      <text class="section-title">成员分布</text>
+    </view>
+    <view class="member-stats">
+      <view class="member-stat-item">
+        <view class="member-num">{{dashboard.founder_count || 0}}</view>
+        <view class="member-label">创始人</view>
+      </view>
+      <view class="member-stat-item">
+        <view class="member-num">{{dashboard.manager_count || 0}}</view>
+        <view class="member-label">管理员</view>
+      </view>
+      <view class="member-stat-item">
+        <view class="member-num">{{dashboard.normal_member_count || 0}}</view>
+        <view class="member-label">普通成员</view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<view class="loading" wx:else>
+  <text>加载中...</text>
+</view>

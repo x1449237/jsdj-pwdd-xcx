@@ -484,4 +484,302 @@ class Player extends BaseController
             Log::error('风控日志写入失败: ' . $e->getMessage());
         }
     }
+
+    public function getTags(Request $request)
+    {
+        $userId = request()->userId();
+
+        try {
+            $tagService = new \app\service\PlayerTagService();
+            $tags = $tagService->getPlayerTags($userId);
+            return $this->success($tags);
+        } catch (\Throwable $e) {
+            Log::error('获取打手标签失败: ' . $e->getMessage());
+            return $this->error('获取失败', 500);
+        }
+    }
+
+    public function setTags(Request $request)
+    {
+        $userId = request()->userId();
+        $gameTags = $request->param('game_tags/a', []);
+        $positionTags = $request->param('position_tags/a', []);
+        $voiceTags = $request->param('voice_tags/a', []);
+        $rankTags = $request->param('rank_tags/a', []);
+        $skillTags = $request->param('skill_tags/a', []);
+
+        try {
+            $tags = [
+                'game'     => $gameTags,
+                'position' => $positionTags,
+                'voice'    => $voiceTags,
+                'rank'     => $rankTags,
+                'skill'    => $skillTags,
+            ];
+
+            $tagService = new \app\service\PlayerTagService();
+            $tagService->setPlayerTags($userId, $tags);
+
+            write_action_log('api_player_set_tags', "打手 ID:{$userId} 设置标签");
+
+            return $this->success(null, '标签设置成功');
+        } catch (\Throwable $e) {
+            Log::error('设置打手标签失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function bidOrders(Request $request)
+    {
+        $userId = request()->userId();
+        [$page, $limit] = $this->pageParams();
+        $status = $request->param('status', '');
+
+        try {
+            $bidService = new \app\service\OrderBidService();
+            $result = $bidService->getPlayerBids($userId, $page, $limit);
+
+            $list = $result['list'];
+            foreach ($list as &$item) {
+                $order = OrderModel::find($item['order_id']);
+                if ($order) {
+                    $item['order'] = $order->toArray();
+                    $item['order']['user'] = $order->user()->find()?->hidden(['openid', 'unionid', 'id_card'])->toArray();
+                }
+            }
+
+            return $this->page($list, $result['total'], $page, $limit);
+        } catch (\Throwable $e) {
+            Log::error('获取竞价订单失败: ' . $e->getMessage());
+            return $this->error('获取失败', 500);
+        }
+    }
+
+    public function placeBid(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+        $bidPrice = $request->param('bid_price', '');
+
+        $error = $this->validateRequired([
+            'order_id'  => $orderId,
+            'bid_price' => $bidPrice,
+        ], ['order_id', 'bid_price']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        if (!is_numeric($bidPrice) || $bidPrice <= 0) {
+            return $this->error('竞价金额无效');
+        }
+
+        try {
+            $bidService = new \app\service\OrderBidService();
+            $result = $bidService->placeBid($orderId, $userId, $bidPrice);
+
+            write_action_log('api_player_place_bid', "打手 ID:{$userId} 参与竞价: order_id={$orderId}, price={$bidPrice}");
+
+            return $this->success($result, '竞价成功');
+        } catch (\Throwable $e) {
+            Log::error('参与竞价失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function cancelBid(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+
+        if ($orderId <= 0) {
+            return $this->error('订单ID无效');
+        }
+
+        try {
+            $bidService = new \app\service\OrderBidService();
+            $bidService->cancelBid($orderId, $userId);
+
+            write_action_log('api_player_cancel_bid', "打手 ID:{$userId} 取消竞价: order_id={$orderId}");
+
+            return $this->success(null, '已取消竞价');
+        } catch (\Throwable $e) {
+            Log::error('取消竞价失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function uploadEvidence(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+        $type = $request->param('type', '');
+        $fileUrl = $request->param('file_url', '');
+        $description = $request->param('description', '');
+
+        $error = $this->validateRequired([
+            'order_id' => $orderId,
+            'type'     => $type,
+            'file_url' => $fileUrl,
+        ], ['order_id', 'type', 'file_url']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        $validTypes = ['gameplay_video', 'rank_screenshot', 'other'];
+        if (!in_array($type, $validTypes)) {
+            return $this->error('无效的凭证类型');
+        }
+
+        try {
+            $order = OrderModel::where('player_id', $userId)->where('id', $orderId)->find();
+            if (!$order) {
+                return $this->error('订单不存在', 404);
+            }
+
+            if (!in_array($order->getData('status'), [OrderModel::STATUS_PLAYING, OrderModel::STATUS_COMPLETED])) {
+                return $this->error('当前订单状态不可上传凭证');
+            }
+
+            $orderService = new \app\service\OrderService();
+            $evidenceId = $orderService->uploadEvidence($orderId, $userId, $type, $fileUrl, $description);
+
+            write_action_log('api_player_upload_evidence', "打手 ID:{$userId} 上传凭证: order_id={$orderId}, type={$type}");
+
+            return $this->success(['evidence_id' => $evidenceId], '上传成功');
+        } catch (\Throwable $e) {
+            Log::error('上传凭证失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function evidenceList(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+
+        if ($orderId <= 0) {
+            return $this->error('订单ID无效');
+        }
+
+        try {
+            $order = OrderModel::where('player_id', $userId)->where('id', $orderId)->find();
+            if (!$order) {
+                return $this->error('订单不存在', 404);
+            }
+
+            $orderService = new \app\service\OrderService();
+            $list = $orderService->getEvidenceList($orderId);
+
+            return $this->success($list);
+        } catch (\Throwable $e) {
+            Log::error('获取凭证列表失败: ' . $e->getMessage());
+            return $this->error('获取失败', 500);
+        }
+    }
+
+    public function confirmAppointment(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+
+        if ($orderId <= 0) {
+            return $this->error('订单ID无效');
+        }
+
+        try {
+            $orderService = new \app\service\OrderService();
+            $orderService->confirmAppointment($orderId, $userId);
+
+            write_action_log('api_player_confirm_appointment', "打手 ID:{$userId} 确认预约: order_id={$orderId}");
+
+            return $this->success(null, '预约已确认');
+        } catch (\Throwable $e) {
+            Log::error('确认预约失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function startServiceV2(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+
+        if ($orderId <= 0) {
+            return $this->error('订单ID无效');
+        }
+
+        try {
+            $orderService = new \app\service\OrderService();
+            $orderService->startService($orderId, $userId);
+
+            write_action_log('api_player_start_service_v2', "打手 ID:{$userId} 开始服务: order_id={$orderId}");
+
+            return $this->success(null, '服务已开始');
+        } catch (\Throwable $e) {
+            Log::error('开始服务失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function completeServiceV2(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+
+        if ($orderId <= 0) {
+            return $this->error('订单ID无效');
+        }
+
+        try {
+            $orderService = new \app\service\OrderService();
+            $orderService->completeService($orderId, $userId);
+
+            write_action_log('api_player_complete_service_v2', "打手 ID:{$userId} 完成服务: order_id={$orderId}");
+
+            return $this->success(null, '服务已完成');
+        } catch (\Throwable $e) {
+            Log::error('完成服务失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function pauseService(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+
+        if ($orderId <= 0) {
+            return $this->error('订单ID无效');
+        }
+
+        try {
+            $orderService = new \app\service\OrderService();
+            $orderService->pauseService($orderId, $userId);
+
+            return $this->success(null, '服务已暂停');
+        } catch (\Throwable $e) {
+            Log::error('暂停服务失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
+
+    public function resumeService(Request $request)
+    {
+        $userId = request()->userId();
+        $orderId = $request->paramInt('order_id', 0);
+
+        if ($orderId <= 0) {
+            return $this->error('订单ID无效');
+        }
+
+        try {
+            $orderService = new \app\service\OrderService();
+            $orderService->resumeService($orderId, $userId);
+
+            return $this->success(null, '服务已恢复');
+        } catch (\Throwable $e) {
+            Log::error('恢复服务失败: ' . $e->getMessage());
+            return $this->error($e->getMessage(), 500);
+        }
+    }
 }

@@ -108,6 +108,62 @@ Page({
     });
   },
 
+  onProfitShare() {
+    if (!this.data.isLogin) {
+      this.onLogin();
+      return;
+    }
+    wx.navigateTo({
+      url: '/pages/profit-share/list'
+    });
+  },
+
+  onMyCoupons() {
+    if (!this.data.isLogin) {
+      this.onLogin();
+      return;
+    }
+    wx.navigateTo({
+      url: '/pages/marketing/coupon-list'
+    });
+  },
+
+  onRecharge() {
+    if (!this.data.isLogin) {
+      this.onLogin();
+      return;
+    }
+    wx.navigateTo({
+      url: '/pages/marketing/recharge'
+    });
+  },
+
+  onInvite() {
+    if (!this.data.isLogin) {
+      this.onLogin();
+      return;
+    }
+    wx.navigateTo({
+      url: '/pages/marketing/invite'
+    });
+  },
+
+  onLottery() {
+    if (!this.data.isLogin) {
+      this.onLogin();
+      return;
+    }
+    wx.navigateTo({
+      url: '/pages/marketing/lottery'
+    });
+  },
+
+  onGroupBuy() {
+    wx.navigateTo({
+      url: '/pages/marketing/group-buy'
+    });
+  },
+
   onMyReviews() {
     if (!this.data.isLogin) {
       this.onLogin();
@@ -173,6 +229,16 @@ Page({
   onClubList() {
     wx.navigateTo({
       url: '/pages/club/list/list'
+    });
+  },
+
+  onParentGuardian() {
+    if (!this.data.isLogin) {
+      this.onLogin();
+      return;
+    }
+    wx.navigateTo({
+      url: '/pages/parent-guardian/home/home'
     });
   },
 

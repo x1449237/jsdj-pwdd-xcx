@@ -12,11 +12,30 @@
     "pages/realname/realname",
     "pages/guardian/guardian",
     "pages/agreement/agreement",
+    "pages/agreement/sign",
     "pages/up-master/apply/apply",
+    "pages/arbitration/apply",
+    "pages/arbitration/detail",
     "pages/club/join/join",
     "pages/club/list/list",
     "pages/club/detail/detail",
-    "pages/club/abbr-help/abbr-help"
+    "pages/club/abbr-help/abbr-help",
+    "pages/club/manage/index",
+    "pages/club/manage/members",
+    "pages/club/manage/internal-order",
+    "pages/club/manage/coupon",
+    "pages/club/manage/dashboard",
+    "pages/club/dynamic/list",
+    "pages/club/dynamic/publish",
+    "pages/profit-share/list",
+    "pages/parent-guardian/bind",
+    "pages/parent-guardian/home",
+    "pages/parent-guardian/consume-report",
+    "pages/marketing/coupon-list",
+    "pages/marketing/recharge",
+    "pages/marketing/lottery",
+    "pages/marketing/group-buy",
+    "pages/marketing/invite"
   ],
   "subPackages": [
     {
@@ -125,7 +144,10 @@
         "create/create",
         "detail/detail",
         "evaluate/evaluate",
-        "reward/reward"
+        "reward/reward",
+        "package-list/package-list",
+        "appointment/appointment",
+        "bid-detail/bid-detail"
       ]
     }
   ],

@@ -1,0 +1,37 @@
+<view class="page" wx:if="{{!loading}}">
+  <view class="header">
+    <view class="role-tag" wx:if="{{myRole === 'founder'}}">创始人</view>
+    <view class="role-tag manager" wx:elif="{{myRole === 'manager'}}">管理员</view>
+    <view class="role-tag member" wx:elif="{{myRole === 'member'}}">成员</view>
+  </view>
+
+  <view class="stats" wx:if="{{dashboard}}">
+    <view class="stat-item">
+      <view class="stat-num">{{dashboard.member_count || 0}}</view>
+      <view class="stat-label">成员数</view>
+    </view>
+    <view class="stat-item">
+      <view class="stat-num">{{dashboard.order_count || 0}}</view>
+      <view class="stat-label">内部订单</view>
+    </view>
+    <view class="stat-item">
+      <view class="stat-num">¥{{dashboard.total_revenue_yuan || '0.00'}}</view>
+      <view class="stat-label">总营收</view>
+    </view>
+  </view>
+
+  <view class="menu-grid">
+    <view class="menu-item" wx:for="{{menus}}" wx:key="id" bindtap="goToMenu" data-path="{{item.path}}">
+      <view class="menu-icon icon-{{item.icon}}"></view>
+      <view class="menu-name">{{item.name}}</view>
+    </view>
+  </view>
+
+  <view class="quick-actions">
+    <button class="btn-primary" bindtap="goPublish">发布动态</button>
+  </view>
+</view>
+
+<view class="loading" wx:else>
+  <view class="loading-text">加载中...</view>
+</view>

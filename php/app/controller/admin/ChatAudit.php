@@ -8,6 +8,10 @@ use app\model\ChatAuditLog;
 use app\model\ChatMessage;
 use app\model\ChatSession;
 use app\model\RiskUser;
+use app\model\ChatAntiFraudRule;
+use app\model\ChatAntiFraudLog;
+use app\model\ChatQuickCard;
+use app\service\AntiFraudService;
 use think\Request;
 
 /**
@@ -292,5 +296,329 @@ class ChatAudit extends BaseController
         $this->operationLog('admin_chat_handle_risk', "处理风险用户 ID:{$id}，操作: {$action}");
 
         return $this->success(null, '风险用户已处理');
+    }
+
+    // ===================== 飞单风控规则管理 =====================
+
+    /**
+     * 飞单风控规则列表
+     */
+    public function antiFraudRuleList(Request $request)
+    {
+        [$page, $limit] = $this->pageParams();
+        $ruleType = $request->param('rule_type', '');
+        $level    = $request->param('level', '');
+        $status   = $request->param('status', '');
+
+        $params = [];
+        if ($ruleType !== '') $params['rule_type'] = $ruleType;
+        if ($level !== '')    $params['level'] = $level;
+        if ($status !== '')   $params['status'] = (int)$status;
+
+        $service = new AntiFraudService();
+        $result = $service->getRuleList($params, $page, $limit);
+
+        $this->operationLog('admin_anti_fraud_rule_list', '查看飞单风控规则列表');
+
+        return $this->page($result['list'], $result['total'], $page, $limit);
+    }
+
+    /**
+     * 创建飞单风控规则
+     */
+    public function antiFraudRuleCreate(Request $request)
+    {
+        $ruleType = $request->param('rule_type', '');
+        $ruleName = $request->param('rule_name', '');
+        $pattern  = $request->param('pattern', '');
+        $level    = $request->param('level', ChatAntiFraudRule::LEVEL_WARNING);
+        $status   = $request->paramInt('status', 1);
+        $sort     = $request->paramInt('sort', 0);
+
+        $error = $this->validateRequired([
+            'rule_type' => $ruleType,
+            'rule_name' => $ruleName,
+            'pattern'   => $pattern,
+        ], ['rule_type', 'rule_name', 'pattern']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        try {
+            $service = new AntiFraudService();
+            $rule = $service->createRule([
+                'rule_type' => $ruleType,
+                'rule_name' => $ruleName,
+                'pattern'   => $pattern,
+                'level'     => $level,
+                'status'    => $status,
+                'sort'      => $sort,
+            ]);
+
+            $this->operationLog('admin_anti_fraud_rule_create', "创建飞单风控规则: {$ruleName}");
+
+            return $this->success($rule, '创建成功');
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+    /**
+     * 更新飞单风控规则
+     */
+    public function antiFraudRuleUpdate(Request $request)
+    {
+        $id       = $request->paramInt('id', 0);
+        $ruleType = $request->param('rule_type', '');
+        $ruleName = $request->param('rule_name', '');
+        $pattern  = $request->param('pattern', '');
+        $level    = $request->param('level', '');
+        $status   = $request->param('status', '');
+        $sort     = $request->param('sort', '');
+
+        if ($id <= 0) {
+            return $this->error('规则ID无效');
+        }
+
+        try {
+            $data = [];
+            if ($ruleType !== '') $data['rule_type'] = $ruleType;
+            if ($ruleName !== '') $data['rule_name'] = $ruleName;
+            if ($pattern !== '')  $data['pattern']   = $pattern;
+            if ($level !== '')    $data['level']     = $level;
+            if ($status !== '')   $data['status']    = (int)$status;
+            if ($sort !== '')     $data['sort']      = (int)$sort;
+
+            $service = new AntiFraudService();
+            $service->updateRule($id, $data);
+
+            $this->operationLog('admin_anti_fraud_rule_update', "更新飞单风控规则: ID={$id}");
+
+            return $this->success(null, '更新成功');
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+    /**
+     * 删除飞单风控规则
+     */
+    public function antiFraudRuleDelete(Request $request)
+    {
+        $id = $request->paramInt('id', 0);
+
+        if ($id <= 0) {
+            return $this->error('规则ID无效');
+        }
+
+        try {
+            $service = new AntiFraudService();
+            $service->deleteRule($id);
+
+            $this->operationLog('admin_anti_fraud_rule_delete', "删除飞单风控规则: ID={$id}");
+
+            return $this->success(null, '删除成功');
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+    // ===================== 飞单拦截日志 =====================
+
+    /**
+     * 飞单拦截日志列表
+     */
+    public function antiFraudLogList(Request $request)
+    {
+        [$page, $limit] = $this->pageParams();
+        $senderId  = $request->paramInt('sender_id', 0);
+        $sessionId = $request->paramInt('session_id', 0);
+        $level     = $request->param('level', '');
+        $handled   = $request->param('handled', '');
+        $startDate = $request->param('start_date', '');
+        $endDate   = $request->param('end_date', '');
+
+        $params = [];
+        if ($senderId > 0)  $params['sender_id'] = $senderId;
+        if ($sessionId > 0) $params['session_id'] = $sessionId;
+        if ($level !== '')  $params['level'] = $level;
+        if ($handled !== '') $params['handled'] = (int)$handled;
+        if ($startDate !== '') $params['start_time'] = $startDate . ' 00:00:00';
+        if ($endDate !== '')   $params['end_time'] = $endDate . ' 23:59:59';
+
+        $service = new AntiFraudService();
+        $result = $service->getLogList($params, $page, $limit);
+
+        $this->operationLog('admin_anti_fraud_log_list', '查看飞单拦截日志列表');
+
+        return $this->page($result['list'], $result['total'], $page, $limit);
+    }
+
+    /**
+     * 处理飞单拦截日志
+     */
+    public function antiFraudLogHandle(Request $request)
+    {
+        $id     = $request->paramInt('id', 0);
+        $result = $request->param('handle_result', '');
+
+        if ($id <= 0) {
+            return $this->error('日志ID无效');
+        }
+
+        try {
+            $adminId = request()->adminId();
+            $service = new AntiFraudService();
+            $service->handleLog($id, $adminId, $result);
+
+            $this->operationLog('admin_anti_fraud_log_handle', "处理飞单拦截日志: ID={$id}");
+
+            return $this->success(null, '处理成功');
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+    // ===================== 快捷服务卡片管理 =====================
+
+    /**
+     * 快捷卡片列表
+     */
+    public function quickCardList(Request $request)
+    {
+        [$page, $limit] = $this->pageParams();
+        $type   = $request->param('type', '');
+        $status = $request->param('status', '');
+
+        $query = ChatQuickCard::order('sort', 'asc')->order('id', 'asc');
+
+        if ($type !== '') {
+            $query->where('type', $type);
+        }
+        if ($status !== '') {
+            $query->where('status', (int)$status);
+        }
+
+        $total = $query->count();
+        $list  = $query->page($page, $limit)->select()->toArray();
+
+        $this->operationLog('admin_quick_card_list', '查看快捷服务卡片列表');
+
+        return $this->page($list, $total, $page, $limit);
+    }
+
+    /**
+     * 创建快捷卡片
+     */
+    public function quickCardCreate(Request $request)
+    {
+        $type    = $request->param('type', '');
+        $title   = $request->param('title', '');
+        $content = $request->param('content', '');
+        $action  = $request->param('action', '');
+        $params  = $request->param('params_json', []);
+        $icon    = $request->param('icon', '');
+        $status  = $request->paramInt('status', 1);
+        $sort    = $request->paramInt('sort', 0);
+
+        $error = $this->validateRequired([
+            'type'    => $type,
+            'title'   => $title,
+            'content' => $content,
+        ], ['type', 'title', 'content']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        try {
+            $card = ChatQuickCard::create([
+                'type'        => $type,
+                'title'       => $title,
+                'content'     => $content,
+                'action'      => $action,
+                'params_json' => $params,
+                'icon'        => $icon,
+                'status'      => $status,
+                'sort'        => $sort,
+            ]);
+
+            $this->operationLog('admin_quick_card_create', "创建快捷卡片: {$title}");
+
+            return $this->success($card->toArray(), '创建成功');
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+    /**
+     * 更新快捷卡片
+     */
+    public function quickCardUpdate(Request $request)
+    {
+        $id      = $request->paramInt('id', 0);
+        $type    = $request->param('type', '');
+        $title   = $request->param('title', '');
+        $content = $request->param('content', '');
+        $action  = $request->param('action', '');
+        $params  = $request->param('params_json', '');
+        $icon    = $request->param('icon', '');
+        $status  = $request->param('status', '');
+        $sort    = $request->param('sort', '');
+
+        if ($id <= 0) {
+            return $this->error('卡片ID无效');
+        }
+
+        $card = ChatQuickCard::find($id);
+        if (!$card) {
+            return $this->error('卡片不存在', 404);
+        }
+
+        try {
+            $updateData = [];
+            if ($type !== '')    $updateData['type'] = $type;
+            if ($title !== '')   $updateData['title'] = $title;
+            if ($content !== '') $updateData['content'] = $content;
+            if ($action !== '')  $updateData['action'] = $action;
+            if ($params !== '')  $updateData['params_json'] = $params;
+            if ($icon !== '')    $updateData['icon'] = $icon;
+            if ($status !== '')  $updateData['status'] = (int)$status;
+            if ($sort !== '')    $updateData['sort'] = (int)$sort;
+
+            $card->save($updateData);
+
+            $this->operationLog('admin_quick_card_update', "更新快捷卡片: ID={$id}");
+
+            return $this->success(null, '更新成功');
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+    /**
+     * 删除快捷卡片
+     */
+    public function quickCardDelete(Request $request)
+    {
+        $id = $request->paramInt('id', 0);
+
+        if ($id <= 0) {
+            return $this->error('卡片ID无效');
+        }
+
+        $card = ChatQuickCard::find($id);
+        if (!$card) {
+            return $this->error('卡片不存在', 404);
+        }
+
+        try {
+            $card->delete();
+
+            $this->operationLog('admin_quick_card_delete', "删除快捷卡片: ID={$id}");
+
+            return $this->success(null, '删除成功');
+        } catch (\Throwable $e) {
+            return $this->error($e->getMessage());
+        }
     }
 }

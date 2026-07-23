@@ -1,0 +1,66 @@
+<view class="package-list-page">
+  <view class="game-tabs">
+    <scroll-view scroll-x class="tabs-scroll">
+      <view class="tabs-inner">
+        <view 
+          class="tab-item {{!currentGameId ? 'active' : ''}}"
+          bindtap="onGameChange"
+          data-id=""
+        >
+          全部
+        </view>
+        <view 
+          wx:for="{{gameList}}" 
+          wx:key="id"
+          class="tab-item {{currentGameId === item.id ? 'active' : ''}}"
+          bindtap="onGameChange"
+          data-id="{{item.id}}"
+        >
+          {{item.name}}
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="package-content">
+    <view wx:if="{{!loading && packageList.length === 0}}" class="empty-state">
+      <text class="empty-icon">📦</text>
+      <text class="empty-text">暂无套餐</text>
+    </view>
+
+    <view class="package-grid">
+      <view 
+        wx:for="{{packageList}}" 
+        wx:key="id"
+        class="package-card"
+        bindtap="onPackageSelect"
+        data-pkg="{{item}}"
+      >
+        <view class="package-header">
+          <text class="package-name">{{item.name}}</text>
+          <view wx:if="{{item.discount > 0}}" class="discount-tag">
+            {{item.discount}}折
+          </view>
+        </view>
+        <view class="package-type">
+          <text class="type-tag" wx:if="{{item.type === 'duration'}}">时长套餐</text>
+          <text class="type-tag type-games" wx:else>局数套餐</text>
+        </view>
+        <view class="package-desc">
+          <text wx:if="{{item.type === 'duration'}}">{{item.duration_hours}}小时畅玩</text>
+          <text wx:else>{{item.games_count}}局畅玩</text>
+        </view>
+        <view class="package-price">
+          <text class="price-symbol">¥</text>
+          <text class="price-value">{{item.price_text}}</text>
+          <text wx:if="{{item.original_price_text != item.price_text}}" class="original-price">
+            ¥{{item.original_price_text}}
+          </text>
+        </view>
+        <view class="package-btn">
+          立即购买
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

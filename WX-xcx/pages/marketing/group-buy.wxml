@@ -1,0 +1,87 @@
+<view class="group-buy-page">
+  <!-- 顶部导航 -->
+  <view class="tab-bar">
+    <view
+      class="tab-item {{tabIndex === index ? 'active' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="index"
+      data-index="{{index}}"
+      bindtap="onTabTap"
+    >
+      <text>{{item}}</text>
+      <view class="tab-line" wx:if="{{tabIndex === index}}"></view>
+    </view>
+  </view>
+
+  <!-- 热门拼团 -->
+  <block wx:if="{{tabIndex === 0}}">
+    <view class="activity-list">
+      <view
+        class="activity-card"
+        wx:for="{{activityList}}"
+        wx:key="id"
+      >
+        <view class="activity-info">
+          <view class="activity-name">{{item.name}}</view>
+          <view class="activity-price">
+            <text class="group-price">¥{{item.group_price}}</text>
+            <text class="original-price">¥{{item.original_price}}</text>
+          </view>
+          <view class="activity-meta">
+            <text>{{item.min_people}}人成团</text>
+            <text>·</text>
+            <text>{{item.duration_hours}}小时有效</text>
+          </view>
+        </view>
+        <view class="activity-action">
+          <button class="join-btn" data-item="{{item}}" bindtap="onOpenGroup">
+            去开团
+          </button>
+        </view>
+      </view>
+
+      <view class="empty-tip" wx:if="{{!loading && activityList.length === 0}}">
+        <text class="empty-text">暂无拼团活动</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 我的拼团 -->
+  <block wx:else>
+    <view class="group-list">
+      <view
+        class="group-card"
+        wx:for="{{myGroupList}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="onJoinGroup"
+      >
+        <view class="group-header">
+          <text class="group-status {{item.status}}">
+            {{item.status === 'pending' ? '拼团中' : item.status === 'success' ? '拼团成功' : '已失败'}}
+          </text>
+          <text class="group-count">
+            {{item.current_people}}/{{item.max_people}}人
+          </text>
+        </view>
+        <view class="group-name">{{item.activity_name}}</view>
+        <view class="group-footer">
+          <text class="group-price">¥{{item.group_price}}</text>
+          <text class="group-arrow">查看详情 ›</text>
+        </view>
+      </view>
+
+      <view class="empty-tip" wx:if="{{!loading && myGroupList.length === 0}}">
+        <text class="empty-text">暂无拼团记录</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+  <view class="load-more" wx:if="{{!hasMore && ((tabIndex === 0 && activityList.length > 0) || (tabIndex === 1 && myGroupList.length > 0))}}">
+    <text>没有更多了</text>
+  </view>
+</view>

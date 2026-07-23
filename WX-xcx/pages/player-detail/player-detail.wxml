@@ -18,6 +18,10 @@
           <text class="tag tag-primary">{{player.server}}</text>
         </view>
       </view>
+      <view class="favorite-btn {{isFavorited ? 'favorited' : ''}}" bindtap="onToggleFavorite">
+        <text class="favorite-icon">{{isFavorited ? '❤️' : '🤍'}}</text>
+        <text class="favorite-text">{{isFavorited ? '已收藏' : '收藏'}}</text>
+      </view>
     </view>
   </view>
 
@@ -51,6 +55,45 @@
     </view>
     <view class="intro-content">
       <text>{{player.intro}}</text>
+    </view>
+  </view>
+
+  <!-- 打手标签 -->
+  <view class="tags-section">
+    <view class="section-title">
+      <text class="title-text">打手标签</text>
+    </view>
+    <view class="tags-content">
+      <view class="tag-group" wx:if="{{playerTags.game && playerTags.game.length > 0}}">
+        <text class="group-label">🎮 擅长游戏</text>
+        <view class="tag-list">
+          <text class="detail-tag tag-game" wx:for="{{playerTags.game}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+      <view class="tag-group" wx:if="{{playerTags.rank && playerTags.rank.length > 0}}">
+        <text class="group-label">🏆 段位等级</text>
+        <view class="tag-list">
+          <text class="detail-tag tag-rank" wx:for="{{playerTags.rank}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+      <view class="tag-group" wx:if="{{playerTags.position && playerTags.position.length > 0}}">
+        <text class="group-label">⚔️ 擅长位置</text>
+        <view class="tag-list">
+          <text class="detail-tag tag-position" wx:for="{{playerTags.position}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+      <view class="tag-group" wx:if="{{playerTags.voice && playerTags.voice.length > 0}}">
+        <text class="group-label">🎤 声线特点</text>
+        <view class="tag-list">
+          <text class="detail-tag tag-voice" wx:for="{{playerTags.voice}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+      <view class="tag-group" wx:if="{{playerTags.skill && playerTags.skill.length > 0}}">
+        <text class="group-label">✨ 特殊技能</text>
+        <view class="tag-list">
+          <text class="detail-tag tag-skill" wx:for="{{playerTags.skill}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
     </view>
   </view>
 

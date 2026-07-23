@@ -43,9 +43,16 @@ class Club extends BaseController
         $abbr = $this->pinyinAbbr($clubName);
         $occupied = ClubAbbreviation::isOccupied($abbr);
 
+        $alternatives = [];
+        if ($occupied) {
+            $operationService = new \app\service\ClubOperationService();
+            $alternatives = $operationService->generateAbbrAlternatives($clubName);
+        }
+
         return $this->success([
             'abbreviation' => $abbr,
             'occupied'     => $occupied,
+            'alternatives' => $alternatives,
         ]);
     }
 
@@ -364,6 +371,29 @@ class Club extends BaseController
         $clubData['up_master_count'] = \app\model\UpMasterCertification::where('club_id', $club->id)
             ->where('audit_status', \app\model\UpMasterCertification::AUDIT_PASSED)
             ->where('is_active', 1)->count();
+
+        $memberService = new \app\service\ClubMemberService();
+        $clubData['member_count'] = $memberService->getMemberCount($club->id);
+
+        $operationService = new \app\service\ClubOperationService();
+
+        $announcementResult = $operationService->getAnnouncementList($club->id, 1, 5);
+        $clubData['announcements'] = $announcementResult['list'];
+
+        $couponResult = $operationService->getCouponList($club->id, ['page' => 1, 'limit' => 10]);
+        $clubData['coupons'] = $couponResult['list'];
+
+        $dynamicResult = $operationService->getDynamicList($club->id, ['page' => 1, 'limit' => 10, 'status' => 1]);
+        $clubData['dynamics'] = $dynamicResult['list'];
+
+        $clubData['branches'] = $operationService->getBranchList($club->id);
+
+        $userId = request()->userId();
+        if ($userId > 0) {
+            $clubData['my_role'] = \app\model\ClubMember::getUserRole($club->id, $userId);
+        } else {
+            $clubData['my_role'] = null;
+        }
 
         return $this->success($clubData);
     }

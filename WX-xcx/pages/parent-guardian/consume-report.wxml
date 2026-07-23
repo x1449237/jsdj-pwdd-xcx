@@ -1,0 +1,39 @@
+<view class="report-page">
+  <view class="month-selector">
+    <picker mode="date" fields="month" value="{{month}}" bindchange="onMonthChange">
+      <view class="picker-row">
+        <text class="picker-label">选择月份：</text>
+        <text class="picker-value">{{month}}</text>
+        <text class="picker-arrow">›</text>
+      </view>
+    </picker>
+  </view>
+
+  <view class="summary-card">
+    <view class="summary-title">本月消费汇总</view>
+    <view class="summary-amount">¥{{(totalAmount / 100).toFixed(2)}}</view>
+    <view class="summary-count">共 {{orderCount}} 笔订单</view>
+  </view>
+
+  <view class="orders-card">
+    <view class="card-title">订单明细</view>
+
+    <view wx:if="{{orders.length === 0 && !loading}}" class="empty-orders">
+      <view class="empty-text">暂无订单记录</view>
+    </view>
+
+    <view wx:for="{{orders}}" wx:key="id" class="order-item" data-id="{{item.id}}" bindtap="onOrderTap">
+      <view class="order-header">
+        <view class="order-sn">{{item.order_sn}}</view>
+        <view class="order-status status-{{item.status}}">{{item.status_text}}</view>
+      </view>
+      <view class="order-body">
+        <view class="order-game">{{item.game_name}}</view>
+        <view class="order-amount">¥{{(item.paid_amount / 100).toFixed(2)}}</view>
+      </view>
+      <view class="order-footer">
+        <view class="order-time">{{item.create_time}}</view>
+      </view>
+    </view>
+  </view>
+</view>

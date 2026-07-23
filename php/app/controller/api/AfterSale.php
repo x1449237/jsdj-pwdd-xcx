@@ -258,4 +258,80 @@ class AfterSale extends BaseController
             return $this->error('申请失败');
         }
     }
+
+    /**
+     * 上传举证材料
+     */
+    public function uploadEvidence(Request $request)
+    {
+        $userId      = request()->userId();
+        $sessionId   = $request->paramInt('session_id', 0);
+        $fileUrl     = $request->param('file_url', '');
+        $fileName    = $request->param('file_name', '');
+        $fileSize    = $request->paramInt('file_size', 0);
+        $fileType    = $request->param('file_type', 'image');
+        $description = $request->param('description', '');
+
+        $error = $this->validateRequired([
+            'session_id' => $sessionId,
+            'file_url'   => $fileUrl,
+            'file_name'  => $fileName,
+        ], ['session_id', 'file_url', 'file_name']);
+        if ($error) {
+            return $this->error($error);
+        }
+
+        try {
+            $service = new AfterSaleService();
+            $evidence = $service->uploadEvidence(
+                $sessionId,
+                $userId,
+                $fileUrl,
+                $fileName,
+                $fileSize,
+                $fileType,
+                $description
+            );
+
+            $this->operationLog('api_after_sale_upload_evidence', "上传举证材料: 会话ID: {$sessionId}");
+
+            return $this->success($evidence, '上传成功');
+        } catch (\RuntimeException $e) {
+            return $this->error($e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('上传举证材料异常: ' . $e->getMessage());
+            return $this->error('上传失败');
+        }
+    }
+
+    /**
+     * 举证材料列表
+     */
+    public function evidenceList(Request $request)
+    {
+        $userId    = request()->userId();
+        $sessionId = $request->paramInt('session_id', 0);
+        [$page, $limit] = $this->pageParams();
+
+        if ($sessionId <= 0) {
+            return $this->error('会话ID无效');
+        }
+
+        $session = AfterSaleSession::find($sessionId);
+        if (!$session) {
+            return $this->error('售后会话不存在', 404);
+        }
+
+        if ($session->user_id != $userId) {
+            $platformService = new \app\service\PlatformService();
+            if (!$platformService->hasPlatformPermission($userId)) {
+                return $this->error('无权查看', 403);
+            }
+        }
+
+        $service = new AfterSaleService();
+        $result = $service->getEvidenceList($sessionId, $page, $limit);
+
+        return $this->page($result['list'], $result['total'], $page, $limit);
+    }
 }

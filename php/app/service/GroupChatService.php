@@ -9,6 +9,9 @@ use app\model\GroupChatMember;
 use app\model\GroupChatMessage;
 use app\model\PlatformAccount;
 use app\model\PunishmentLog;
+use app\model\GroupAnnouncementSchedule;
+use app\model\ChatMessageRevoke;
+use app\model\ChatAntiFraudLog;
 use think\facade\Db;
 use think\facade\Log;
 
@@ -514,5 +517,228 @@ class GroupChatService
             ->where('status', PlatformAccount::STATUS_ENABLED)
             ->find();
         return $account !== null;
+    }
+
+    /**
+     * 创建定时公告
+     * @param int    $groupId
+     * @param int    $creatorId
+     * @param string $title
+     * @param string $content
+     * @param string $scheduleTime
+     * @return array
+     * @throws \RuntimeException
+     */
+    public function createScheduleAnnouncement(int $groupId, int $creatorId, string $title, string $content, string $scheduleTime): array
+    {
+        $group = GroupChat::find($groupId);
+        if (!$group) {
+            throw new \RuntimeException('群聊不存在');
+        }
+
+        if (!$this->isPlatformAccount($creatorId)) {
+            $member = GroupChatMember::where('group_id', $groupId)
+                ->where('user_id', $creatorId)
+                ->find();
+            if (!$member || ($member->role != GroupChatMember::ROLE_ADMIN && $member->role != GroupChatMember::ROLE_FOUNDER)) {
+                throw new \RuntimeException('无权限操作');
+            }
+        }
+
+        if (strtotime($scheduleTime) <= time()) {
+            throw new \RuntimeException('定时时间必须大于当前时间');
+        }
+
+        $schedule = GroupAnnouncementSchedule::create([
+            'group_id'      => $groupId,
+            'title'         => $title,
+            'content'       => $content,
+            'schedule_time' => $scheduleTime,
+            'is_sent'       => GroupAnnouncementSchedule::NOT_SENT,
+            'creator_id'    => $creatorId,
+            'status'        => GroupAnnouncementSchedule::STATUS_NORMAL,
+        ]);
+
+        write_action_log('group_schedule_announcement_create', "创建定时公告: group_id={$groupId}, title={$title}");
+
+        return $schedule->toArray();
+    }
+
+    /**
+     * 获取群定时公告列表
+     * @param int $groupId
+     * @param int $page
+     * @param int $limit
+     * @return array
+     */
+    public function getScheduleAnnouncements(int $groupId, int $page, int $limit): array
+    {
+        $query = GroupAnnouncementSchedule::where('group_id', $groupId)
+            ->order('schedule_time', 'desc');
+
+        $total = $query->count();
+        $list  = $query->page($page, $limit)->select()->toArray();
+
+        return ['list' => $list, 'total' => $total];
+    }
+
+    /**
+     * 取消定时公告
+     * @param int $scheduleId
+     * @param int $operatorId
+     * @return bool
+     * @throws \RuntimeException
+     */
+    public function cancelScheduleAnnouncement(int $scheduleId, int $operatorId): bool
+    {
+        $schedule = GroupAnnouncementSchedule::find($scheduleId);
+        if (!$schedule) {
+            throw new \RuntimeException('定时公告不存在');
+        }
+
+        if ($schedule->is_sent == GroupAnnouncementSchedule::SENT) {
+            throw new \RuntimeException('公告已发送，无法取消');
+        }
+
+        $groupId = $schedule->group_id;
+        if (!$this->isPlatformAccount($operatorId)) {
+            $member = GroupChatMember::where('group_id', $groupId)
+                ->where('user_id', $operatorId)
+                ->find();
+            if (!$member || ($member->role != GroupChatMember::ROLE_ADMIN && $member->role != GroupChatMember::ROLE_FOUNDER)) {
+                throw new \RuntimeException('无权限操作');
+            }
+        }
+
+        $schedule->status = GroupAnnouncementSchedule::STATUS_CANCELLED;
+        $schedule->save();
+
+        write_action_log('group_schedule_announcement_cancel', "取消定时公告: schedule_id={$scheduleId}");
+
+        return true;
+    }
+
+    /**
+     * 执行定时公告发送（由定时任务调用）
+     * @return int 发送数量
+     */
+    public function executeScheduledAnnouncements(): int
+    {
+        $count = 0;
+        try {
+            $schedules = GroupAnnouncementSchedule::pending()
+                ->where('schedule_time', '<=', date('Y-m-d H:i:s'))
+                ->select();
+
+            foreach ($schedules as $schedule) {
+                try {
+                    $this->sendGroupMessage(
+                        $schedule->group_id,
+                        0,
+                        GroupChatMessage::SENDER_SYSTEM,
+                        GroupChatMessage::TYPE_TEXT,
+                        "【公告】{$schedule->title}\n{$schedule->content}"
+                    );
+
+                    $schedule->is_sent   = GroupAnnouncementSchedule::SENT;
+                    $schedule->send_time = date('Y-m-d H:i:s');
+                    $schedule->save();
+
+                    $count++;
+                    Log::info("定时公告发送成功: schedule_id={$schedule->id}, group_id={$schedule->group_id}");
+                } catch (\Throwable $e) {
+                    Log::error("定时公告发送失败: schedule_id={$schedule->id}, error={$e->getMessage()}");
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error("执行定时公告失败: {$e->getMessage()}");
+        }
+
+        return $count;
+    }
+
+    /**
+     * 撤回群消息（群聊2分钟内可撤）
+     * @param int $messageId
+     * @param int $userId
+     * @return bool
+     * @throws \RuntimeException
+     */
+    public function recallGroupMessage(int $messageId, int $userId): bool
+    {
+        $message = GroupChatMessage::where('id', $messageId)
+            ->where('sender_id', $userId)
+            ->where('sender_type', GroupChatMessage::SENDER_USER)
+            ->find();
+
+        if (!$message) {
+            throw new \RuntimeException('消息不存在或无权撤回');
+        }
+
+        if ($message->status == GroupChatMessage::STATUS_HIDDEN) {
+            throw new \RuntimeException('消息已撤回');
+        }
+
+        $messageTime = strtotime($message->create_time);
+        if (time() - $messageTime > 120) {
+            throw new \RuntimeException('消息发送超过2分钟，无法撤回');
+        }
+
+        Db::startTrans();
+        try {
+            ChatMessageRevoke::create([
+                'session_id'       => $message->group_id,
+                'session_type'     => ChatMessageRevoke::SESSION_TYPE_GROUP,
+                'message_id'       => $message->id,
+                'user_id'          => $userId,
+                'msg_type'         => $message->msg_type,
+                'original_content' => $message->content,
+                'revoke_time'      => date('Y-m-d H:i:s'),
+            ]);
+
+            $message->status = GroupChatMessage::STATUS_HIDDEN;
+            $message->save();
+
+            Db::commit();
+
+            write_action_log('group_message_recall', "撤回群消息: message_id={$messageId}, user_id={$userId}");
+
+            return true;
+        } catch (\Throwable $e) {
+            Db::rollback();
+            Log::error("撤回群消息失败: {$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    /**
+     * 群消息飞单风控检测
+     * @param string $content
+     * @param int    $groupId
+     * @param int    $senderId
+     * @param int    $messageId
+     * @return array
+     */
+    public function detectGroupAntiFraud(string $content, int $groupId, int $senderId, int $messageId): array
+    {
+        try {
+            $antiFraudService = new AntiFraudService();
+            return $antiFraudService->detectFraud(
+                $content,
+                $groupId,
+                ChatAntiFraudLog::SESSION_TYPE_GROUP,
+                $senderId,
+                $messageId
+            );
+        } catch (\Throwable $e) {
+            Log::error("群聊飞单风控检测失败: {$e->getMessage()}");
+            return [
+                'is_risky'         => false,
+                'level'            => '',
+                'matched_rules'    => [],
+                'matched_content'  => [],
+                'filtered_content' => $content,
+            ];
+        }
     }
 }

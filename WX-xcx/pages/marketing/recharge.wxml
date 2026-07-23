@@ -1,0 +1,70 @@
+<view class="recharge-page">
+  <!-- 未登录提示 -->
+  <view class="empty-tip" wx:if="{{!isLogin}}">
+    <text class="empty-text">请先登录</text>
+    <button class="login-btn" bindtap="onLogin">去登录</button>
+  </view>
+
+  <block wx:else>
+    <!-- 余额卡片 -->
+    <view class="balance-card">
+      <view class="balance-label">账户余额</view>
+      <view class="balance-value">
+        <text class="symbol">¥</text>
+        <text class="amount">{{balance}}</text>
+      </view>
+      <view class="balance-link" bindtap="onRechargeRecords">
+        <text>充值记录</text>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 充值档位 -->
+    <view class="recharge-section">
+      <view class="section-title">选择充值档位</view>
+      <view class="activity-grid">
+        <view
+          class="activity-item {{selectedActivity && selectedActivity.id === item.id ? 'active' : ''}}"
+          wx:for="{{activityList}}"
+          wx:key="id"
+          data-item="{{item}}"
+          bindtap="onSelectActivity"
+        >
+          <view class="activity-amount">
+            <text class="symbol">¥</text>
+            <text class="num">{{item.recharge_amount}}</text>
+          </view>
+          <view class="activity-bonus" wx:if="{{item.bonus_amount > 0}}">
+            送¥{{item.bonus_amount}}
+          </view>
+          <view class="activity-name">{{item.name}}</view>
+          <view class="check-icon" wx:if="{{selectedActivity && selectedActivity.id === item.id}}">✓</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 充值说明 -->
+    <view class="tips-section">
+      <view class="section-title">充值说明</view>
+      <view class="tips-content">
+        <text class="tip-item">1. 充值金额实时到账，可用于下单支付</text>
+        <text class="tip-item">2. 充值赠送金额仅限平台消费使用</text>
+        <text class="tip-item">3. 充值金额不可提现，赠送金额不可退</text>
+        <text class="tip-item">4. 如有疑问请联系客服</text>
+      </view>
+    </view>
+
+    <!-- 底部充值按钮 -->
+    <view class="bottom-bar">
+      <view class="pay-info">
+        <text class="pay-label">支付金额：</text>
+        <text class="pay-amount">
+          ¥{{selectedActivity ? selectedActivity.recharge_amount : '0.00'}}
+        </text>
+      </view>
+      <button class="recharge-btn" bindtap="onRecharge" loading="{{paying}}">
+        立即充值
+      </button>
+    </view>
+  </block>
+</view>

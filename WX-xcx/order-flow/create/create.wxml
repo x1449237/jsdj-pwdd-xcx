@@ -1,4 +1,21 @@
 <view class="create-page">
+  <!-- 订单类型选择 -->
+  <view class="section type-section">
+    <view class="section-title">订单类型</view>
+    <view class="type-grid">
+      <view 
+        wx:for="{{orderTypes}}" 
+        wx:key="type"
+        class="type-item {{currentType === item.type ? 'active' : ''}}"
+        bindtap="onTypeChange"
+        data-type="{{item.type}}"
+      >
+        <text class="type-icon">{{item.icon}}</text>
+        <text class="type-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
   <!-- 服务信息 -->
   <view class="section">
     <view class="section-title">服务信息</view>
@@ -56,9 +73,20 @@
         <text class="a-label">单价</text>
         <text class="a-value">¥{{serviceInfo.price}}/小时</text>
       </view>
+      <view class="amount-row" bindtap="onOpenCouponPicker">
+        <text class="a-label">优惠券</text>
+        <view class="a-value coupon-value">
+          <text wx:if="{{selectedCoupon}}">-¥{{selectedCoupon.value}}</text>
+          <text wx:elif="{{couponList.length > 0}}" class="coupon-tip">{{couponList.length}}张可用 ›</text>
+          <text wx:else class="no-coupon">暂无可用</text>
+        </view>
+      </view>
       <view class="amount-row amount-total">
         <text class="a-label">合计</text>
-        <text class="a-value text-primary font-bold">¥{{totalAmount}}</text>
+        <view class="a-value-group">
+          <text wx:if="{{discountAmount > 0}}" class="original-price">¥{{totalAmount}}</text>
+          <text class="a-value text-primary font-bold">¥{{payAmount}}</text>
+        </view>
       </view>
     </view>
 
@@ -106,7 +134,8 @@
   <view class="bottom-bar">
     <view class="total-section">
       <text class="total-label">合计：</text>
-      <text class="total-amount">¥{{totalAmount}}</text>
+      <text class="total-amount">¥{{payAmount}}</text>
+      <text wx:if="{{discountAmount > 0}}" class="discount-tip">已优惠¥{{discountAmount}}</text>
     </view>
     <button
       class="pay-btn {{paying ? 'btn-disabled' : ''}}"
@@ -116,5 +145,38 @@
     >
       立即支付
     </button>
+  </view>
+
+  <!-- 优惠券选择弹窗 -->
+  <view class="coupon-modal" wx:if="{{showCouponPicker}}" catchtap="onCloseCouponPicker">
+    <view class="coupon-picker" catchtap="">
+      <view class="picker-header">
+        <text class="picker-title">选择优惠券</text>
+        <text class="picker-close" bindtap="onCloseCouponPicker">×</text>
+      </view>
+      <view class="picker-content">
+        <view class="coupon-list">
+          <view
+            class="coupon-item {{selectedCoupon && selectedCoupon.id === item.id ? 'selected' : ''}}"
+            wx:for="{{couponList}}"
+            wx:key="id"
+            data-item="{{item}}"
+            bindtap="onSelectCoupon"
+          >
+            <view class="coupon-left">
+              <text class="coupon-symbol">¥</text>
+              <text class="coupon-value">{{item.value}}</text>
+              <text class="coupon-condition">满{{item.min_amount}}可用</text>
+            </view>
+            <view class="coupon-right">
+              <text class="coupon-name">{{item.name}}</text>
+              <text class="coupon-time">{{item.expire_time || '长期有效'}}</text>
+            </view>
+            <view class="coupon-check" wx:if="{{selectedCoupon && selectedCoupon.id === item.id}}">✓</view>
+          </view>
+        </view>
+        <view class="no-coupon-btn" bindtap="onNoCoupon">不使用优惠券</view>
+      </view>
+    </view>
   </view>
 </view>

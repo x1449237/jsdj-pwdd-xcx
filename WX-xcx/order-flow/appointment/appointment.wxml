@@ -1,0 +1,106 @@
+<view class="appointment-page">
+  <view class="section">
+    <view class="section-title">打手信息</view>
+    <view class="player-card">
+      <image class="player-avatar" src="{{playerInfo.avatar}}" mode="aspectFill"></image>
+      <view class="player-info">
+        <text class="player-name">{{playerInfo.nickname}}</text>
+        <view class="player-stats">
+          <text class="stat">⭐ {{playerInfo.rating}}</text>
+          <text class="stat">📦 {{playerInfo.orderCount}}单</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">服务信息</view>
+    <view class="service-card">
+      <view class="service-row">
+        <text class="s-label">游戏：</text>
+        <text class="s-value">{{serviceInfo.gameName}}</text>
+      </view>
+      <view class="service-row">
+        <text class="s-label">段位：</text>
+        <text class="s-value">{{serviceInfo.rank}}</text>
+      </view>
+      <view class="service-row">
+        <text class="s-label">服务：</text>
+        <text class="s-value">{{serviceInfo.serviceName}}</text>
+      </view>
+      <view class="service-row">
+        <text class="s-label">时长：</text>
+        <text class="s-value">{{serviceInfo.duration}}小时</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">预约时间</view>
+    <view class="appoint-card">
+      <view class="appoint-row">
+        <text class="a-label">预约日期</text>
+        <picker 
+          mode="date" 
+          value="{{appointDate}}" 
+          start="{{minDate}}"
+          bindchange="onDateChange"
+        >
+          <view class="a-value picker-value">
+            {{appointDate || '请选择日期'}}
+            <text class="picker-arrow">></text>
+          </view>
+        </picker>
+      </view>
+      <view class="appoint-row">
+        <text class="a-label">预约时间</text>
+        <picker 
+          mode="selector" 
+          range="{{timeOptions}}"
+          value="{{appointTime ? timeOptions.indexOf(appointTime) : 0}}"
+          bindchange="onTimeChange"
+        >
+          <view class="a-value picker-value">
+            {{appointTime || '请选择时间'}}
+            <text class="picker-arrow">></text>
+          </view>
+        </picker>
+      </view>
+    </view>
+    <view class="appoint-tip">
+      <text class="tip-icon">💡</text>
+      <text class="tip-text">打手将在预约时间前15分钟与您联系确认</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">备注</view>
+    <view class="remark-section">
+      <textarea
+        class="remark-input"
+        placeholder="请输入备注信息，如游戏ID、特殊要求等..."
+        placeholder-class="placeholder"
+        value="{{remark}}"
+        bindinput="onRemarkInput"
+        maxlength="200"
+        auto-height
+      />
+      <text class="char-count">{{remark.length || 0}}/200</text>
+    </view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="amount-info">
+      <text class="amount-label">合计：</text>
+      <text class="amount-symbol">¥</text>
+      <text class="amount-value">{{totalAmount}}</text>
+    </view>
+    <button 
+      class="submit-btn {{submitting ? 'disabled' : ''}}" 
+      bindtap="onSubmit"
+      disabled="{{submitting}}"
+    >
+      {{submitting ? '提交中...' : '提交预约'}}
+    </button>
+  </view>
+</view>

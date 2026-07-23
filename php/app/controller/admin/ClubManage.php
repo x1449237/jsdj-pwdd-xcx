@@ -310,4 +310,42 @@ class ClubManage extends BaseController
 
         return $this->success(null, '保证金配置已更新');
     }
+
+    public function operationData(Request $request)
+    {
+        $days = $request->paramInt('days', 30);
+        $clubId = $request->paramInt('club_id', 0);
+
+        $totalClubs = UserVBadge::where('club_status', UserVBadge::STATUS_ACTIVE)->count();
+        $totalMembers = \app\model\ClubMember::where('status', 1)->count();
+        $totalOrders = \app\model\ClubInternalOrder::count();
+        $totalRevenue = \app\model\ClubInternalOrder::where('status', 4)->sum('reward');
+
+        $newClubs = UserVBadge::where('create_time', '>=', date('Y-m-d H:i:s', strtotime("-{$days} days")))->count();
+
+        $trendData = [];
+        if ($clubId > 0) {
+            $operationService = new \app\service\ClubOperationService();
+            $trendData = $operationService->getTrendData($clubId, $days);
+        }
+
+        $memberCountByRole = [
+            'founder' => \app\model\ClubMember::where('role', 'founder')->where('status', 1)->count(),
+            'manager' => \app\model\ClubMember::where('role', 'manager')->where('status', 1)->count(),
+            'member'  => \app\model\ClubMember::where('role', 'member')->where('status', 1)->count(),
+        ];
+
+        $this->operationLog('admin_club_operation_data', '查看俱乐部运营数据');
+
+        return $this->success([
+            'total_clubs'        => $totalClubs,
+            'total_members'      => $totalMembers,
+            'total_orders'       => $totalOrders,
+            'total_revenue'      => $totalRevenue,
+            'total_revenue_yuan' => bcdiv((string) $totalRevenue, '100', 2),
+            'new_clubs'          => $newClubs,
+            'member_by_role'     => $memberCountByRole,
+            'trend'              => $trendData,
+        ]);
+    }
 }

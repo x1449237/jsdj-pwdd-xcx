@@ -6,7 +6,15 @@ Page({
     playerId: '',
     player: {},
     reviews: [],
-    selectedServiceIndex: -1
+    selectedServiceIndex: -1,
+    isFavorited: false,
+    playerTags: {
+      game: [],
+      position: [],
+      voice: [],
+      rank: [],
+      skill: []
+    }
   },
 
   onLoad(options) {
@@ -14,13 +22,57 @@ Page({
       this.setData({ playerId: options.id });
       this.loadPlayerDetail();
       this.loadReviews();
+      this.loadPlayerTags();
+      this.checkFavoriteStatus();
     }
   },
 
   onPullDownRefresh() {
     this.loadPlayerDetail();
     this.loadReviews();
+    this.loadPlayerTags();
+    this.checkFavoriteStatus();
     wx.stopPullDownRefresh();
+  },
+
+  loadPlayerTags() {
+    request.get(`/api/v1/player/tags`, {
+      player_id: this.data.playerId
+    }).then((res) => {
+      this.setData({ playerTags: res || {} });
+    }).catch(() => {});
+  },
+
+  checkFavoriteStatus() {
+    request.get('/api/v1/player/favorite/list').then((res) => {
+      const list = res.list || [];
+      const isFavorited = list.some(item => item.player_user_id == this.data.playerId);
+      this.setData({ isFavorited });
+    }).catch(() => {});
+  },
+
+  onToggleFavorite() {
+    const { isFavorited, playerId } = this.data;
+    
+    if (isFavorited) {
+      request.post('/api/v1/player/favorite/cancel', {
+        player_user_id: playerId
+      }).then(() => {
+        this.setData({ isFavorited: false });
+        wx.showToast({ title: '已取消收藏', icon: 'none' });
+      }).catch(() => {
+        wx.showToast({ title: '操作失败', icon: 'none' });
+      });
+    } else {
+      request.post('/api/v1/player/favorite/add', {
+        player_user_id: playerId
+      }).then(() => {
+        this.setData({ isFavorited: true });
+        wx.showToast({ title: '收藏成功', icon: 'success' });
+      }).catch(() => {
+        wx.showToast({ title: '操作失败', icon: 'none' });
+      });
+    }
   },
 
   loadPlayerDetail() {

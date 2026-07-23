@@ -7,6 +7,11 @@ use app\model\Order;
 use app\model\OrderStatusLog;
 use app\model\Payment;
 use app\model\CircuitBreaker;
+use app\model\OrderServiceTimer;
+use app\model\OrderAppointment;
+use app\model\OrderRefundRule;
+use app\model\OrderPackage;
+use app\model\OrderEvidence;
 use think\facade\Log;
 use think\facade\Db;
 
@@ -463,5 +468,438 @@ LUA;
         }
 
         return $age;
+    }
+
+    public function createOrderByType(int $userId, array $data): array
+    {
+        try {
+            Db::startTrans();
+
+            $orderType = $data['order_type'] ?? Order::TYPE_INSTANT;
+            $amount    = $data['order_amount'] ?? '0';
+            $playerId  = $data['player_id'] ?? 0;
+
+            if (bc_comp($amount, '0.01', 2) < 0) {
+                throw new \RuntimeException('订单金额不能小于0.01元');
+            }
+
+            $this->checkMinorLimit($userId, $amount);
+
+            $orderSn = generate_sn('OD');
+
+            $orderData = [
+                'order_sn'       => $orderSn,
+                'user_id'        => $userId,
+                'player_id'      => $playerId,
+                'service_type_id'=> $data['service_type_id'] ?? 0,
+                'game_name'      => $data['game_name'] ?? '',
+                'order_type'     => $orderType,
+                'order_amount'   => $amount,
+                'paid_amount'    => '0',
+                'discount_amount'=> '0',
+                'package_id'     => $data['package_id'] ?? 0,
+                'is_bid'         => $data['is_bid'] ?? 0,
+                'status'         => Order::STATUS_PENDING,
+                'remark'         => $data['remark'] ?? '',
+            ];
+
+            $order = Order::create($orderData);
+
+            if ($orderType === Order::TYPE_APPOINTMENT && !empty($data['appoint_time'])) {
+                OrderAppointment::create([
+                    'order_id'       => $order->id,
+                    'appoint_time'   => $data['appoint_time'],
+                    'player_user_id' => $playerId,
+                    'is_confirmed'   => 0,
+                ]);
+            }
+
+            OrderServiceTimer::create([
+                'order_id'     => $order->id,
+                'status'       => OrderServiceTimer::STATUS_NOT_START,
+                'total_seconds'=> 0,
+            ]);
+
+            OrderStatusLog::create([
+                'order_id'      => $order->id,
+                'from_status'   => -1,
+                'to_status'     => Order::STATUS_PENDING,
+                'operator_id'   => $userId,
+                'operator_type' => 'user',
+                'remark'        => "创建{$this->getTypeName($orderType)}",
+            ]);
+
+            Db::commit();
+
+            $platformFee  = $this->calculatePlatformFee($amount);
+            $playerIncome = $this->calculatePlayerIncome($amount);
+
+            Log::info("订单创建成功: order_sn={$orderSn}, type={$orderType}, user_id={$userId}, amount={$amount}");
+
+            return [
+                'order_id'       => $order->id,
+                'order_sn'       => $orderSn,
+                'order_type'     => $orderType,
+                'order_amount'   => $amount,
+                'platform_fee'   => $platformFee,
+                'player_income'  => $playerIncome,
+            ];
+        } catch (\Throwable $e) {
+            Db::rollback();
+            Log::error("创建订单失败: {$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    private function getTypeName(string $type): string
+    {
+        $names = [
+            Order::TYPE_INSTANT     => '即时单',
+            Order::TYPE_APPOINTMENT => '预约单',
+            Order::TYPE_TEAM        => '车队单',
+            Order::TYPE_TEACHING    => '教学单',
+        ];
+        return $names[$type] ?? '订单';
+    }
+
+    public function createPackageOrder(int $userId, int $packageId, array $data = []): array
+    {
+        try {
+            $package = OrderPackage::find($packageId);
+            if (!$package || $package->status != OrderPackage::STATUS_ENABLED) {
+                throw new \RuntimeException('套餐不存在或已下架');
+            }
+
+            $orderData = array_merge($data, [
+                'order_type'   => Order::TYPE_INSTANT,
+                'order_amount' => $package->price,
+                'package_id'   => $packageId,
+                'game_name'    => $package->game ? $package->game->name : '',
+            ]);
+
+            return $this->createOrderByType($userId, $orderData);
+        } catch (\Throwable $e) {
+            Log::error("套餐下单失败: package_id={$packageId}, error={$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    public function createAppointmentOrder(int $userId, array $data): array
+    {
+        try {
+            if (empty($data['appoint_time'])) {
+                throw new \RuntimeException('请选择预约时间');
+            }
+            if (strtotime($data['appoint_time']) <= time()) {
+                throw new \RuntimeException('预约时间必须晚于当前时间');
+            }
+
+            $data['order_type'] = Order::TYPE_APPOINTMENT;
+            $result = $this->createOrderByType($userId, $data);
+
+            return $result;
+        } catch (\Throwable $e) {
+            Log::error("预约下单失败: error={$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    public function startService(int $orderId, int $playerId): bool
+    {
+        try {
+            Db::startTrans();
+
+            $order = Order::lock(true)->find($orderId);
+            if (!$order) {
+                throw new \RuntimeException('订单不存在');
+            }
+            if ($order->player_id != $playerId) {
+                throw new \RuntimeException('无权限操作此订单');
+            }
+            if ($order->status != Order::STATUS_PAID && $order->status != Order::STATUS_APPOINTING) {
+                throw new \RuntimeException('订单状态不允许开始服务');
+            }
+
+            $oldStatus = $order->status;
+            $order->status = Order::STATUS_PLAYING;
+            $order->start_time = date('Y-m-d H:i:s');
+            $order->save();
+
+            $timer = OrderServiceTimer::byOrder($orderId)->find();
+            if ($timer) {
+                $timer->start_time = date('Y-m-d H:i:s');
+                $timer->status = OrderServiceTimer::STATUS_RUNNING;
+                $timer->save();
+            }
+
+            OrderStatusLog::create([
+                'order_id'      => $orderId,
+                'from_status'   => $oldStatus,
+                'to_status'     => Order::STATUS_PLAYING,
+                'operator_id'   => $playerId,
+                'operator_type' => 'player',
+                'remark'        => '开始服务',
+            ]);
+
+            Db::commit();
+            Log::info("服务开始: order_id={$orderId}, player_id={$playerId}");
+            return true;
+        } catch (\Throwable $e) {
+            Db::rollback();
+            Log::error("开始服务失败: order_id={$orderId}, error={$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    public function pauseService(int $orderId, int $playerId): bool
+    {
+        try {
+            Db::startTrans();
+
+            $timer = OrderServiceTimer::byOrder($orderId)->find();
+            if (!$timer || $timer->status != OrderServiceTimer::STATUS_RUNNING) {
+                throw new \RuntimeException('服务未在进行中');
+            }
+
+            $startTs = strtotime($timer->start_time);
+            $elapsed = time() - $startTs;
+            $timer->total_seconds = $timer->total_seconds + $elapsed;
+            $timer->pause_time = date('Y-m-d H:i:s');
+            $timer->status = OrderServiceTimer::STATUS_PAUSED;
+            $timer->save();
+
+            Db::commit();
+            Log::info("服务暂停: order_id={$orderId}, total_seconds={$timer->total_seconds}");
+            return true;
+        } catch (\Throwable $e) {
+            Db::rollback();
+            Log::error("暂停服务失败: order_id={$orderId}, error={$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    public function resumeService(int $orderId, int $playerId): bool
+    {
+        try {
+            Db::startTrans();
+
+            $timer = OrderServiceTimer::byOrder($orderId)->find();
+            if (!$timer || $timer->status != OrderServiceTimer::STATUS_PAUSED) {
+                throw new \RuntimeException('服务未暂停');
+            }
+
+            $timer->start_time = date('Y-m-d H:i:s');
+            $timer->pause_time = null;
+            $timer->status = OrderServiceTimer::STATUS_RUNNING;
+            $timer->save();
+
+            Db::commit();
+            Log::info("服务恢复: order_id={$orderId}");
+            return true;
+        } catch (\Throwable $e) {
+            Db::rollback();
+            Log::error("恢复服务失败: order_id={$orderId}, error={$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    public function getServiceDuration(int $orderId): int
+    {
+        try {
+            $timer = OrderServiceTimer::byOrder($orderId)->find();
+            if (!$timer) {
+                return 0;
+            }
+
+            $total = $timer->total_seconds;
+            if ($timer->status == OrderServiceTimer::STATUS_RUNNING && $timer->start_time) {
+                $total += time() - strtotime($timer->start_time);
+            }
+            return (int)$total;
+        } catch (\Throwable $e) {
+            Log::error("获取服务时长失败: order_id={$orderId}, error={$e->getMessage()}");
+            return 0;
+        }
+    }
+
+    public function calculateRefundAmount(int $orderId): array
+    {
+        try {
+            $order = Order::find($orderId);
+            if (!$order) {
+                throw new \RuntimeException('订单不存在');
+            }
+
+            $serviceSeconds = $this->getServiceDuration($orderId);
+            $serviceMinutes = ceil($serviceSeconds / 60);
+
+            $rules = OrderRefundRule::enabled()
+                ->order('minutes_threshold', 'asc')
+                ->select()
+                ->toArray();
+
+            $refundRatio = '0.00';
+            $appliedRule = null;
+            foreach ($rules as $rule) {
+                if ($serviceMinutes <= $rule['minutes_threshold']) {
+                    $refundRatio = $rule['refund_ratio'];
+                    $appliedRule = $rule;
+                    break;
+                }
+            }
+
+            $orderAmount = $order->getData('paid_amount');
+            $refundAmount = bcmul($orderAmount, $refundRatio, 0);
+            $refundAmount = bcdiv($refundAmount, '100', 2);
+
+            return [
+                'service_minutes' => $serviceMinutes,
+                'service_seconds' => $serviceSeconds,
+                'refund_ratio'    => $refundRatio,
+                'refund_amount'   => $refundAmount,
+                'order_amount'    => fen_to_yuan($orderAmount),
+                'applied_rule'    => $appliedRule,
+            ];
+        } catch (\Throwable $e) {
+            Log::error("计算退款金额失败: order_id={$orderId}, error={$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    public function uploadEvidence(int $orderId, int $uploaderId, string $type, string $fileUrl, string $description = ''): int
+    {
+        try {
+            $evidence = OrderEvidence::create([
+                'order_id'    => $orderId,
+                'uploader_id' => $uploaderId,
+                'type'        => $type,
+                'file_url'    => $fileUrl,
+                'description' => $description,
+            ]);
+
+            Log::info("履约凭证上传: order_id={$orderId}, uploader_id={$uploaderId}, type={$type}");
+            return $evidence->id;
+        } catch (\Throwable $e) {
+            Log::error("上传履约凭证失败: order_id={$orderId}, error={$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    public function getEvidenceList(int $orderId): array
+    {
+        try {
+            return OrderEvidence::byOrder($orderId)
+                ->order('create_time', 'desc')
+                ->select()
+                ->toArray();
+        } catch (\Throwable $e) {
+            Log::error("获取履约凭证失败: order_id={$orderId}, error={$e->getMessage()}");
+            return [];
+        }
+    }
+
+    public function confirmAppointment(int $orderId, int $playerId): bool
+    {
+        try {
+            Db::startTrans();
+
+            $appointment = OrderAppointment::byOrder($orderId)->find();
+            if (!$appointment) {
+                throw new \RuntimeException('预约信息不存在');
+            }
+            if ($appointment->player_user_id != $playerId) {
+                throw new \RuntimeException('无权限操作此预约');
+            }
+            if ($appointment->is_confirmed) {
+                throw new \RuntimeException('预约已确认');
+            }
+
+            $appointment->is_confirmed = 1;
+            $appointment->save();
+
+            $order = Order::find($orderId);
+            if ($order && $order->status == Order::STATUS_APPOINTING) {
+                $order->status = Order::STATUS_PAID;
+                $order->save();
+            }
+
+            OrderStatusLog::create([
+                'order_id'      => $orderId,
+                'from_status'   => $order ? $order->status : -1,
+                'to_status'     => Order::STATUS_PAID,
+                'operator_id'   => $playerId,
+                'operator_type' => 'player',
+                'remark'        => '打手确认预约',
+            ]);
+
+            Db::commit();
+            Log::info("预约确认: order_id={$orderId}, player_id={$playerId}");
+            return true;
+        } catch (\Throwable $e) {
+            Db::rollback();
+            Log::error("确认预约失败: order_id={$orderId}, error={$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    public function completeService(int $orderId, int $playerId): bool
+    {
+        try {
+            Db::startTrans();
+
+            $order = Order::lock(true)->find($orderId);
+            if (!$order) {
+                throw new \RuntimeException('订单不存在');
+            }
+            if ($order->player_id != $playerId) {
+                throw new \RuntimeException('无权限操作此订单');
+            }
+            if ($order->status != Order::STATUS_PLAYING) {
+                throw new \RuntimeException('订单状态不允许完成');
+            }
+
+            $timer = OrderServiceTimer::byOrder($orderId)->find();
+            if ($timer && $timer->status == OrderServiceTimer::STATUS_RUNNING) {
+                $elapsed = time() - strtotime($timer->start_time);
+                $timer->total_seconds = $timer->total_seconds + $elapsed;
+                $timer->status = OrderServiceTimer::STATUS_ENDED;
+                $timer->save();
+            }
+
+            $oldStatus = $order->status;
+            $order->status = Order::STATUS_COMPLETED;
+            $order->completed_time = date('Y-m-d H:i:s');
+            $order->save();
+
+            OrderStatusLog::create([
+                'order_id'      => $orderId,
+                'from_status'   => $oldStatus,
+                'to_status'     => Order::STATUS_COMPLETED,
+                'operator_id'   => $playerId,
+                'operator_type' => 'player',
+                'remark'        => '打手提交完成',
+            ]);
+
+            Db::commit();
+            Log::info("服务完成: order_id={$orderId}, player_id={$playerId}");
+            return true;
+        } catch (\Throwable $e) {
+            Db::rollback();
+            Log::error("完成服务失败: order_id={$orderId}, error={$e->getMessage()}");
+            throw $e;
+        }
+    }
+
+    public function getRefundRules(): array
+    {
+        try {
+            return OrderRefundRule::enabled()
+                ->order('minutes_threshold', 'asc')
+                ->select()
+                ->toArray();
+        } catch (\Throwable $e) {
+            Log::error("获取退款规则失败: {$e->getMessage()}");
+            return [];
+        }
     }
 }

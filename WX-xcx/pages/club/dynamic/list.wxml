@@ -1,0 +1,66 @@
+<view class="page">
+  <scroll-view class="type-tabs" scroll-x>
+    <view class="tab-item {{type === '' ? 'active' : ''}}" bindtap="onTypeChange" data-type="">全部</view>
+    <view class="tab-item {{type === 'achievement' ? 'active' : ''}}" bindtap="onTypeChange" data-type="achievement">战绩</view>
+    <view class="tab-item {{type === 'daily' ? 'active' : ''}}" bindtap="onTypeChange" data-type="daily">日常</view>
+    <view class="tab-item {{type === 'event' ? 'active' : ''}}" bindtap="onTypeChange" data-type="event">活动</view>
+  </scroll-view>
+
+  <view class="dynamic-list">
+    <view class="dynamic-card" wx:for="{{list}}" wx:key="id">
+      <view class="dynamic-header">
+        <image class="avatar" src="{{item.avatar || '/images/default-avatar.png'}}" mode="aspectFill" />
+        <view class="user-info">
+          <view class="nickname">{{item.nickname || '用户' + item.player_user_id}}</view>
+          <view class="meta">
+            <text class="type-tag">{{typeMap[item.type] || '动态'}}</text>
+            <text class="time">{{item.create_time}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="dynamic-title" wx:if="{{item.title}}">{{item.title}}</view>
+      <view class="dynamic-content" wx:if="{{item.content}}">{{item.content}}</view>
+
+      <view class="image-grid" wx:if="{{item.images && item.images.length > 0}}">
+        <image
+          wx:for="{{item.images}}"
+          wx:for-item="img"
+          wx:for-index="imgIdx"
+          wx:key="*this"
+          class="grid-img"
+          src="{{img}}"
+          mode="aspectFill"
+          data-urls="{{item.images}}"
+          data-current="{{img}}"
+          bindtap="previewImage"
+        />
+      </view>
+
+      <view class="dynamic-footer">
+        <view class="footer-item" bindtap="handleLike" data-id="{{item.id}}" data-index="{{index}}">
+          <text class="footer-icon">👍</text>
+          <text class="footer-text">{{item.like_count || 0}}</text>
+        </view>
+        <view class="footer-item">
+          <text class="footer-icon">👁</text>
+          <text class="footer-text">{{item.view_count || 0}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="load-more" wx:if="{{list.length > 0}}">
+    <text wx:if="{{noMore}}">没有更多了</text>
+    <text wx:elif="{{loading}}">加载中...</text>
+  </view>
+
+  <view class="empty" wx:if="{{list.length === 0 && !loading}}">
+    <text>暂无动态</text>
+  </view>
+
+  <view class="fab" bindtap="goPublish">
+    <text class="fab-icon">+</text>
+    <text class="fab-text">发布</text>
+  </view>
+</view>

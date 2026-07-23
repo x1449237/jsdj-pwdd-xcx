@@ -69,6 +69,20 @@ Route::group('api/v1', function () {
         // --- 监护人验证 ---
         Route::post('user/guardian_verify',     'api/User/guardianVerify');
 
+        // --- 家长监护 ---
+        Route::get('parent_guardian/bind_list',        'api/ParentGuardian/bindList');
+        Route::post('parent_guardian/bind',             'api/ParentGuardian/bind');
+        Route::post('parent_guardian/send_bind_code',   'api/ParentGuardian/sendBindCode');
+        Route::post('parent_guardian/unbind',           'api/ParentGuardian/unbind');
+        Route::get('parent_guardian/setting',           'api/ParentGuardian/getSetting');
+        Route::put('parent_guardian/monthly_limit',     'api/ParentGuardian/updateMonthlyLimit');
+        Route::put('parent_guardian/toggle_order',      'api/ParentGuardian/toggleOrder');
+        Route::put('parent_guardian/toggle_reward',     'api/ParentGuardian/toggleReward');
+        Route::put('parent_guardian/toggle_freeze',     'api/ParentGuardian/toggleFreeze');
+        Route::get('parent_guardian/consume_report',    'api/ParentGuardian/consumeReport');
+        Route::get('parent_guardian/chat_summary',      'api/ParentGuardian/chatSummary');
+        Route::get('parent_guardian/child_info',        'api/ParentGuardian/childInfo');
+
         // --- 手机号申诉 ---
         Route::post('user/phone_appeal',        'api/User/phoneAppeal');
         Route::get('user/appeal_list',          'api/User/appealList');
@@ -84,6 +98,18 @@ Route::group('api/v1', function () {
         Route::put('order/:id/cancel',          'api/Order/cancel');
         Route::put('order/:id/confirm',         'api/Order/confirmComplete');
 
+        Route::get('order/types',               'api/Order/orderTypes');
+        Route::get('order/packages',            'api/Order/packageList');
+        Route::post('order/create_appointment', 'api/Order/createAppointment');
+        Route::post('order/create_package',     'api/Order/createPackageOrder');
+        Route::post('order/create_designated',  'api/Order/createDesignatedOrder');
+        Route::get('order/:id/service_timer',   'api/Order/serviceTimer');
+        Route::get('order/:id/refund_calculate','api/Order/refundCalculate');
+        Route::post('order/:id/evidence',       'api/Order/evidenceUpload');
+        Route::get('order/:id/evidences',       'api/Order/evidenceList');
+        Route::get('order/:id/bids',            'api/Order/bidList');
+        Route::post('order/:id/select_winner',  'api/Order/bidSelectWinner');
+
         // --- 评价 ---
         Route::post('order/evaluate',           'api/Order/evaluate');
 
@@ -96,8 +122,11 @@ Route::group('api/v1', function () {
         Route::post('chat/send_text',           'api/Chat/sendText');
         Route::post('chat/send_voice',          'api/Chat/sendVoice');
         Route::post('chat/send_image',          'api/Chat/sendImage');
+        Route::post('chat/send_file',           'api/Chat/sendFile');
         Route::post('chat/recall',              'api/Chat/recall');
         Route::put('chat/read_status',          'api/Chat/readStatus');
+        Route::get('chat/quick_cards',          'api/Chat/quickCardList');
+        Route::post('chat/send_quick_card',     'api/Chat/sendQuickCard');
 
         // --- 文件上传 ---
         Route::post('upload/upload',            'api/Common/upload');
@@ -135,6 +164,10 @@ Route::group('api/v1', function () {
         Route::post('group/remove_member',      'api/GroupChat/removeMember');
         Route::post('group/dissolve',           'api/GroupChat/dissolveGroup');
         Route::post('group/add_member',         'api/GroupChat/addMember');
+        Route::post('group/recall',             'api/GroupChat/recallMessage');
+        Route::post('group/schedule_announcement', 'api/GroupChat/createScheduleAnnouncement');
+        Route::get('group/schedule_list',       'api/GroupChat/scheduleAnnouncementList');
+        Route::post('group/schedule_cancel',    'api/GroupChat/cancelScheduleAnnouncement');
 
         // --- 售后申诉 ---
         Route::get('after_sale/list',           'api/AfterSale/sessionList');
@@ -145,6 +178,20 @@ Route::group('api/v1', function () {
         Route::post('after_sale/send_voice',    'api/AfterSale/sendVoice');
         Route::post('after_sale/send_image',    'api/AfterSale/sendImage');
         Route::post('after_sale/request_intervene', 'api/AfterSale/requestIntervene');
+
+        // --- 仲裁 ---
+        Route::get('arbitration/evidence_tpl',    'api/Arbitration/evidenceTplList');
+        Route::post('arbitration/apply',          'api/Arbitration/apply');
+        Route::get('arbitration/my_list',         'api/Arbitration/myList');
+        Route::get('arbitration/detail',          'api/Arbitration/detail');
+        Route::post('arbitration/upload_evidence','api/Arbitration/uploadEvidence');
+        Route::get('arbitration/match_rules',     'api/Arbitration/matchRules');
+
+        // --- 协议签署 ---
+        Route::get('agreement/detail',            'api/Arbitration/agreementDetail');
+        Route::post('agreement/sign',             'api/Arbitration/signAgreement');
+        Route::get('agreement/check_need_sign',   'api/Arbitration/checkNeedSign');
+        Route::post('compliance/check_content',   'api/Arbitration/checkContent');
 
         // --- 订阅消息上报 ---
         Route::post('subscribe/report',         'api.Subscribe/report');
@@ -168,6 +215,63 @@ Route::group('api/v1', function () {
         Route::get('club/list',                 'api.Club/list');
         Route::get('club/detail',               'api.Club/detail');
 
+        // --- 俱乐部运营 ---
+        Route::get('club/dynamic/list',         'api.ClubOperation/dynamicList');
+        Route::post('club/dynamic/publish',     'api.ClubOperation/publishDynamic');
+        Route::get('club/internal-order/list',  'api.ClubOperation/internalOrderList');
+        Route::post('club/internal-order/accept', 'api.ClubOperation/acceptInternalOrder');
+        Route::get('club/coupon/list',          'api.ClubOperation/couponList');
+        Route::post('club/coupon/receive',      'api.ClubOperation/receiveCoupon');
+        Route::get('club/coupon/my',            'api.ClubOperation/myCoupons');
+        Route::get('club/branch/list',          'api.ClubOperation/branchList');
+        Route::get('club/member/list',          'api.ClubOperation/memberList');
+        Route::post('club/member/join-apply',   'api.ClubOperation/joinApply');
+        Route::get('club/member/my-roles',      'api.ClubOperation/myRoles');
+        Route::get('club/announcement/list',    'api.ClubOperation/announcementList');
+        Route::get('club/abbr-alternatives',    'api.ClubOperation/abbrAlternatives');
+        Route::get('club/manage/dashboard',     'api.ClubOperation/manageDashboard');
+        Route::get('club/manage/trend',         'api.ClubOperation/manageTrend');
+
+        // --- 分账与税务 ---
+        Route::get('profit_share/my_stats',      'api/ProfitShare/myStats');
+        Route::get('profit_share/list',          'api/ProfitShare/shareList');
+        Route::get('profit_share/detail',        'api/ProfitShare/shareDetail');
+        Route::get('tax/list',                   'api/ProfitShare/taxList');
+        Route::get('tax/stats',                  'api/ProfitShare/taxStats');
+        Route::get('tax/calculator',             'api/ProfitShare/taxCalculator');
+        Route::get('merchant/account/list',      'api/ProfitShare/accountList');
+        Route::post('merchant/account/create',   'api/ProfitShare/accountCreate');
+        Route::delete('merchant/account/delete', 'api/ProfitShare/accountDelete');
+
+        // --- 营销模块 ---
+        // 优惠券
+        Route::get('coupon/list',               'api/Marketing/couponList');
+        Route::get('coupon/my',                 'api/Marketing/myCoupons');
+        Route::post('coupon/receive',           'api/Marketing/receiveCoupon');
+        Route::get('coupon/usable',             'api/Marketing/usableCoupons');
+
+        // 充值活动
+        Route::get('recharge/activities',       'api/Marketing/rechargeActivities');
+        Route::post('recharge/create',          'api/Marketing/recharge');
+        Route::get('recharge/records',          'api/Marketing/rechargeRecords');
+
+        // 抽奖
+        Route::get('lottery/activity',          'api/Marketing/lotteryActivity');
+        Route::post('lottery/draw',             'api/Marketing/drawLottery');
+        Route::get('lottery/records',           'api/Marketing/lotteryRecords');
+
+        // 拼团
+        Route::get('group_buy/activities',      'api/Marketing/groupBuyActivities');
+        Route::get('group_buy/list',            'api/Marketing/groupBuyList');
+        Route::get('group_buy/detail',          'api/Marketing/groupBuyDetail');
+        Route::post('group_buy/create',         'api/Marketing/createGroupBuy');
+        Route::post('group_buy/join',           'api/Marketing/joinGroupBuy');
+        Route::get('group_buy/my',              'api/Marketing/myGroupBuys');
+
+        // 邀请奖励
+        Route::get('invite/rewards',            'api/Marketing/inviteRewards');
+        Route::get('invite/stats',              'api/Marketing/inviteStats');
+
     })->middleware(['auth']);
 
     // ========== 打手端接口组（需要JWT user认证 + 打手身份校验） ==========
@@ -185,6 +289,25 @@ Route::group('api/v1', function () {
         Route::get('order/:id',                 'api/Player/orderDetail');
         Route::put('order/:id/start',           'api/Player/startService');
         Route::put('order/:id/complete',        'api/Player/completeService');
+
+        // --- 标签管理 ---
+        Route::get('tags',                      'api/Player/getTags');
+        Route::post('tags',                     'api/Player/setTags');
+
+        // --- 竞价抢单 ---
+        Route::get('bid_orders',                'api/Player/bidOrders');
+        Route::post('bid',                      'api/Player/placeBid');
+        Route::post('cancel_bid',               'api/Player/cancelBid');
+
+        // --- 凭证上传 ---
+        Route::post('evidence',                 'api/Player/uploadEvidence');
+        Route::get('evidences',                 'api/Player/evidenceList');
+
+        // --- 服务管理V2 ---
+        Route::put('order/:id/confirm_appointment', 'api/Player/confirmAppointment');
+        Route::put('order/:id/start_v2',        'api/Player/startServiceV2');
+        Route::put('order/:id/pause',           'api/Player/pauseService');
+        Route::put('order/:id/resume',          'api/Player/resumeService');
 
         // --- 服务管理 ---
         Route::get('services',                  'api/Player/myServices');
@@ -272,6 +395,28 @@ Route::group('api/v1', function () {
         Route::get('order/large_fail',          'admin/Order/largeFailOrders');
         Route::get('order/confirm_batch',       'admin/Order/confirmBatch');
 
+        Route::get('order/package/list',        'admin/Order/packageList');
+        Route::post('order/package/create',     'admin/Order/packageCreate');
+        Route::put('order/package/update',      'admin/Order/packageUpdate');
+        Route::put('order/package/toggle',      'admin/Order/packageToggle');
+        Route::delete('order/package/delete',   'admin/Order/packageDelete');
+
+        Route::get('order/refund_rule/list',    'admin/Order/refundRuleList');
+        Route::post('order/refund_rule/create', 'admin/Order/refundRuleCreate');
+        Route::put('order/refund_rule/update',  'admin/Order/refundRuleUpdate');
+        Route::delete('order/refund_rule/delete', 'admin/Order/refundRuleDelete');
+        Route::put('order/refund_rule/toggle',  'admin/Order/refundRuleToggle');
+
+        Route::get('order/evidence/list',       'admin/Order/evidenceList');
+
+        Route::get('order/bid/list',            'admin/Order/bidList');
+
+        Route::get('game/list',                 'admin/Order/gameList');
+        Route::post('game/create',              'admin/Order/gameCreate');
+        Route::put('game/update',               'admin/Order/gameUpdate');
+        Route::put('game/toggle',               'admin/Order/gameToggle');
+        Route::delete('game/delete',            'admin/Order/gameDelete');
+
         // --- 申诉管理 ---
         Route::get('appeal/list',               'admin/Appeal/list');
         Route::get('appeal/detail/:id',         'admin/Appeal/detail');
@@ -302,6 +447,20 @@ Route::group('api/v1', function () {
         Route::get('club/transfer_list',         'admin/ClubManage/corporateTransferList');
         Route::put('club/verify_transfer',       'admin/ClubManage/verifyCorporateTransfer');
         Route::put('club/deposit_config',        'admin/ClubManage/updateDepositConfig');
+        Route::get('club/operation_data',        'admin/ClubManage/operationData');
+
+        // --- 俱乐部运营 ---
+        Route::get('club/deposit-tier/list',     'admin/ClubOperation/depositTierList');
+        Route::post('club/deposit-tier/create',  'admin/ClubOperation/depositTierCreate');
+        Route::post('club/deposit-tier/update',  'admin/ClubOperation/depositTierUpdate');
+        Route::post('club/deposit-tier/delete',  'admin/ClubOperation/depositTierDelete');
+        Route::get('club/operation-dashboard',   'admin/ClubOperation/operationDashboard');
+        Route::get('club/internal-order/list',   'admin/ClubOperation/internalOrderList');
+        Route::get('club/internal-order/detail', 'admin/ClubOperation/internalOrderDetail');
+        Route::get('club/dynamic-audit/list',    'admin/ClubOperation/dynamicAuditList');
+        Route::post('club/dynamic-audit/audit',  'admin/ClubOperation/dynamicAudit');
+        Route::get('club/coupon/list',           'admin/ClubOperation/couponList');
+        Route::post('club/coupon/toggle-status', 'admin/ClubOperation/couponToggleStatus');
 
         // --- 资金与提现 ---
         Route::get('finance/withdraw_list',     'admin/Finance/withdrawList');
@@ -309,6 +468,32 @@ Route::group('api/v1', function () {
         Route::put('finance/withdraw_config',   'admin/Finance/withdrawConfig');
         Route::post('finance/bank_verify',      'admin/Finance/bankVerify');
         Route::put('finance/platform_fee',      'admin/Finance/platformFee');
+        Route::post('finance/withdraw_batch_audit', 'admin/Finance/withdrawBatchAudit');
+        Route::get('finance/withdraw_batch_list',  'admin/Finance/withdrawBatchList');
+        Route::post('finance/withdraw_batch_create','admin/Finance/withdrawBatchCreate');
+        Route::put('finance/withdraw_batch_process','admin/Finance/withdrawBatchProcess');
+        Route::put('finance/withdraw_batch_complete','admin/Finance/withdrawBatchComplete');
+
+        // --- 分账与税务管理 ---
+        Route::get('profit_share/rule_list',        'admin/ProfitShare/ruleList');
+        Route::get('profit_share/rule_detail',      'admin/ProfitShare/ruleDetail');
+        Route::post('profit_share/rule_create',     'admin/ProfitShare/ruleCreate');
+        Route::put('profit_share/rule_update',      'admin/ProfitShare/ruleUpdate');
+        Route::delete('profit_share/rule_delete',   'admin/ProfitShare/ruleDelete');
+        Route::put('profit_share/rule_toggle',      'admin/ProfitShare/ruleToggle');
+        Route::get('profit_share/record_list',      'admin/ProfitShare/recordList');
+        Route::get('profit_share/record_detail',    'admin/ProfitShare/recordDetail');
+        Route::put('profit_share/record_settle',    'admin/ProfitShare/recordSettle');
+        Route::post('profit_share/record_batch_settle','admin/ProfitShare/recordBatchSettle');
+        Route::get('profit_share/refund_list',      'admin/ProfitShare/refundList');
+        Route::get('tax/config_list',               'admin/ProfitShare/taxConfigList');
+        Route::put('tax/config_update',             'admin/ProfitShare/taxConfigUpdate');
+        Route::get('tax/record_list',               'admin/ProfitShare/taxRecordList');
+        Route::put('tax/record_complete',           'admin/ProfitShare/taxRecordComplete');
+        Route::get('merchant/account_list',         'admin/ProfitShare/merchantAccountList');
+        Route::post('merchant/account_create',      'admin/ProfitShare/merchantAccountCreate');
+        Route::put('merchant/account_verify',       'admin/ProfitShare/merchantAccountVerify');
+        Route::get('profit_share/statistics',       'admin/ProfitShare/statistics');
 
         // --- 聊天审计 ---
         Route::get('chat/session_list',         'admin/ChatAudit/sessionList');
@@ -318,6 +503,18 @@ Route::group('api/v1', function () {
         Route::get('chat/nlp_result',           'admin/ChatAudit/nlpResult');
         Route::get('chat/risk_users',           'admin/ChatAudit/riskUsers');
         Route::put('chat/handle_risk',          'admin/ChatAudit/handleRiskUser');
+        // 飞单风控
+        Route::get('chat/anti_fraud_rules',     'admin/ChatAudit/antiFraudRuleList');
+        Route::post('chat/anti_fraud_rule',     'admin/ChatAudit/antiFraudRuleCreate');
+        Route::put('chat/anti_fraud_rule',      'admin/ChatAudit/antiFraudRuleUpdate');
+        Route::delete('chat/anti_fraud_rule',   'admin/ChatAudit/antiFraudRuleDelete');
+        Route::get('chat/anti_fraud_logs',      'admin/ChatAudit/antiFraudLogList');
+        Route::put('chat/anti_fraud_log_handle', 'admin/ChatAudit/antiFraudLogHandle');
+        // 快捷服务卡片
+        Route::get('chat/quick_cards',          'admin/ChatAudit/quickCardList');
+        Route::post('chat/quick_card',          'admin/ChatAudit/quickCardCreate');
+        Route::put('chat/quick_card',           'admin/ChatAudit/quickCardUpdate');
+        Route::delete('chat/quick_card',        'admin/ChatAudit/quickCardDelete');
 
         // --- 系统配置 ---
         Route::get('config/list',               'admin/SystemConfig/list');
@@ -394,6 +591,45 @@ Route::group('api/v1', function () {
         Route::post('after_sale_manage/resolve',    'admin/AfterSaleManage/resolve');
         Route::get('after_sale_manage/export',      'admin/AfterSaleManage/export');
 
+        // --- 仲裁管理 ---
+        Route::get('arbitration/case_list',             'admin/Arbitration/caseList');
+        Route::get('arbitration/case_detail',           'admin/Arbitration/caseDetail');
+        Route::post('arbitration/process_case',         'admin/Arbitration/processCase');
+        Route::post('arbitration/resolve_case',         'admin/Arbitration/resolveCase');
+        Route::get('arbitration/rule_list',             'admin/Arbitration/ruleList');
+        Route::post('arbitration/rule_create',          'admin/Arbitration/createRule');
+        Route::put('arbitration/rule_update',           'admin/Arbitration/updateRule');
+        Route::delete('arbitration/rule_delete',        'admin/Arbitration/deleteRule');
+        Route::get('arbitration/evidence_tpl_list',     'admin/Arbitration/evidenceTplList');
+        Route::post('arbitration/evidence_tpl_create',  'admin/Arbitration/createEvidenceTpl');
+        Route::put('arbitration/evidence_tpl_update',   'admin/Arbitration/updateEvidenceTpl');
+        Route::delete('arbitration/evidence_tpl_delete','admin/Arbitration/deleteEvidenceTpl');
+
+        // --- 服务保证金管理 ---
+        Route::get('service_deposit/list',           'admin/ServiceDeposit/depositList');
+        Route::get('service_deposit/detail',         'admin/ServiceDeposit/depositDetail');
+        Route::get('service_deposit/log_list',       'admin/ServiceDeposit/logList');
+        Route::post('service_deposit/manual_deposit','admin/ServiceDeposit/manualDeposit');
+        Route::post('service_deposit/manual_deduct', 'admin/ServiceDeposit/manualDeduct');
+        Route::post('service_deposit/manual_refund', 'admin/ServiceDeposit/manualRefund');
+        Route::post('service_deposit/freeze',        'admin/ServiceDeposit/freeze');
+        Route::post('service_deposit/unfreeze',      'admin/ServiceDeposit/unfreeze');
+
+        // --- 合规管理 ---
+        Route::get('compliance/anti_boosting_rule_list',   'admin/Compliance/antiBoostingRuleList');
+        Route::post('compliance/anti_boosting_rule_create','admin/Compliance/createAntiBoostingRule');
+        Route::put('compliance/anti_boosting_rule_update', 'admin/Compliance/updateAntiBoostingRule');
+        Route::delete('compliance/anti_boosting_rule_delete','admin/Compliance/deleteAntiBoostingRule');
+        Route::get('compliance/anti_boosting_log_list',    'admin/Compliance/antiBoostingLogList');
+        Route::post('compliance/anti_boosting_log_handle', 'admin/Compliance/handleAntiBoostingLog');
+        Route::post('compliance/expand_sensitive_words',   'admin/Compliance/expandSensitiveWords');
+        Route::get('compliance/agreement_version_list',    'admin/Compliance/agreementVersionList');
+        Route::post('compliance/agreement_version_create', 'admin/Compliance/createAgreementVersion');
+        Route::put('compliance/agreement_version_update',  'admin/Compliance/updateAgreementVersion');
+        Route::post('compliance/agreement_version_publish','admin/Compliance/publishAgreementVersion');
+        Route::get('compliance/agreement_sign_log',        'admin/Compliance/agreementSignLogList');
+        Route::post('compliance/test_check_content',       'admin/Compliance/testCheckContent');
+
         // --- 订阅消息模板管理 ---
         Route::get('subscribe/template/list',       'admin.SubscribeMessage/templateList');
         Route::post('subscribe/template/create',    'admin.SubscribeMessage/templateCreate');
@@ -407,6 +643,99 @@ Route::group('api/v1', function () {
         Route::post('up_master/approve',        'admin.UpMaster/approve');
         Route::post('up_master/reject',         'admin.UpMaster/reject');
         Route::post('up_master/revoke',         'admin.UpMaster/revoke');
+
+        // --- 未成年人保护 ---
+        Route::get('minor/curfew_config',        'admin/MinorProtect/getCurfewConfig');
+        Route::put('minor/curfew_config',        'admin/MinorProtect/updateCurfewConfig');
+        Route::get('minor/curfew_log',           'admin/MinorProtect/curfewLogList');
+        Route::get('minor/warning_log',          'admin/MinorProtect/warningLogList');
+        Route::get('minor/guardian_list',        'admin/MinorProtect/guardianList');
+        Route::get('minor/risk_users',           'admin/MinorProtect/riskUserList');
+        Route::post('minor/force_unbind',        'admin/MinorProtect/forceUnbind');
+        Route::get('minor/curfew_stats',         'admin/MinorProtect/curfewStats');
+
+        // --- 操作日志 ---
+        Route::get('operation_log/list',          'admin/OperationLog/list');
+        Route::get('operation_log/stats',         'admin/OperationLog/stats');
+        Route::get('operation_log/export',        'admin/OperationLog/export');
+        Route::get('operation_log/modules',       'admin/OperationLog/modules');
+
+        // --- AI风险预警 ---
+        Route::get('risk_alert/list',             'admin/RiskAlert/list');
+        Route::get('risk_alert/stats',            'admin/RiskAlert/stats');
+        Route::post('risk_alert/handle',          'admin/RiskAlert/handle');
+        Route::post('risk_alert/batch_handle',    'admin/RiskAlert/batchHandle');
+        Route::post('risk_alert/batch_ban',       'admin/RiskAlert/batchBanUsers');
+
+        // --- 活动运营 ---
+        Route::get('activity/index',              'admin/Activity/index');
+        Route::get('activity/coupon/list',        'admin/Activity/couponList');
+        Route::post('activity/coupon/create',     'admin/Activity/couponCreate');
+        Route::post('activity/coupon/update',     'admin/Activity/couponUpdate');
+        Route::post('activity/coupon/toggle',     'admin/Activity/couponToggle');
+        Route::delete('activity/coupon/delete',   'admin/Activity/couponDelete');
+
+        // --- 第三方接口监控 ---
+        Route::get('api_monitor/index',           'admin/ApiMonitor/index');
+        Route::get('api_monitor/list',            'admin/ApiMonitor/list');
+        Route::get('api_monitor/detail',          'admin/ApiMonitor/detail');
+        Route::get('api_monitor/trend',           'admin/ApiMonitor/trend');
+        Route::post('api_monitor/threshold',      'admin/ApiMonitor/updateThreshold');
+        Route::post('api_monitor/reset',          'admin/ApiMonitor/resetStats');
+        Route::get('api_monitor/slow_query/list', 'admin/ApiMonitor/slowQueryList');
+        Route::get('api_monitor/slow_query/stats','admin/ApiMonitor/slowQueryStats');
+
+        // --- 数据大屏 ---
+        Route::get('data_dashboard/realtime',     'admin/DataDashboard/realtime');
+        Route::get('data_dashboard/order_trend',  'admin/DataDashboard/orderTrend');
+        Route::get('data_dashboard/fund_flow',    'admin/DataDashboard/fundFlow');
+        Route::get('data_dashboard/risk_stats',   'admin/DataDashboard/riskStats');
+        Route::get('data_dashboard/snapshots',    'admin/DataDashboard/snapshots');
+
+        // --- 营销管理 ---
+        // 优惠券模板
+        Route::get('marketing/coupon/list',          'admin/Marketing/couponList');
+        Route::post('marketing/coupon/create',       'admin/Marketing/couponCreate');
+        Route::put('marketing/coupon/update',        'admin/Marketing/couponUpdate');
+        Route::delete('marketing/coupon/delete',     'admin/Marketing/couponDelete');
+        Route::put('marketing/coupon/toggle',        'admin/Marketing/couponToggle');
+        Route::post('marketing/coupon/issue',        'admin/Marketing/couponIssue');
+        Route::get('marketing/coupon/issue_log',     'admin/Marketing/couponIssueLog');
+
+        // 充值活动
+        Route::get('marketing/recharge/list',        'admin/Marketing/rechargeList');
+        Route::post('marketing/recharge/create',     'admin/Marketing/rechargeCreate');
+        Route::put('marketing/recharge/update',      'admin/Marketing/rechargeUpdate');
+        Route::delete('marketing/recharge/delete',   'admin/Marketing/rechargeDelete');
+        Route::put('marketing/recharge/toggle',      'admin/Marketing/rechargeToggle');
+        Route::get('marketing/recharge/records',     'admin/Marketing/rechargeRecords');
+
+        // 邀请奖励配置
+        Route::get('marketing/invite_reward/list',       'admin/Marketing/inviteRewardList');
+        Route::post('marketing/invite_reward/create',    'admin/Marketing/inviteRewardCreate');
+        Route::put('marketing/invite_reward/update',     'admin/Marketing/inviteRewardUpdate');
+        Route::delete('marketing/invite_reward/delete',  'admin/Marketing/inviteRewardDelete');
+        Route::put('marketing/invite_reward/toggle',     'admin/Marketing/inviteRewardToggle');
+        Route::get('marketing/invite_reward/log',        'admin/Marketing/inviteRewardLog');
+
+        // 抽奖活动
+        Route::get('marketing/lottery/list',         'admin/Marketing/lotteryList');
+        Route::get('marketing/lottery/detail',       'admin/Marketing/lotteryDetail');
+        Route::post('marketing/lottery/create',      'admin/Marketing/lotteryCreate');
+        Route::put('marketing/lottery/update',       'admin/Marketing/lotteryUpdate');
+        Route::delete('marketing/lottery/delete',    'admin/Marketing/lotteryDelete');
+        Route::put('marketing/lottery/toggle',       'admin/Marketing/lotteryToggle');
+        Route::post('marketing/lottery/save_prizes', 'admin/Marketing/lotterySavePrizes');
+        Route::delete('marketing/lottery/prize_delete', 'admin/Marketing/lotteryPrizeDelete');
+        Route::get('marketing/lottery/records',      'admin/Marketing/lotteryRecords');
+
+        // 拼团活动
+        Route::get('marketing/group_buy/list',       'admin/Marketing/groupBuyList');
+        Route::post('marketing/group_buy/create',    'admin/Marketing/groupBuyCreate');
+        Route::put('marketing/group_buy/update',     'admin/Marketing/groupBuyUpdate');
+        Route::delete('marketing/group_buy/delete',  'admin/Marketing/groupBuyDelete');
+        Route::put('marketing/group_buy/toggle',     'admin/Marketing/groupBuyToggle');
+        Route::get('marketing/group_buy/orders',     'admin/Marketing/groupBuyOrders');
 
     })->middleware(['auth_admin']);
 

@@ -6,19 +6,146 @@ Page({
     orderId: '',
     orderInfo: {},
     timelineList: [],
-    subscribeTmplIds: 'TEMPLATE_ID_PLACEHOLDER_02'
+    subscribeTmplIds: 'TEMPLATE_ID_PLACEHOLDER_02',
+    serviceTimer: null,
+    serviceDurationText: '00:00:00',
+    evidenceList: [],
+    isPlayer: false,
+    timerInterval: null
   },
 
   onLoad(options) {
     const { orderId } = options;
     this.setData({ orderId });
     this.loadOrderDetail();
+    this.checkUserRole();
   },
 
   onShow() {
     if (this.data.orderId) {
       this.loadOrderDetail();
+      this.loadServiceTimer();
+      this.loadEvidenceList();
     }
+  },
+
+  onUnload() {
+    if (this.data.timerInterval) {
+      clearInterval(this.data.timerInterval);
+    }
+  },
+
+  checkUserRole() {
+    request.get('/api/v1/user/profile').then((res) => {
+      this.setData({ isPlayer: res.is_player || false });
+    }).catch(() => {});
+  },
+
+  loadServiceTimer() {
+    request.get(`/api/v1/order/${this.data.orderId}/service_timer`).then((res) => {
+      if (res) {
+        this.setData({ serviceTimer: res });
+        this.updateDurationText(res.total_seconds || 0);
+        if (res.status === 1) {
+          this.startTimer();
+        }
+      }
+    }).catch(() => {});
+  },
+
+  startTimer() {
+    if (this.data.timerInterval) {
+      clearInterval(this.data.timerInterval);
+    }
+    let seconds = this.data.serviceTimer?.total_seconds || 0;
+    const timer = setInterval(() => {
+      seconds++;
+      this.updateDurationText(seconds);
+    }, 1000);
+    this.setData({ timerInterval: timer });
+  },
+
+  updateDurationText(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const text = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    this.setData({ serviceDurationText: text });
+  },
+
+  loadEvidenceList() {
+    request.get(`/api/v1/order/${this.data.orderId}/evidences`).then((res) => {
+      const list = (res.list || []).map(item => ({
+        ...item,
+        type_text: this.getEvidenceTypeText(item.type),
+        create_time_text: util.formatTime(item.create_time, 'MM-DD HH:mm')
+      }));
+      this.setData({ evidenceList: list });
+    }).catch(() => {});
+  },
+
+  getEvidenceTypeText(type) {
+    const map = {
+      'gameplay_video': '录屏',
+      'rank_screenshot': '战绩截图',
+      'other': '其他'
+    };
+    return map[type] || '其他';
+  },
+
+  onUploadEvidence() {
+    wx.chooseMedia({
+      count: 9,
+      mediaType: ['image', 'video'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const files = res.tempFiles;
+        wx.showActionSheet({
+          itemList: ['录屏', '战绩截图', '其他'],
+          success: (actionRes) => {
+            const types = ['gameplay_video', 'rank_screenshot', 'other'];
+            const type = types[actionRes.tapIndex];
+            this.uploadEvidenceFiles(files, type);
+          }
+        });
+      }
+    });
+  },
+
+  uploadEvidenceFiles(files, type) {
+    wx.showLoading({ title: '上传中...' });
+    
+    const uploadPromises = files.map(file => {
+      return new Promise((resolve, reject) => {
+        request.upload('/api/v1/order/evidence/upload', file.tempFilePath).then(res => {
+          request.post(`/api/v1/order/${this.data.orderId}/evidence`, {
+            type: type,
+            file_url: res.url,
+            description: ''
+          }).then(resolve).catch(reject);
+        }).catch(reject);
+      });
+    });
+
+    Promise.all(uploadPromises).then(() => {
+      wx.hideLoading();
+      wx.showToast({ title: '上传成功', icon: 'success' });
+      this.loadEvidenceList();
+    }).catch(() => {
+      wx.hideLoading();
+      wx.showToast({ title: '上传失败', icon: 'none' });
+    });
+  },
+
+  onPreviewImage(e) {
+    const url = e.currentTarget.dataset.url;
+    const urls = this.data.evidenceList
+      .filter(item => item.type !== 'gameplay_video')
+      .map(item => item.file_url);
+    wx.previewImage({
+      current: url,
+      urls: urls
+    });
   },
 
   loadOrderDetail() {

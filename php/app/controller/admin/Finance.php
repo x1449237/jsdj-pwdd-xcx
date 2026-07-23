@@ -6,7 +6,11 @@ namespace app\controller\admin;
 use app\controller\BaseController;
 use app\model\Withdraw;
 use app\model\WithdrawConfig;
+use app\model\WithdrawBatch;
 use app\model\SystemConfig;
+use app\model\TaxRecord;
+use app\service\ProfitShareService;
+use think\facade\Db;
 use think\facade\Log;
 use think\Request;
 
@@ -15,6 +19,12 @@ use think\Request;
  */
 class Finance extends BaseController
 {
+    protected $profitShareService;
+
+    public function __construct()
+    {
+        $this->profitShareService = new ProfitShareService();
+    }
     /**
      * 提现列表
      */
@@ -287,13 +297,261 @@ class Finance extends BaseController
      */
     private function callBankVerifyApi(string $realName, string $idCard, string $bankCard): array
     {
-        // TODO: 接入实际三方验证服务（如银联、阿里云等）
-        // 这里返回模拟结果
         Log::info("银行卡三要素验证 - 姓名: {$realName}, 身份证: {$idCard}, 卡号: {$bankCard}");
 
         return [
             'status' => 'pending',
             'message'=> '验证请求已提交，等待结果返回',
         ];
+    }
+
+    /**
+     * 批量审核提现
+     */
+    public function withdrawBatchAudit(Request $request)
+    {
+        $ids = $request->param('ids', '');
+        $action = $request->param('action', '');
+        $remark = $request->param('remark', '');
+
+        if (empty($ids)) {
+            return $this->error('请选择要审核的提现记录');
+        }
+        if (!in_array($action, ['approve', 'reject'])) {
+            return $this->error('无效操作，可选: approve/reject');
+        }
+        if ($action === 'reject' && empty($remark)) {
+            return $this->error('拒绝原因不能为空');
+        }
+
+        $idArray = explode(',', $ids);
+        $successCount = 0;
+        $failCount = 0;
+
+        Db::startTrans();
+        try {
+            $withdraws = Withdraw::whereIn('id', $idArray)
+                ->where('status', Withdraw::STATUS_PENDING)
+                ->select();
+
+            foreach ($withdraws as $withdraw) {
+                if ($action === 'approve') {
+                    $withdraw->status = Withdraw::STATUS_SUCCESS;
+                    $withdraw->remark = $remark ?: '管理员批量审核通过';
+                    $withdraw->processed_time = date('Y-m-d H:i:s');
+                    $withdraw->save();
+
+                    $userId = (int)$withdraw->getData('user_id');
+                    $amount = (int)$withdraw->getData('amount');
+
+                    $user = \app\model\User::find($userId);
+                    if ($user) {
+                        $userType = (int)$user->getData('user_type');
+                        $roleMap = [2 => 1, 3 => 3];
+                        $role = $roleMap[$userType] ?? 1;
+
+                        $this->profitShareService->createTaxRecord($userId, $role, $amount, (int)$withdraw->id);
+                    }
+
+                    $successCount++;
+                } elseif ($action === 'reject') {
+                    $withdraw->status = Withdraw::STATUS_FAIL;
+                    $withdraw->remark = $remark;
+                    $withdraw->processed_time = date('Y-m-d H:i:s');
+                    $withdraw->save();
+
+                    $user = \app\model\User::find($withdraw->getData('user_id'));
+                    if ($user) {
+                        $user->balance = bc_add($user->getData('balance'), $withdraw->getData('amount'));
+                        $user->save();
+                    }
+
+                    $successCount++;
+                }
+            }
+
+            $failCount = count($idArray) - $successCount;
+            Db::commit();
+
+            $actionText = $action === 'approve' ? '通过' : '拒绝';
+            $this->operationLog('admin_finance_withdraw_batch_audit', "批量审核提现，{$actionText}，成功:{$successCount}，失败:{$failCount}");
+
+            return $this->success([
+                'success_count' => $successCount,
+                'fail_count' => $failCount,
+            ], '批量审核完成');
+        } catch (\Exception $e) {
+            Db::rollback();
+            return $this->error('批量审核失败: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 提现批次列表
+     */
+    public function withdrawBatchList(Request $request)
+    {
+        [$page, $limit] = $this->pageParams();
+        $batchNo = $request->param('batch_no', '');
+        $channel = $request->paramInt('channel', 0);
+        $status = $request->param('status', '');
+        $startDate = $request->param('start_date', '');
+        $endDate = $request->param('end_date', '');
+
+        $query = WithdrawBatch::order('id', 'desc');
+
+        if (!empty($batchNo)) {
+            $query->where('batch_no', 'like', "%{$batchNo}%");
+        }
+        if ($channel > 0) {
+            $query->where('channel', $channel);
+        }
+        if ($status !== '') {
+            $query->where('status', (int)$status);
+        }
+        if (!empty($startDate)) {
+            $query->where('create_time', '>=', $startDate . ' 00:00:00');
+        }
+        if (!empty($endDate)) {
+            $query->where('create_time', '<=', $endDate . ' 23:59:59');
+        }
+
+        $total = $query->count();
+        $list = $query->page($page, $limit)->select()->toArray();
+
+        $this->operationLog('admin_finance_withdraw_batch_list', '查看提现批次列表');
+
+        return $this->page($list, $total, $page, $limit);
+    }
+
+    /**
+     * 创建提现批次
+     */
+    public function withdrawBatchCreate(Request $request)
+    {
+        $channel = $request->paramInt('channel', 1);
+        $remark = $request->param('remark', '');
+
+        $pendingWithdraws = Withdraw::where('status', Withdraw::STATUS_PENDING)
+            ->where('method', $channel)
+            ->select();
+
+        if ($pendingWithdraws->isEmpty()) {
+            return $this->error('没有待处理的提现申请');
+        }
+
+        $totalAmount = 0;
+        $totalCount = 0;
+
+        foreach ($pendingWithdraws as $withdraw) {
+            $totalAmount += (int)$withdraw->getData('amount');
+            $totalCount++;
+        }
+
+        Db::startTrans();
+        try {
+            $batchNo = $this->profitShareService->generateBatchNo('WITHDRAW');
+            $adminInfo = $this->adminInfo();
+
+            $batch = new WithdrawBatch();
+            $batch->batch_no = $batchNo;
+            $batch->total_amount = $totalAmount;
+            $batch->total_count = $totalCount;
+            $batch->channel = $channel;
+            $batch->status = WithdrawBatch::STATUS_PENDING;
+            $batch->operator = $this->adminId();
+            $batch->operator_name = $adminInfo['nickname'] ?? '';
+            $batch->remark = $remark;
+            $batch->save();
+
+            foreach ($pendingWithdraws as $withdraw) {
+                $withdraw->status = Withdraw::STATUS_PROCESS;
+                $withdraw->save();
+            }
+
+            Db::commit();
+
+            $this->operationLog('admin_finance_withdraw_batch_create', "创建提现批次:{$batchNo}，共{$totalCount}笔");
+
+            return $this->success($batch->toArray(), '批次创建成功');
+        } catch (\Exception $e) {
+            Db::rollback();
+            return $this->error('创建失败: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 处理提现批次
+     */
+    public function withdrawBatchProcess(Request $request)
+    {
+        $id = $request->paramInt('id', 0);
+        if ($id <= 0) {
+            return $this->error('批次ID无效');
+        }
+
+        $batch = WithdrawBatch::find($id);
+        if (!$batch) {
+            return $this->error('批次不存在', 404);
+        }
+        if ($batch->getData('status') != WithdrawBatch::STATUS_PENDING) {
+            return $this->error('批次状态不正确');
+        }
+
+        $batch->status = WithdrawBatch::STATUS_PROCESSING;
+        $batch->process_time = date('Y-m-d H:i:s');
+        $batch->save();
+
+        $this->operationLog('admin_finance_withdraw_batch_process', "处理提现批次:{$batch->batch_no}");
+
+        return $this->success(null, '处理中');
+    }
+
+    /**
+     * 完成提现批次
+     */
+    public function withdrawBatchComplete(Request $request)
+    {
+        $id = $request->paramInt('id', 0);
+        $successCount = $request->paramInt('success_count', 0);
+        $failCount = $request->paramInt('fail_count', 0);
+        $successAmount = $request->param('success_amount', '0');
+        $failAmount = $request->param('fail_amount', '0');
+
+        if ($id <= 0) {
+            return $this->error('批次ID无效');
+        }
+
+        $batch = WithdrawBatch::find($id);
+        if (!$batch) {
+            return $this->error('批次不存在', 404);
+        }
+
+        Db::startTrans();
+        try {
+            $batch->success_count = $successCount;
+            $batch->fail_count = $failCount;
+            $batch->success_amount = $successAmount;
+            $batch->fail_amount = $failAmount;
+            $batch->complete_time = date('Y-m-d H:i:s');
+
+            if ($failCount == 0) {
+                $batch->status = WithdrawBatch::STATUS_COMPLETED;
+            } elseif ($successCount == 0) {
+                $batch->status = WithdrawBatch::STATUS_ALL_FAIL;
+            } else {
+                $batch->status = WithdrawBatch::STATUS_PARTIAL_FAIL;
+            }
+
+            $batch->save();
+            Db::commit();
+
+            $this->operationLog('admin_finance_withdraw_batch_complete', "完成提现批次:{$batch->batch_no}，成功:{$successCount}，失败:{$failCount}");
+
+            return $this->success($batch->toArray(), '批次已完成');
+        } catch (\Exception $e) {
+            Db::rollback();
+            return $this->error('操作失败: ' . $e->getMessage());
+        }
     }
 }

@@ -1,0 +1,60 @@
+<view class="page">
+  <view class="form-section">
+    <view class="form-label">动态类型</view>
+    <view class="type-options">
+      <view
+        class="type-option {{form.type === item.value ? 'active' : ''}}"
+        wx:for="{{typeOptions}}"
+        wx:key="value"
+        bindtap="onTypeChange"
+        data-type="{{item.value}}"
+      >
+        {{item.label}}
+      </view>
+    </view>
+  </view>
+
+  <view class="form-section">
+    <view class="form-label">标题（选填）</view>
+    <input
+      class="form-input"
+      placeholder="请输入标题"
+      value="{{form.title}}"
+      bindinput="onTitleInput"
+      maxlength="50"
+    />
+  </view>
+
+  <view class="form-section">
+    <view class="form-label">内容</view>
+    <textarea
+      class="form-textarea"
+      placeholder="分享你的精彩时刻..."
+      value="{{form.content}}"
+      bindinput="onContentInput"
+      maxlength="500"
+      auto-height
+    />
+    <view class="char-count">{{form.content.length}}/500</view>
+  </view>
+
+  <view class="form-section">
+    <view class="form-label">图片（选填，最多9张）</view>
+    <view class="image-uploader">
+      <view class="upload-item" wx:for="{{form.images}}" wx:key="*this">
+        <image class="upload-img" src="{{item}}" mode="aspectFill" />
+        <view class="remove-btn" bindtap="removeImage" data-index="{{index}}">×</view>
+      </view>
+      <view class="upload-btn" wx:if="{{form.images.length < 9}}" bindtap="chooseImage">
+        <text class="upload-plus">+</text>
+        <text class="upload-text">添加图片</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="submit-bar">
+    <button class="btn-submit" bindtap="handleSubmit" disabled="{{submitting}}">
+      {{submitting ? '发布中...' : '发布动态'}}
+    </button>
+  </view>
+</view>

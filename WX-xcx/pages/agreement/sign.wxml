@@ -1,0 +1,38 @@
+<view class="container">
+  <view class="header">
+    <view class="back-btn" bindtap="onBack">
+      <text class="back-icon">←</text>
+    </view>
+    <view class="title">{{agreementTitle}}</view>
+    <view class="placeholder"></view>
+  </view>
+
+  <view class="content" wx:if="{{!loading}}">
+    <view class="version-tag">版本号：{{agreementVersion}}</view>
+    <view class="agreement-content">
+      <rich-text nodes="{{agreementContent}}"></rich-text>
+    </view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="agree-row">
+      <checkbox-group bindchange="onAgreeChange">
+        <label class="checkbox-label">
+          <checkbox value="agree" checked="{{agreed}}" color="#e94560" />
+          <text class="agree-text">我已阅读并同意上述协议</text>
+        </label>
+      </checkbox-group>
+    </view>
+    <button
+      class="sign-btn {{agreed ? '' : 'disabled'}}"
+      bindtap="onSign"
+      disabled="{{!agreed}}"
+    >
+      同意并签署
+    </button>
+  </view>
+</view>

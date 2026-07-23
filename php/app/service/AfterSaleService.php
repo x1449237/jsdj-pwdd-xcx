@@ -10,6 +10,9 @@ use app\model\AfterSaleSession;
 use app\model\PlatformAccount;
 use app\model\RiskControlLog;
 use app\model\SystemConfig;
+use app\model\ChatUploadEvidenceLog;
+use app\model\ChatAsrCache;
+use app\model\ChatAntiFraudLog;
 use think\facade\Db;
 use think\facade\Log;
 
@@ -341,5 +344,209 @@ class AfterSaleService
     {
         $value = SystemConfig::getValue('after_sale_keyword_switch', '0');
         return $value === '1' || $value === 'true' || $value === true;
+    }
+
+    /**
+     * 上传举证材料
+     * @param int    $sessionId
+     * @param int    $userId
+     * @param string $fileUrl
+     * @param string $fileName
+     * @param int    $fileSize
+     * @param string $fileType
+     * @param string $description
+     * @return array
+     * @throws \RuntimeException
+     */
+    public function uploadEvidence(
+        int $sessionId,
+        int $userId,
+        string $fileUrl,
+        string $fileName,
+        int $fileSize,
+        string $fileType,
+        string $description = ''
+    ): array {
+        $session = AfterSaleSession::find($sessionId);
+        if (!$session) {
+            throw new \RuntimeException('售后会话不存在');
+        }
+
+        if ($session->status == AfterSaleSession::STATUS_CLOSED) {
+            throw new \RuntimeException('售后会话已关闭');
+        }
+
+        if ($fileSize > 10485760) {
+            throw new \RuntimeException('文件大小不能超过10M');
+        }
+
+        $evidence = ChatUploadEvidenceLog::create([
+            'session_id'  => $sessionId,
+            'user_id'     => $userId,
+            'file_url'    => $fileUrl,
+            'file_name'   => $fileName,
+            'file_size'   => $fileSize,
+            'file_type'   => $fileType,
+            'description' => $description,
+        ]);
+
+        write_action_log('after_sale_upload_evidence', "上传举证材料: session_id={$sessionId}, user_id={$userId}");
+
+        return $evidence->toArray();
+    }
+
+    /**
+     * 获取会话举证列表
+     * @param int $sessionId
+     * @param int $page
+     * @param int $limit
+     * @return array
+     */
+    public function getEvidenceList(int $sessionId, int $page, int $limit): array
+    {
+        $query = ChatUploadEvidenceLog::where('session_id', $sessionId)
+            ->order('id', 'desc');
+
+        $total = $query->count();
+        $list  = $query->page($page, $limit)->select()->toArray();
+
+        return ['list' => $list, 'total' => $total];
+    }
+
+    /**
+     * 保存ASR缓存
+     * @param int    $messageId
+     * @param int    $sessionId
+     * @param string $voiceUrl
+     * @param string $asrText
+     * @param float  $confidence
+     * @param string $provider
+     * @return bool
+     */
+    public function saveAsrCache(int $messageId, int $sessionId, string $voiceUrl, string $asrText, float $confidence = 0, string $provider = ''): bool
+    {
+        try {
+            $existing = ChatAsrCache::where('message_id', $messageId)->find();
+            if ($existing) {
+                $existing->asr_text   = $asrText;
+                $existing->confidence = $confidence;
+                $existing->provider   = $provider;
+                $existing->save();
+                return true;
+            }
+
+            ChatAsrCache::create([
+                'message_id'   => $messageId,
+                'session_id'   => $sessionId,
+                'session_type' => ChatAsrCache::SESSION_TYPE_AFTERSALE,
+                'voice_url'    => $voiceUrl,
+                'asr_text'     => $asrText,
+                'confidence'   => $confidence,
+                'provider'     => $provider,
+            ]);
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error("保存ASR缓存失败: {$e->getMessage()}");
+            return false;
+        }
+    }
+
+    /**
+     * 获取ASR缓存
+     * @param int $messageId
+     * @return array|null
+     */
+    public function getAsrCache(int $messageId): ?array
+    {
+        $cache = ChatAsrCache::where('message_id', $messageId)->find();
+        return $cache ? $cache->toArray() : null;
+    }
+
+    /**
+     * 售后消息飞单风控检测
+     * @param string $content
+     * @param int    $sessionId
+     * @param int    $senderId
+     * @param int    $messageId
+     * @return array
+     */
+    public function detectAfterSaleAntiFraud(string $content, int $sessionId, int $senderId, int $messageId): array
+    {
+        try {
+            $antiFraudService = new AntiFraudService();
+            return $antiFraudService->detectFraud(
+                $content,
+                $sessionId,
+                ChatAntiFraudLog::SESSION_TYPE_AFTERSALE,
+                $senderId,
+                $messageId
+            );
+        } catch (\Throwable $e) {
+            Log::error("售后飞单风控检测失败: {$e->getMessage()}");
+            return [
+                'is_risky'         => false,
+                'level'            => '',
+                'matched_rules'    => [],
+                'matched_content'  => [],
+                'filtered_content' => $content,
+            ];
+        }
+    }
+
+    /**
+     * 获取仲裁举证模板（标准化举证引导）
+     * @param string $disputeType
+     * @return array|null
+     */
+    public function getArbitrationEvidenceTpl(string $disputeType): ?array
+    {
+        try {
+            $arbitrationService = new \app\service\ArbitrationService();
+            return $arbitrationService->getEvidenceTplByType($disputeType);
+        } catch (\Throwable $e) {
+            Log::error('获取仲裁举证模板失败: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 获取所有仲裁举证模板列表
+     * @return array
+     */
+    public function getAllArbitrationEvidenceTpls(): array
+    {
+        try {
+            $arbitrationService = new \app\service\ArbitrationService();
+            return $arbitrationService->getEvidenceTplList();
+        } catch (\Throwable $e) {
+            Log::error('获取仲裁举证模板列表失败: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * 引导申请仲裁
+     * @param int    $sessionId
+     * @param int    $userId
+     * @param string $disputeType
+     * @return array
+     */
+    public function guideArbitration(int $sessionId, int $userId, string $disputeType): array
+    {
+        $session = AfterSaleSession::find($sessionId);
+        if (!$session) {
+            throw new \RuntimeException('售后会话不存在');
+        }
+
+        $tpl = $this->getArbitrationEvidenceTpl($disputeType);
+
+        return [
+            'session_id'   => $sessionId,
+            'order_id'     => $session->order_id,
+            'dispute_type' => $disputeType,
+            'evidence_tpl' => $tpl,
+            'guide_text'   => $tpl ? $tpl['description'] : '请准备相关举证材料后提交仲裁申请',
+        ];
     }
 }

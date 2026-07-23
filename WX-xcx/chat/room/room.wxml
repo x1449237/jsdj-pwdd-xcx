@@ -81,7 +81,7 @@
             bindlongpress="onLongPressMessage"
             data-msg="{{item}}"
           >
-            <text>{{item.content}}</text>
+            <text class="{{item.anti_fraud_risky ? 'risk-text' : ''}}">{{item.content}}</text>
           </view>
 
           <!-- 图片消息 -->
@@ -89,6 +89,8 @@
             wx:if="{{item.type === 'image'}}"
             class="msg-bubble msg-image {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
             bindtap="onPreviewImage"
+            bindlongpress="onLongPressMessage"
+            data-msg="{{item}}"
             data-url="{{item.image_url}}"
           >
             <image
@@ -104,10 +106,45 @@
             wx:if="{{item.type === 'voice'}}"
             class="msg-bubble msg-voice {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
             bindtap="onPlayVoice"
+            bindlongpress="onLongPressMessage"
             data-msg="{{item}}"
           >
             <text class="voice-icon">{{item.playing ? '🔊' : '🔈'}}</text>
             <text class="voice-duration">{{item.duration}}"</text>
+          </view>
+
+          <!-- 文件消息 -->
+          <view
+            wx:if="{{item.type === 'file'}}"
+            class="msg-bubble msg-file {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
+            bindtap="onOpenFile"
+            bindlongpress="onLongPressMessage"
+            data-msg="{{item}}"
+          >
+            <view class="file-icon">📄</view>
+            <view class="file-info">
+              <text class="file-name">{{item.file_name}}</text>
+              <text class="file-size">{{item.file_size_text}}</text>
+            </view>
+          </view>
+
+          <!-- 卡片消息 -->
+          <view
+            wx:if="{{item.type === 'card'}}"
+            class="msg-bubble msg-card {{item.from_self ? 'bubble-self' : 'bubble-other'}}"
+            bindtap="onCardAction"
+            data-msg="{{item}}"
+          >
+            <view class="card-header">
+              <text class="card-icon">{{item.card_icon || '📋'}}</text>
+              <text class="card-title">{{item.card_title}}</text>
+            </view>
+            <view class="card-content">
+              <text>{{item.card_content}}</text>
+            </view>
+            <view class="card-action">
+              <text class="card-action-text">点击查看</text>
+            </view>
           </view>
 
           <!-- 撤回消息 -->
@@ -121,6 +158,11 @@
           <!-- 敏感词拦截提示 -->
           <view wx:if="{{item.sensitive_blocked}}" class="sensitive-tip">
             <text>⚠️ 消息含有敏感词，发送失败</text>
+          </view>
+
+          <!-- 飞单风险提示 -->
+          <view wx:if="{{item.anti_fraud_risky && item.from_self}}" class="anti-fraud-tip">
+            <text>⚠️ 检测到风险内容，已自动屏蔽</text>
           </view>
         </view>
 
@@ -200,9 +242,51 @@
       <view class="panel-icon">📸</view>
       <text class="panel-label">拍照</text>
     </view>
+    <view class="panel-item" bindtap="onChooseFile">
+      <view class="panel-icon">📄</view>
+      <text class="panel-label">文件</text>
+    </view>
+    <view class="panel-item" bindtap="onShowQuickCards">
+      <view class="panel-icon">💳</view>
+      <text class="panel-label">快捷卡片</text>
+    </view>
     <view class="panel-item" bindtap="onSwitchMode">
       <view class="panel-icon">🎤</view>
       <text class="panel-label">语音</text>
+    </view>
+  </view>
+
+  <!-- 快捷卡片选择面板 -->
+  <view class="quick-card-panel" wx:if="{{showQuickCardPanel}}">
+    <view class="panel-header">
+      <text class="panel-title">选择快捷卡片</text>
+      <view class="panel-close" bindtap="onCloseQuickCards">×</view>
+    </view>
+    <scroll-view class="card-list" scroll-x>
+      <view
+        class="card-item"
+        wx:for="{{quickCardList}}"
+        wx:key="id"
+        bindtap="onSendQuickCard"
+        data-card="{{item}}"
+      >
+        <view class="card-item-icon">{{item.icon || '📋'}}</view>
+        <view class="card-item-title">{{item.title}}</view>
+        <view class="card-item-content">{{item.content}}</view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 飞单风控警告弹窗 -->
+  <view class="modal-mask" wx:if="{{showAntiFraudModal}}" bindtap="onCloseAntiFraudModal"></view>
+  <view class="anti-fraud-modal" wx:if="{{showAntiFraudModal}}">
+    <view class="modal-icon">⚠️</view>
+    <view class="modal-title">风险提示</view>
+    <view class="modal-content">
+      <text>{{antiFraudModalContent}}</text>
+    </view>
+    <view class="modal-btn" bindtap="onCloseAntiFraudModal">
+      <text>我知道了</text>
     </view>
   </view>
 </view>

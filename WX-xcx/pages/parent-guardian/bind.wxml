@@ -1,0 +1,56 @@
+<view class="bind-page">
+  <view class="header">
+    <view class="title">家长监护绑定</view>
+    <view class="subtitle">绑定后可查看孩子消费记录并设置监护权限</view>
+  </view>
+
+  <view class="form-card">
+    <view class="form-item">
+      <view class="label">孩子用户ID</view>
+      <input
+        class="input"
+        type="number"
+        placeholder="请输入孩子的用户ID"
+        value="{{childUserId}}"
+        bindinput="onChildUserIdInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <view class="label">验证码</view>
+      <view class="code-input-row">
+        <input
+          class="input code-input"
+          type="number"
+          placeholder="请输入6位验证码"
+          value="{{verifyCode}}"
+          bindinput="onVerifyCodeInput"
+          maxlength="6"
+        />
+        <button
+          class="send-code-btn {{countdown > 0 ? 'disabled' : ''}}"
+          bindtap="onSendCode"
+          disabled="{{sending || countdown > 0}}"
+        >
+          {{countdown > 0 ? countdown + 's后重发' : '发送验证码'}}
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <view class="tips-card">
+    <view class="tips-title">温馨提示</view>
+    <view class="tips-item">1. 请先让孩子在个人中心查看并告知其用户ID</view>
+    <view class="tips-item">2. 验证码将发送到孩子账号，需孩子配合提供</view>
+    <view class="tips-item">3. 绑定后您可设置消费限额、一键冻结等功能</view>
+  </view>
+
+  <button
+    class="bind-btn"
+    bindtap="onBind"
+    loading="{{submitting}}"
+    disabled="{{submitting}}"
+  >
+    立即绑定
+  </button>
+</view>

@@ -1,0 +1,35 @@
+<view class="page">
+  <scroll-view class="type-tabs" scroll-x>
+    <view class="tab-item {{type === '' ? 'active' : ''}}" bindtap="onTypeChange" data-type="">全部</view>
+    <view class="tab-item {{type === 'discount' ? 'active' : ''}}" bindtap="onTypeChange" data-type="discount">满减券</view>
+    <view class="tab-item {{type === 'new_user' ? 'active' : ''}}" bindtap="onTypeChange" data-type="new_user">新人券</view>
+  </scroll-view>
+
+  <view class="coupon-list">
+    <view class="coupon-card" wx:for="{{list}}" wx:key="id">
+      <view class="coupon-left">
+        <view class="coupon-value">¥{{item.value_yuan}}</view>
+        <view class="coupon-condition" wx:if="{{item.min_amount > 0}}">满{{item.min_amount_yuan}}可用</view>
+        <view class="coupon-condition" wx:else>无门槛</view>
+      </view>
+      <view class="coupon-right">
+        <view class="coupon-name">{{item.name}}</view>
+        <view class="coupon-type">{{typeMap[item.type]}}</view>
+        <view class="coupon-time">{{item.start_time}} 至 {{item.end_time}}</view>
+        <view class="coupon-count">已领 {{item.used_count}}/{{item.total_count}}</view>
+        <button wx:if="{{item.status === 1 && item.used_count < item.total_count}}" class="btn-receive" size="mini" bindtap="handleReceive" data-id="{{item.id}}">立即领取</button>
+        <view wx:elif="{{item.status === 0}}" class="coupon-end">已下架</view>
+        <view wx:else class="coupon-end">已领完</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="load-more" wx:if="{{list.length > 0}}">
+    <text wx:if="{{noMore}}">没有更多了</text>
+    <text wx:elif="{{loading}}">加载中...</text>
+  </view>
+
+  <view class="empty" wx:if="{{list.length === 0 && !loading}}">
+    <text>暂无优惠券</text>
+  </view>
+</view>

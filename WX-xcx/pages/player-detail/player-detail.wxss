@@ -347,3 +347,92 @@
   font-size: 30rpx;
   border-radius: 40rpx;
 }
+
+.favorite-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 20rpx;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12rpx;
+  margin-left: 16rpx;
+}
+
+.favorite-btn.favorited {
+  background: rgba(255, 107, 53, 0.2);
+}
+
+.favorite-icon {
+  font-size: 32rpx;
+  margin-bottom: 4rpx;
+}
+
+.favorite-text {
+  font-size: 20rpx;
+  color: #fff;
+}
+
+.tags-section {
+  margin: 16rpx 32rpx;
+  padding: 24rpx;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.tags-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.tag-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.group-label {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+  font-weight: 500;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.detail-tag {
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  line-height: 1.4;
+}
+
+.tag-game {
+  background: #ecf5ff;
+  color: #409eff;
+}
+
+.tag-rank {
+  background: #fdf6ec;
+  color: #e6a23c;
+}
+
+.tag-position {
+  background: #f0f9eb;
+  color: #67c23a;
+}
+
+.tag-voice {
+  background: #fef0f0;
+  color: #f56c6c;
+}
+
+.tag-skill {
+  background: #f4f4f5;
+  color: #909399;
+}
